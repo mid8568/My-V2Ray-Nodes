@@ -5,6 +5,9 @@ on:
     - cron: '0 */6 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-and-run:
     runs-on: ubuntu-latest
@@ -18,29 +21,28 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: 安装依赖库
+      - name: 安装依赖
         run: |
           python -m pip install --upgrade pip
           pip install requests
 
-      - name: 执行节点抓取脚本
+      - name: 执行脚本
         run: python fetch_nodes.py
 
-      - name: 提交并推送到仓库
-        env:
-          GH_PAT: ${{ secrets.MY_PUSH_TOKEN }}
+      - name: 提交更新
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
           git add .
           
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "🚀 成功检测到数据变更，正在通过最高特权 PAT 通道强行推送到主仓..."
-            git commit -m "自动更新节点列表: $(date +'%Y-%m-%d %H:%M:%S')"
-            
-            # 【终极修复】：直接使用当前正在操作的确定路径，彻底杜绝任何变量解析失败的死结！
-            git push https://x-access-token:${GH_PAT}@://github.com HEAD:main
-          else
-            echo "💡 数据内容完全一致，本次安全跳过推送。"
+          # 精准优雅的去重变动判定，无变化则以状态码 0 优雅收尾
+          if git diff --cached --quiet; then
+            echo "💡 节点数据内容与上一次完全一致，安全跳过本次推送。"
+            exit 0
           fi
+          
+          git commit -m "自动更新: $(date +'%Y-%m-%d %H:%M:%S')"
+          
+          # 核心修复：直接使用安全的 origin 别名秒级推通，彻底告别所有 URL 错误！
+          git push origin HEAD:main
