@@ -11,10 +11,10 @@ jobs:
 
     steps:
       - name: 检出仓库代码
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: 配置 Python 环境
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -31,16 +31,16 @@ jobs:
           GH_PAT: ${{ secrets.MY_PUSH_TOKEN }}
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@://github.com"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          # 【核心修复】：使用 git add . 盲加全工作区，彻底杜绝 pathspec 找不到文件引发的 128 崩溃
           git add .
           
-          # 检查整个工作区是否有文件发生变动
           if [ -n "$(git status --porcelain)" ]; then
             echo "🚀 成功检测到数据变更，正在通过最高特权 PAT 通道强行推送到主仓..."
             git commit -m "自动更新节点列表: $(date +'%Y-%m-%d %H:%M:%S')"
-            git push https://x-access-token:${GH_PAT}@://github.com{{ github.repository }}.git HEAD:main
+            
+            # 【终极修复】：改用 Linux 系统原生环境变量 $GITHUB_REPOSITORY，彻底解决大括号解析失败的死结
+            git push https://x-access-token:${GH_PAT}@://github.com HEAD:main
           else
             echo "💡 数据内容完全一致，本次安全跳过推送。"
           fi
