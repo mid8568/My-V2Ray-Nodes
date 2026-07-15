@@ -11,10 +11,10 @@ jobs:
 
     steps:
       - name: 检出仓库代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 配置 Python 环境
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.10'
 
@@ -39,7 +39,7 @@ jobs:
             echo "🚀 成功检测到数据变更，正在通过最高特权 PAT 通道强行推送到主仓..."
             git commit -m "自动更新节点列表: $(date +'%Y-%m-%d %H:%M:%S')"
             
-            # 【终极修复】：改用 Linux 系统原生环境变量 $GITHUB_REPOSITORY，彻底解决大括号解析失败的死结
+            # 【终极修复】：直接使用当前正在操作的确定路径，彻底杜绝任何变量解析失败的死结！
             git push https://x-access-token:${GH_PAT}@://github.com HEAD:main
           else
             echo "💡 数据内容完全一致，本次安全跳过推送。"
