@@ -8,6 +8,11 @@ on:
 jobs:
   build-and-run:
     runs-on: ubuntu-latest
+    
+    # 强制让所有基础组件在符合新版规范的环境下运行，彻底消除警告
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
     - name: 检出仓库代码
       uses: actions/checkout@v4
