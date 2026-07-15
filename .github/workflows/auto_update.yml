@@ -32,12 +32,16 @@ jobs:
       - name: 提交并推送到仓库
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add .
-
-          git diff --cached --quiet && exit 0
-
-          git commit -m "自动更新节点列表: $(date +'%Y-%m-%d %H:%M:%S')"
-
-          git push
+          git config --global user.email "41898282+github-actions[bot]@://github.com"
+          
+          # 【核心修复】：显式将 nodes.txt 加入暂存区，无视其他历史残留影响
+          git add nodes.txt
+          
+          # 鲁棒性更强的状态检测：只要检测到 nodes.txt 在当前工作区处于新增、修改或未跟踪状态，就必须强制提交
+          if [ -n "$(git status --porcelain nodes.txt)" ]; then
+            echo "🚀 成功检测到节点文件状态变更，开始强制推送到主仓..."
+            git commit -m "自动更新节点列表: $(date +'%Y-%m-%d %H:%M:%S')"
+            git push
+          else
+            echo "💡 节点数据内容未发生任何质变，本次安全跳过推送。"
+          fi
