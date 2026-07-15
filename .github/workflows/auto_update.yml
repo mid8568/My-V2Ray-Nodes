@@ -1,43 +1,35 @@
 name: 自动更新 V2Ray 节点
 
-# 触发条件配置
 on:
   schedule:
-    - cron: '0 */6 * * *'  # 每 6 小时自动执行一次（国际标准时间 UTC）
-  workflow_dispatch:      # 允许你在网页上点击按钮手动触发更新
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 jobs:
   build-and-run:
-    runs-on: ubuntu-latest  # 使用最新的 Ubuntu 系统作为运行环境
-
+    runs-on: ubuntu-latest
     steps:
-    # 1. 检出（下载）你仓库的代码到虚拟环境中
     - name: 检出仓库代码
       uses: actions/checkout@v4
 
-    # 2. 安装 Python 环境
     - name: 配置 Python 环境
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    # 3. 安装脚本需要的第三方库（如果你的脚本里 import 了 requests 等）
     - name: 安装依赖库
       run: |
         python -m pip install --upgrade pip
-        pip install requests  # 常见的网络请求库，如果没有需要可以删掉
+        pip install requests
 
-    # 4. 运行你的抓取脚本
     - name: 执行节点抓取脚本
       run: |
         python fetch_nodes.py
 
-    # 5. 将抓取生成的新文件提交并推送到 GitHub 仓库
     - name: 提交并推送到仓库
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@://github.com"
         git add .
-        # 如果节点没有变化，避免报错导致流程中断
         git commit -m "自动更新节点列表: $(date +'%Y-%m-%d %H:%M:%S')" || echo "没有检测到文件变化"
         git push
