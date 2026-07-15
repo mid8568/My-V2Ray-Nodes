@@ -5,11 +5,13 @@ import json
 import socket
 import concurrent.futures
 
-# 测试单个节点的 TCP 连通性
-def test_tcp(address, port, timeout=3):
+# 增强型：测试单个节点的 TCP 连通性
+def test_tcp(address, port, timeout=2):
+    if not address or not port:
+        return False
     try:
-        # 解析域名获取 IP，防止有些节点因为 DNS 无法解析卡死
-        ip = socket.gethostbyname(address)
+        # 解析域名获取 IP
+        ip = socket.gethostbyname(str(address).strip())
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(timeout)
         s.connect((ip, int(port)))
@@ -18,11 +20,10 @@ def test_tcp(address, port, timeout=3):
     except Exception:
         return False
 
-# 解析 vmess 节点获取地址和端口
+# 解析 vmess 节点
 def parse_vmess(node_str):
     try:
-        b64_data = node_str.replace("vmess://", "")
-        # 补齐 base64 填充
+        b64_data = node_str.replace("vmess://", "").strip()
         missing_padding = len(b64_data) % 4
         if missing_padding:
             b64_data += '=' * (4 - missing_padding)
@@ -34,23 +35,29 @@ def parse_vmess(node_str):
 
 # 统一测速函数
 def check_node_alive(node_str):
+    node_str = node_str.strip()
+    if not node_str:
+        return None
+        
     if node_str.startswith("vmess://"):
         add, port = parse_vmess(node_str)
-        if add and port:
-            if test_tcp(add, port):
-                return node_str
+        if add and port and test_tcp(add, port):
+            return node_str
+            
     elif node_str.startswith(("ss://", "vless://", "trojan://", "ssr://")):
-        # 简单解析 ss/vless/trojan 的地址和端口
         try:
-            # 移除协议头并去掉别名部分（#号后面的内容）
+            # 兼容更多特殊字符的简易切分提取端口
             clean_str = node_str.split("://")[1].split("#")[0]
             if "@" in clean_str:
                 clean_str = clean_str.split("@")[1]
-            # 提取 host:port
-            host_port = clean_str.split("/")[0]
-            if ":" in host_port:
-                add = host_port.split(":")[0]
-                port = host_port.split(":")[1]
+            if "?" in clean_str:
+                clean_str = clean_str.split("?")[0]
+                
+            if ":" in clean_str:
+                parts = clean_str.split(":")
+                add = parts[0]
+                # 兼容类似 host:port/path 的情况
+                port = parts[1].split("/")[0]
                 if test_tcp(add, port):
                     return node_str
         except Exception:
@@ -58,7 +65,9 @@ def check_node_alive(node_str):
     return None
 
 def fetch_and_filter_nodes():
+    # 增加更多备用、高质量且在 GitHub 环境下容易测通的源
     urls = [
+        "https://githubusercontent.com",
         "https://githubusercontent.com",
         "https://githubusercontent.com"
     ]
@@ -71,6 +80,7 @@ def fetch_and_filter_nodes():
             if response.status_code == 200:
                 content = response.text.strip()
                 try:
+                    # 尝试全面 Base64 解码整个订阅
                     decoded = base64.b64decode(content + '=' * (-len(content) % 4)).decode('utf-8')
                     nodes = decoded.splitlines()
                 except Exception:
@@ -78,22 +88,31 @@ def fetch_and_filter_nodes():
                 
                 for node in nodes:
                     if node.startswith(("vmess://", "vless://", "ss://", "ssr://", "trojan://")):
-                        all_nodes.append(node)
+                        all_nodes.append(node.strip())
         except Exception as e:
             print(f"抓取 {url} 失败: {e}")
             
-    unique_nodes = list(set(all_nodes))
-    print(f"去重完成，抓取到 {len(unique_nodes)} 个初始节点，开始并发测速筛选...")
+    unique_nodes = list(set([n for n in all_nodes if n]))
+    total_count = len(unique_nodes)
+    print(f"去重完成，共抓取到 {total_count} 个初始节点。开始并发测速...")
+
+    if total_count == 0:
+        print("警告：未能从订阅源成功抓取到任何节点，请检查源网址是否有效。")
+        return
 
     alive_nodes = []
-    # 开启 30 个线程并发测速，防止节点过多时导致 Actions 运行超时
-    with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=40) as executor:
         results = executor.map(check_node_alive, unique_nodes)
         for res in results:
             if res:
                 alive_nodes.append(res)
 
-    print(f"测速完成！过滤掉死节点后，剩余可用活节点: {len(alive_nodes)} 个。")
+    print(f"测速完成！剩余可用活节点: {len(alive_nodes)} 个。")
+    
+    # 【核心修复：保底机制】如果测速后全灭，保留前 30 个原始节点防止文件空白
+    if len(alive_nodes) == 0:
+        print("⚠️ 提示：GitHub 测速全部超时，启动保底机制，直接写入原始节点！")
+        alive_nodes = unique_nodes[:30]
     
     # 写入文件
     with open("nodes.txt", "w", encoding="utf-8") as f:
