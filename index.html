@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 高网速节点质控看板</title>
+    <title>🚀 纯直连高速节点分发大屏</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; line-height: 1.6; max-width: 950px; margin: 30px auto; padding: 0 20px; background-color: #f4f6f9; color: #333; }
         h1 { color: #0d6efd; border-bottom: 3px solid #0d6efd; padding-bottom: 10px; font-size: 24px; text-align: center; }
@@ -19,54 +19,53 @@
         .badge { background-color: #e9ecef; padding: 3px 8px; border-radius: 4px; font-size: 12px; color: #495057; }
         textarea { width: 100%; height: 45px; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; background-color: #e9ecef; font-family: monospace; resize: none; }
         .copy-btn { background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 8px 0 15px 0; font-size: 13px; }
-        ul { padding-left: 20px; margin: 5px 0; font-size: 14px; }
     </style>
 </head>
 <body>
-    <h1>🚀 高带宽测速分发看板（仅限高速节点）</h1>
+    <h1>🚀 纯直连无污染高速分发看板</h1>
     
     <div class="report-box">
-        <p style="margin:0;font-size:13px;color:#666;text-align:right;">📅 测速同步时间 (北京时间)：2026-07-16 14:12:15</p>
-        <h2>📊 网速纯净质量报告（剔除任何低于 2MB/s 或延迟异常的节点）</h2>
+        <p style="margin:0;font-size:13px;color:#666;text-align:right;">📅 纯直连更新时间 (北京时间)：2026-07-16 14:19:52</p>
+        <h2>📊 质量监控报告（已物理隔离一切代理中转）</h2>
         <div class="grid-container">
-            <div class="card"><h3 style="color:#6c757d;">原始池节点总数</h3><p>0 个</p></div>
-            <div class="card"><h3 style="color:#198754;">高速达标留存</h3><p style="color:#198754;">0 个</p></div>
-            <div class="card"><h3 style="color:#fd7e14;">全通达标率</h3><p style="color:#fd7e14;">0%</p></div>
-            <div class="card"><h3 style="color:#dc3545;">全网顶配速度</h3><p style="color:#dc3545;">0 MB/s</p></div>
+            <div class="card"><h3 style="color:#6c757d;">原始抓取池</h3><p>0 个</p></div>
+            <div class="card"><h3 style="color:#198754;">纯直连达标数</h3><p style="color:#198754;">0 个</p></div>
+            <div class="card"><h3 style="color:#fd7e14;">直连接通率</h3><p style="color:#fd7e14;">0%</p></div>
+            <div class="card"><h3 style="color:#dc3545;">最快网速峰值</h3><p style="color:#dc3545;">0 MB/s</p></div>
         </div>
     </div>
 
     <div class="report-box">
-        <h2>🌐 高网速节点国别地域分布</h2>
+        <h2>🌐 符合直连限流的地理分布</h2>
         <ul>
             <li>无留存节点</li>
         </ul>
     </div>
 
     <div class="report-box">
-        <h2>🏆 吞吐带宽真实网速排行榜 Top 10（速度从高到低严格降序）</h2>
+        <h2>🏆 吞吐带宽真实网速排行榜 Top 10</h2>
         <table>
             <thead>
-                <tr><th>名次</th><th>节点别名</th><th>区域</th><th>物理真实下载网速</th><th>TCP 握手延迟</th></tr>
+                <tr><th>名次</th><th>节点备注名称</th><th>区域</th><th>物理直连吞吐网速</th><th>TCP 延迟</th></tr>
             </thead>
             <tbody>
-                <tr><td colspan='5'>暂无达标高网速节点</td></tr>
+                <tr><td colspan='5'>暂无达标高网速直连节点</td></tr>
             </tbody>
         </table>
     </div>
     
     <div class="report-box">
-        <h2>⚡ 纯净极速订阅分发链接</h2>
+        <h2>⚡ 纯净直连订阅接口分发</h2>
         <strong>明文链：</strong>
-        <textarea id="sub-url-raw" readonly>https://mid8568.github.io/My-V2Ray-Nodes/nodes.txt?v=1784182335</textarea>
+        <textarea id="sub-url-raw" readonly>https://mid8568.github.io/My-V2Ray-Nodes/nodes.txt?v=1784182792</textarea>
         <button class="copy-btn" onclick="copyUrl('sub-url-raw')">复制高速明文</button>
 
-        <br><strong>Base64 密文订阅：</strong>
-        <textarea id="sub-url-b64" readonly>https://mid8568.github.io/My-V2Ray-Nodes/base64.txt?v=1784182335</textarea>
+        <br><strong>Base64 订阅链接：</strong>
+        <textarea id="sub-url-b64" readonly>https://mid8568.github.io/My-V2Ray-Nodes/base64.txt?v=1784182792</textarea>
         <button class="copy-btn" onclick="copyUrl('sub-url-b64')">复制密文订阅</button>
 
-        <br><strong>Clash 配置：</strong>
-        <textarea id="sub-url-clash" readonly>https://mid8568.github.io/My-V2Ray-Nodes/clash.yaml?v=1784182335</textarea>
+        <br><strong>Clash Meta 专属配置：</strong>
+        <textarea id="sub-url-clash" readonly>https://mid8568.github.io/My-V2Ray-Nodes/clash.yaml?v=1784182792</textarea>
         <button class="copy-btn" style="background-color: #fd7e14;" onclick="copyUrl('sub-url-clash')">复制 Clash 配置</button>
     </div>
 
@@ -75,7 +74,7 @@
             var copyText = document.getElementById(id);
             copyText.select();
             navigator.clipboard.writeText(copyText.value);
-            alert("高速订阅链已复制！");
+            alert("直连订阅链复制成功！");
         }
     </script>
 </body>
