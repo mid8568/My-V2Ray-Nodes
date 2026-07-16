@@ -159,7 +159,7 @@ jobs:
               # 严格排序：优先按分数（x[0]）降序，分数相同时按延迟（x[1]）升序
               results.sort(key=lambda x: (-x[0], x[1]))
 
-              final_nodes = [item[2] for item in results[:1000]]
+              final_nodes = [item[2] for item in results[:200]]
               alive_count = sum(1 for item in results if item[0] > 0)
 
               if len(final_nodes) >= 5:
