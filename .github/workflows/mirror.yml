@@ -57,13 +57,13 @@ jobs:
           YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
          
           urls=(
-            "https://githubusercontent.com{TODAY}2"
-            "https://jsdelivr.net{TODAY}2"
-            "https://githubusercontent.com{TODAY}1"
-            "https://jsdelivr.net{TODAY}1"
-            "https://githubusercontent.com{YESTERDAY}2"
-            "https://githubusercontent.com{YESTERDAY}1"
-          )
+             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
+             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}2"
+             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}1"
+             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}1"
+             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}2"
+             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}1"
+             )
          
           > temp_all_raw.txt
           for url in "${urls[@]}"; do
@@ -176,7 +176,11 @@ jobs:
           EOF
 
           # 去除 Python 脚本中多余的 YAML 前置缩进，使其在容器中能够被 Python 引擎正常执行
-          sed -i 's/^[[:space:]]\{10\}//' score.py
+          sed -i 's/^          //' score.py
+
+          python3 -m py_compile score.py
+
+          python3 score.py
 
           # 执行清洗和检测，若脚本出错(触发熔断)则无条件回滚原备份
           if ! python3 score.py; then
