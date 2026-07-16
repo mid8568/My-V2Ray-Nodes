@@ -250,7 +250,6 @@ jobs:
              | sed -n '1,80p' \
            > nodes.txt
 
-
            else
 
               echo "=== 没有测速结果，使用TCP备用 ==="
@@ -262,17 +261,11 @@ jobs:
 
                  fi
 
-
               echo "最终节点数量:"
                wc -l nodes.txt
           
             echo "【成功】鲜活节点已置顶"
-          else
-            echo "【熔断】所有源失效，回滚备份"
-            if [ -f /tmp/nodes_backup.txt ]; then
-              cp /tmp/nodes_backup.txt nodes.txt
-            fi
-          fi
+ 
           rm -f temp_*
 
       
