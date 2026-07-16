@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>🚀 My V2Ray Nodes Subscription Hub</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; max-width: 850px; margin: 40px auto; padding: 0 20px; background-color: #f8f9fa; color: #212529; }
+        h1 { color: #0d6efd; border-bottom: 2px solid #dee2e6; padding-bottom: 10px; margin-bottom: 5px; }
+        h2 { color: #198754; margin-top: 30px; }
+        .meta-box { background: #fff; border-left: 4px solid #0d6efd; padding: 15px; margin: 20px 0; border-radius: 0 4px 4px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        textarea { width: 100%; height: 50px; padding: 10px; box-sizing: border-box; border: 1px solid #ced4da; border-radius: 4px; background-color: #e9ecef; font-family: monospace; resize: none; margin-top: 10px; }
+        .copy-btn { background-color: #0d6efd; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 5px; font-weight: bold; margin-bottom: 15px; transition: 0.2s; }
+        .copy-btn:hover { background-color: #0b5ed7; }
+        h3 { margin-bottom: 5px; color: #495057; }
+        .sub-desc { font-size: 13px; color: #6c757d; margin-top: -5px; margin-bottom: 5px;}
+    </style>
+</head>
+<body>
+    <h1>🚀 My V2Ray Nodes Hub</h1>
+    <div class="meta-box">
+        <p>⏰ <strong>更新时间 (北京时间)：</strong> 2083-01-28 15:31:44</p>
+        <p>📊 <strong>当前清洗入库节点总数：</strong> <span style="color: #198754; font-weight: bold;">958</span></p>
+        <p>🩺 <strong>上轮并发 TCP 探测握手成功数：</strong> <span style="color: #fd7e14; font-weight: bold;">505</span></p>
+        <p>🌐 <strong>独立服务器 (IP/域名) 数量：</strong> <span style="color: #0d6efd; font-weight: bold;">371</span></p>
+    </div>
+    
+    <h2>⚡ 方案 A：高速通用订阅（带缓存强刷，推荐 Shadowrocket）</h2>
+    <p class="sub-desc">100% 避开 CDN 缓存延迟。</p>
+    
+    <h3>🔗 1. 通用明文 (带强刷)：</h3>
+    <textarea id="sub-url-raw-cache" readonly>https://mid8568.github.io/My-V2Ray-Nodes/nodes.txt?v=1784173552</textarea>
+    <button class="copy-btn" onclick="copyUrl('sub-url-raw-cache')">复制高速明文</button>
+
+    <h3>🔗 2. 通用明文 (标准静态)：</h3>
+    <textarea id="sub-url-raw-std" readonly>https://mid8568.github.io/My-V2Ray-Nodes/nodes.txt</textarea>
+    <button class="copy-btn" style="background-color: #6c757d;" onclick="copyUrl('sub-url-raw-std')">复制标准明文</button>
+
+    <h3>🔗 3. 通用 Base64 密文：</h3>
+    <textarea id="sub-url-b64-cache" readonly>https://mid8568.github.io/My-V2Ray-Nodes/base64.txt?v=1784173552</textarea>
+    <button class="copy-btn" onclick="copyUrl('sub-url-b64-cache')">复制高速密文</button>
+
+    <hr style="border: 0; border-top: 1px dashed #dee2e6; margin: 30px 0;">
+
+    <h2>🛠️ 方案 B：专属客户端一键配置</h2>
+    <p class="sub-desc">免去转换烦恼，本地 100% 实时闭环渲染生成的客户端配置文件。</p>
+
+    <h3>🔗 1. Clash Meta YAML 专用配置订阅：</h3>
+    <textarea id="sub-url-clash" readonly>https://mid8568.github.io/My-V2Ray-Nodes/clash.yaml?v=1784173552</textarea>
+    <button class="copy-btn" style="background-color: #fd7e14;" onclick="copyUrl('sub-url-clash')">复制 Clash 配置</button>
+
+    <h3>🔗 2. sing-box JSON 专用配置订阅：</h3>
+    <textarea id="sub-url-singbox" readonly>https://mid8568.github.io/My-V2Ray-Nodes/singbox.json?v=1784173552</textarea>
+    <button class="copy-btn" style="background-color: #6f42c1;" onclick="copyUrl('sub-url-singbox')">复制 sing-box 配置</button>
+
+    <script>
+        function copyUrl(id) {
+            var copyText = document.getElementById(id);
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value).then(() => {
+                alert("链接已成功复制到剪贴板！");
+            }).catch(() => {
+                alert("复制失败，请手动选择复制。");
+            });
+        }
+    </script>
+</body>
+</html>
