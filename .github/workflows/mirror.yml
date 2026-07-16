@@ -32,7 +32,7 @@ jobs:
         run: |
           set -euo pipefail
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
-          TEST_URL="https://githubusercontent.com{TODAY}2"
+          TEST_URL="https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
           echo "=== 正在探测今日上游 Raw 路径可用性 ==="
           curl -I -s -A "Mozilla/5.0" -o /dev/null -w "HTTP 状态码: %{http_code}\n" "$TEST_URL" || true
 
@@ -202,7 +202,20 @@ jobs:
               # 严格排序：优先按分数（x[0]）降序，分数相同时按延迟（x[1]）升序
               results.sort(key=lambda x: (-x[0], x[1]))
 
-              final_nodes = [item[2] for item in results[:200]]
+              MAX_NODES = 200
+
+              alive_results = [
+              item for item in results
+              if item[0] > 0
+                                    ]
+                alive_results.sort(
+               key=lambda x: (-x[0], x[1])
+                 )
+              final_nodes = [
+                  item[2]
+                   for item in alive_results[:MAX_NODES]
+                    ]
+                    
               alive_count = sum(1 for item in results if item[0] > 0)
 
               if len(final_nodes) >= 5:
@@ -221,8 +234,6 @@ jobs:
           # 去除 Python 脚本中多余的 YAML 前置缩进，使其在容器中能够被 Python 引擎正常执行
           
           python3 -m py_compile score.py
-
-          python3 score.py
 
           # 执行清洗和检测，若脚本出错(触发熔断)则无条件回滚原备份
           if ! python3 score.py; then
