@@ -1,13 +1,1 @@
-{
-  "outbounds": [
-    {
-      "type": "selector",
-      "tag": "proxy",
-      "outbounds": ["direct"]
-    },
-    {
-      "type": "direct",
-      "tag": "direct"
-    }
-  ]
-}
+{"outbounds":[]}
