@@ -1,5 +1,10 @@
 cat > score.py << 'EOF'
-import sys, asyncio, re, base64, time
+
+import sys
+import asyncio
+import re
+import base64
+import time
 
 PROTOCOL_REGEX = re.compile(
     r'^(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://',
