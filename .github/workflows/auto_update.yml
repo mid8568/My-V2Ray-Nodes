@@ -27,7 +27,10 @@ jobs:
           pip install requests
 
       - name: 执行脚本
-        run: python fetch_nodes.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 注入官方内置绿色通行令牌
+        run: |
+          python fetch_nodes.py
 
       - name: 提交更新
         run: |
