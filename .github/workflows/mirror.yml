@@ -1,4 +1,4 @@
-name: Repo Auto Mirror Sync - V5.3 Fortress Pro
+name: Repo Auto Mirror Sync
 
 on:
   workflow_dispatch:
@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: 3. 安全提取、Python Asyncio 高并发测速与动态权重排序
+      - name: 3. 安全提取、Python Asyncio 高并发测速并清除无效节点
         run: |
           set -euo pipefail
           
@@ -46,7 +46,7 @@ jobs:
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
           YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
           
-          # 构建核心测速与过滤脚本
+          # 构建核心测速、严格过滤与清除脚本
           cat > speed_test.py << 'EOF'
           import asyncio
           import re
@@ -63,11 +63,9 @@ jobs:
                   return None
               clean_uri = line.split('#')[0]
               
-              # 处理非标准但常见的各种协议连接串主机定位
               host, port = None, None
               if '@' in clean_uri:
                   right_part = clean_uri.split('@')[-1]
-                  # 兼容带用户认证后的主机端口提取
                   host_port_match = re.search(r'([^/\\?#]+):([0-9]+)', right_part)
                   if host_port_match:
                       host = host_port_match.group(1).strip("[]")
@@ -92,7 +90,7 @@ jobs:
               host = node["host"]
               port = node["port"]
               
-              # IPv6 修复机制：若包含冒号且未被中括号包裹，自动补全
+              # IPv6 修复机制
               if ":" in host and not host.startswith("["):
                   conn_host = f"[{host}]"
               else:
@@ -100,20 +98,20 @@ jobs:
                   
               start_time = time.time()
               try:
-                  # 使用 asyncio 核心异步建立握手
+                  # 使用 asyncio 核心异步建立握手，连不上直接抛出异常
                   reader, writer = await asyncio.wait_for(
                       asyncio.open_connection(conn_host, port), timeout=timeout
                   )
                   writer.close()
                   await writer.wait_closed()
-                  delay = (time.time() - start_time) * 1000  # 转换为毫秒
+                  delay = (time.time() - start_time) * 1000
                   
-                  # 严格过滤：去掉 999ms 垃圾节点
+                  # 严格过滤：去掉 999ms 垃圾节点，无效或超时节点在此处被过滤（返回 None）
                   if delay < 999:
-                      # 延迟 + 随机权重排序公式 (0-50ms随机扰动)
                       weight = delay + random.uniform(0, 50)
                       return {"line": node["line"], "delay": delay, "weight": weight}
               except:
+                  # 捕获所有连接失败、拒绝、超时错误，判定为无效节点
                   pass
               return None
 
@@ -131,6 +129,7 @@ jobs:
                       tasks.append(test_node(node_info))
                       
               results = await asyncio.gather(*tasks)
+              # 核心清洗：只保留非 None 的有效活节点，无效节点在这里被彻底从列表中删除
               valid_nodes = [r for r in results if r is not None]
               
               # 根据计算的动态权重升序排列
@@ -169,7 +168,6 @@ jobs:
               sed -i '1s/^\xEF\xBB\xBF//' temp_src.txt
               if grep -qi "<html" temp_src.txt; then continue; fi
               
-              # Base64 解密适配
               if ! grep -E -q "^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://" temp_src.txt; then
                 if tr -d '\r\n\t ' < temp_src.txt | base64 -d > decoded_src.txt 2>/dev/null; then
                   mv decoded_src.txt temp_src.txt
@@ -182,24 +180,25 @@ jobs:
             fi
           done
 
-          # 去重去杂质
+          # 去重去杂质并执行测速删除
           if [ -s temp_all_raw.txt ]; then
             awk '!seen[$0]++' temp_all_raw.txt > temp_clean_raw.txt
             
-            echo "=== ⚙️ 启动 Python Asyncio 并发测速引擎 ==="
+            echo "=== ⚙️ 启动 Python Asyncio 并发测速并剔除死节点 ==="
             python3 speed_test.py < temp_clean_raw.txt > temp_final_nodes.txt || touch temp_final_nodes.txt
             
             NODE_COUNT=$(wc -l < temp_final_nodes.txt || echo 0)
+            # 设置阈值：只有筛选出的有效节点数 >= 3 时才允许覆盖落盘，防止因网络波动删光所有节点
             if [ "$NODE_COUNT" -ge 3 ]; then
               mv temp_final_nodes.txt nodes.txt
               success=true
-              echo "【重排成功】共有 $NODE_COUNT 个优秀节点落盘。"
+              echo "【清洗完成】已剔除所有无效/慢节点，共有 $NODE_COUNT 个优质节点落盘。"
             fi
           fi
           
           # 熔断恢复机制
           if [ "$success" = false ]; then
-            echo "【⚠️ 安全熔断】高质量活节点不足！正在回滚保持上一次版本..."
+            echo "【⚠️ 安全熔断】本次未检测到足够的有效活节点！正在回滚保持上一次版本，防止空壳..."
             if [ -f /tmp/nodes_backup.txt ]; then
               cp /tmp/nodes_backup.txt nodes.txt
             else
@@ -225,7 +224,7 @@ jobs:
           set -euo pipefail
           base64 -w 0 nodes.txt > base64.txt
 
-      - name: 6. 恢复 Subconverter 安全订阅转换与启动健康检查
+      - name: 6. Subconverter 安全订阅转换与健康检查
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
@@ -237,13 +236,10 @@ jobs:
           API_BACKUP="https://api.v1.mk"
           SELECTED_API=""
 
-          # 💡 修正 5：Subconverter 启动健康检查函数
           check_api_health() {
             local base_url="$1"
-            # 探测基础网关是否存活，限制超时时间为5秒
             local status
             status=$(curl -sL -o /dev/null -w "%{http_code}" --connect-timeout 5 --max-time 8 "${base_url}" || echo "500")
-            # 200 到 450 之间均视作网关响应（排除 5xx 服务端崩溃）
             if [ "$status" -ge 200 ] && [ "$status" -lt 450 ]; then
               return 0
             else
@@ -331,7 +327,7 @@ jobs:
               <h1>🚀 My V2Ray Nodes Hub</h1>
               <div class="meta-box">
                   <p>⏰ <strong>更新时间 (北京时间)：</strong> ${BEIJING_TIME}</p>
-                  <p>📊 <strong>纯净筛选高动态排序节点总数：</strong> <span style="color: #198754; font-weight: bold;">${TOTAL_COUNT}</span></p>
+                  <p>📊 <strong>纯净筛选高动态排序节点总数（已完全剔除无效）：</strong> <span style="color: #198754; font-weight: bold;">${TOTAL_COUNT}</span></p>
                   <p>🌐 <strong>去重独立节点服务器数量：</strong> <span style="color: #0d6efd; font-weight: bold;">${IP_COUNT}</span></p>
               </div>
               
@@ -344,7 +340,7 @@ jobs:
               <textarea id="sub-url-b64-cache" readonly>${BASE_PAGE_URL}/base64.txt?v=${CACHE_ID}</textarea>
               <button class="copy-btn" onclick="copyUrl('sub-url-b64-cache')">复制密文订阅</button>
 
-              <h2>🛠️ 方案 B：专属客户端配置订阅 (健康熔断保护)</h2>
+              <h2>🛠️ 方案 B：专属客户端配置订阅 (健康转换)</h2>
               <h3>🔗 1. Clash Meta YAML 专用配置链接：</h3>
               <textarea id="sub-url-clash" readonly>${BASE_PAGE_URL}/clash.yaml?v=${CACHE_ID}</textarea>
               <button class="copy-btn" style="background-color: #fd7e14;" onclick="copyUrl('sub-url-clash')">复制 Clash 配置</button>
