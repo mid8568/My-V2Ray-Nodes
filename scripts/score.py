@@ -7,18 +7,20 @@ import base64
 import time
 
 
-  PROTOCOL_REGEX = re.compile(
-      r'^(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://',
-      re.IGNORECASE
-    )
+PROTOCOL_REGEX = re.compile(
+    r'^(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://',
+    re.IGNORECASE
+)
 
 
-  HOST_PORT_REGEX = re.compile(
-      r'://[^@]*@?([\w\.\-\[\]:]+):(\d+)'
-  )
+HOST_PORT_REGEX = re.compile(
+    r'://[^@]*@?([\w\.\-\[\]:]+):(\d+)'
+)
 
-  def decode_base64_safe(data):
-      try:
+
+def decode_base64_safe(data):
+
+    try:
         cleaned = re.sub(r'[\r\n\t ]', '', data)
 
         padding = len(cleaned) % 4
@@ -26,16 +28,18 @@ import time
         if padding:
             cleaned += '=' * (4 - padding)
 
-        return base64.b64decode(cleaned).decode(
+        return base64.b64decode(
+            cleaned
+        ).decode(
             'utf-8',
             errors='ignore'
         )
 
-      except:
-          return ""
+    except:
+        return ""
 
 
-  async def test_tcp_node(line, sem):
+async def test_tcp_node(line, sem):
 
     async with sem:
 
@@ -44,10 +48,11 @@ import time
         match = HOST_PORT_REGEX.search(clean_line)
 
         if not match:
-            return (0,9999,line)
+            return (0, 9999, line)
 
 
         host = match.group(1)
+
         port = int(match.group(2))
 
 
@@ -61,13 +66,16 @@ import time
 
 
             reader, writer = await asyncio.wait_for(
-                asyncio.open_connection(host,port),
+                asyncio.open_connection(
+                    host,
+                    port
+                ),
                 timeout=3
             )
 
 
-            delay=int(
-                (time.perf_counter()-start)*1000
+            delay = int(
+                (time.perf_counter() - start) * 1000
             )
 
 
@@ -76,11 +84,11 @@ import time
             await writer.wait_closed()
 
 
-            score=max(
+            score = max(
                 10,
                 min(
                     100,
-                    4500//(delay+25)
+                    4500 // (delay + 25)
                 )
             )
 
@@ -101,37 +109,52 @@ import time
             )
 
 
-  async def main():
 
-      with open(
-          'temp_all_raw.txt',
-          'r',
-          encoding='utf-8',
-          errors='ignore'
-      ) as f:
-
-          raw=f.read()
+async def main():
 
 
+    try:
 
-     if not PROTOCOL_REGEX.search(raw):
+        with open(
+            'temp_all_raw.txt',
+            'r',
+            encoding='utf-8',
+            errors='ignore'
+        ) as f:
 
-        decoded=decode_base64_safe(raw)
+            raw = f.read()
+
+
+    except Exception as e:
+
+        print(
+            "读取失败:",
+            e
+        )
+
+        sys.exit(1)
+
+
+
+    if not PROTOCOL_REGEX.search(raw):
+
+        decoded = decode_base64_safe(raw)
 
         if PROTOCOL_REGEX.search(decoded):
 
-            raw=decoded
+            raw = decoded
 
 
 
-    seen=set()
+    seen = set()
 
-    nodes=[]
+    nodes = []
+
 
 
     for line in raw.splitlines():
 
-        line=line.strip()
+        line = line.strip()
 
 
         if not line:
@@ -154,7 +177,8 @@ import time
             continue
 
 
-        key=line.split('#')[0]
+
+        key = line.split('#')[0]
 
 
         if key not in seen:
@@ -172,35 +196,53 @@ import time
 
 
 
-    if len(nodes)==0:
+    if len(nodes) == 0:
 
         sys.exit(1)
 
 
 
-    sem=asyncio.Semaphore(100)
+    sem = asyncio.Semaphore(100)
 
 
-    tasks=[
-        test_tcp_node(n,sem)
+    tasks = [
+        test_tcp_node(
+            n,
+            sem
+        )
         for n in nodes
     ]
 
 
-    results=await asyncio.gather(*tasks)
+
+    results = await asyncio.gather(
+        *tasks
+    )
 
 
 
-    results=[
-        x for x in results
-        if x[0]>0
+    # 删除测速失败节点
+
+    results = [
+        x
+        for x in results
+        if x[0] > 0
     ]
 
 
 
+    # 按速度排序
+
     results.sort(
-        key=lambda x:(-x[0],x[1])
+        key=lambda x: (
+            -x[0],
+            x[1]
+        )
     )
+
+
+
+    MAX_NODES = 200
 
 
 
@@ -210,7 +252,7 @@ import time
         encoding='utf-8'
     ) as f:
 
-        for score,delay,node in results:
+        for score, delay, node in results:
 
             f.write(
                 f"{delay}|{node}\n"
@@ -224,10 +266,10 @@ import time
         encoding='utf-8'
     ) as f:
 
-        for score,delay,node in results[:200]:
+        for score, delay, node in results[:MAX_NODES]:
 
             f.write(
-                node+'\n'
+                node + '\n'
             )
 
 
@@ -238,10 +280,17 @@ import time
     )
 
 
+    print(
+        "最终输出:",
+        min(len(results), MAX_NODES)
+    )
 
-if __name__=="__main__":
+
+
+if __name__ == "__main__":
 
     asyncio.run(main())
 
 PYEOF
+
 python3 -m py_compile score.py
