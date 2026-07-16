@@ -22,18 +22,22 @@ def parse_node(uri):
         u = urllib.parse.urlparse(uri)
 
         query = urllib.parse.parse_qs(u.query)
-        
-        host=query.get("host",[""])[0]
-        sni=query.get("sni",[""])[0]
-        path=query.get("path",[""])[0]
 
 
-        if query.get("type",[""])[0]=="ws":
+        host = query.get("host", [""])[0]
+        sni = query.get("sni", [u.hostname])[0]
+        path = query.get("path", [""])[0]
 
-             if not host or not sni or not path:
-                 return None
+
+        if query.get("type", [""])[0] == "ws":
+
+            if not host or not sni or not path:
+                return None
+
+
 
         return {
+
             "type": "vless",
 
             "tag": "node",
@@ -44,9 +48,30 @@ def parse_node(uri):
 
             "uuid": u.username,
 
-            "flow": query.get("flow", [""])[0],
-            
-            "tls": {...}
+
+            "flow":
+                query.get("flow", [""])[0],
+
+
+            "tls": {
+
+                "enabled":
+                    query.get("security", [""])[0] == "tls",
+
+
+                "server_name":
+                    sni,
+
+
+                "utls": {
+
+                    "enabled": True,
+
+                    "fingerprint":
+                        query.get("fp",
+                        ["chrome"])[0]
+
+                }
 
             },
 
@@ -59,16 +84,12 @@ def parse_node(uri):
 
 
                 "path":
-                    urllib.parse.unquote(
-                    query.get("path",
-                    [""])[0]),
+                    urllib.parse.unquote(path),
 
 
                 "headers": {
 
-                    "Host":
-                    query.get("host",
-                    [u.hostname])[0]
+                    "Host": host
 
                 }
 
