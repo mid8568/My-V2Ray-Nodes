@@ -8,6 +8,10 @@ import time
 import os
 
 
+# =====================
+# 节点解析
+# =====================
+
 def parse_node(uri):
 
     uri = uri.strip()
@@ -24,14 +28,29 @@ def parse_node(uri):
         query = urllib.parse.parse_qs(u.query)
 
 
-        host = query.get("host", [""])[0]
-        sni = query.get("sni", [u.hostname])[0]
-        path = query.get("path", [""])[0]
+        host = query.get(
+            "host",
+            [u.hostname]
+        )[0]
 
 
+        sni = query.get(
+            "sni",
+            [u.hostname]
+        )[0]
+
+
+        path = query.get(
+            "path",
+            [""]
+        )[0]
+
+
+        # WS节点必须有参数
         if query.get("type", [""])[0] == "ws":
 
             if not host or not sni or not path:
+
                 return None
 
 
@@ -50,13 +69,19 @@ def parse_node(uri):
 
 
             "flow":
-                query.get("flow", [""])[0],
+                query.get(
+                    "flow",
+                    [""]
+                )[0],
 
 
             "tls": {
 
                 "enabled":
-                    query.get("security", [""])[0] == "tls",
+                    query.get(
+                        "security",
+                        [""]
+                    )[0] == "tls",
 
 
                 "server_name":
@@ -68,8 +93,10 @@ def parse_node(uri):
                     "enabled": True,
 
                     "fingerprint":
-                        query.get("fp",
-                        ["chrome"])[0]
+                        query.get(
+                            "fp",
+                            ["chrome"]
+                        )[0]
 
                 }
 
@@ -79,12 +106,16 @@ def parse_node(uri):
             "transport": {
 
                 "type":
-                    query.get("type",
-                    ["tcp"])[0],
+                    query.get(
+                        "type",
+                        ["tcp"]
+                    )[0],
 
 
                 "path":
-                    urllib.parse.unquote(path),
+                    urllib.parse.unquote(
+                        path
+                    ),
 
 
                 "headers": {
@@ -108,8 +139,9 @@ def parse_node(uri):
 
         u = urllib.parse.urlparse(uri)
 
-
-        query = urllib.parse.parse_qs(u.query)
+        query = urllib.parse.parse_qs(
+            u.query
+        )
 
 
         return {
@@ -130,8 +162,10 @@ def parse_node(uri):
                 "enabled":True,
 
                 "server_name":
-                query.get("sni",
-                [u.hostname])[0]
+                    query.get(
+                        "sni",
+                        [u.hostname]
+                    )[0]
 
             }
 
@@ -147,19 +181,25 @@ def parse_node(uri):
 
         try:
 
-            raw=uri[5:].split("#")[0]
+            raw = uri[5:].split("#")[0]
 
 
-            data=base64.urlsafe_b64decode(
-                raw+"=="
+            raw += "=" * (
+                -len(raw) % 4
+            )
+
+
+            data = base64.urlsafe_b64decode(
+                raw
             ).decode()
 
 
-            method,password_host=data.split("@")
+            method_password, server = data.split("@")
 
-            method,password=method.split(":")
+            method, password = method_password.split(":")
 
-            host,port=password_host.split(":")
+
+            host, port = server.split(":")
 
 
             return {
@@ -179,7 +219,7 @@ def parse_node(uri):
             }
 
 
-        except:
+        except Exception:
 
             return None
 
@@ -191,25 +231,40 @@ def parse_node(uri):
 
 
 
+# =====================
+# 真实代理测速
+# =====================
+
 def test_proxy(node):
+
+
+    filename = None
+
+    process = None
 
 
     try:
 
 
-        config=parse_node(node)
-        
+        config = parse_node(node)
+
+
         if not config:
+
             return None
 
 
-        import random
 
-        port=random.randint(20000,30000)
+        port = (
+            20000
+            +
+            int(time.time()*1000)
+            %5000
+        )
 
 
 
-        singbox_config={
+        singbox_config = {
 
 
             "log":{
@@ -265,7 +320,9 @@ def test_proxy(node):
 
 
             filename=f.name
-            
+
+
+
 
         process=subprocess.Popen(
 
@@ -281,24 +338,35 @@ def test_proxy(node):
 
             ],
 
-            stdout=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+
             stderr=subprocess.PIPE
 
         )
 
 
 
+        # 等待sing-box启动
+
         time.sleep(2)
-        
+
+
+
         if process.poll() is not None:
-            
-           err=process.stderr.read().decode()
-            
-           print(err[:500])
-            
-           process.kill()
-            
-           return None
+
+
+            err = process.stderr.read().decode()
+
+
+            print(
+                "sing-box失败:",
+                err[:200]
+            )
+
+
+            return None
+
+
 
 
         start=time.time()
@@ -313,16 +381,14 @@ def test_proxy(node):
 
 
                 "http":
-
                 f"socks5h://127.0.0.1:{port}",
 
 
                 "https":
-
                 f"socks5h://127.0.0.1:{port}"
 
-
             },
+
 
             timeout=5
 
@@ -332,32 +398,65 @@ def test_proxy(node):
 
         delay=int(
 
-            (time.time()-start)*1000
+            (time.time()-start)
+            *1000
 
         )
-
-
-        process.kill()
-
-        os.remove(filename)
 
 
 
         if r.status_code in [200,204]:
 
+
             return delay
 
 
 
-except Exception as e:
-
-    print("测速错误:",e)
-
-    return None
+        return None
 
 
 
+    except Exception as e:
 
+
+        print(
+            "测速错误:",
+            e
+        )
+
+
+        return None
+
+
+
+    finally:
+
+
+        if process:
+
+
+            try:
+
+                process.kill()
+
+            except:
+
+                pass
+
+
+
+        if filename and os.path.exists(filename):
+
+            os.remove(filename)
+
+
+
+
+
+
+# =====================
+# 批量测速
+# =====================
 
 
 input_file="clean_nodes.txt"
@@ -394,11 +493,8 @@ with open(
 
 
         print(
-
             "测试:",
-
-            node[:60]
-
+            node[:70]
         )
 
 
@@ -411,13 +507,9 @@ with open(
 
 
             print(
-
                 "成功",
-
                 delay,
-
                 "ms"
-
             )
 
 
@@ -432,11 +524,8 @@ with open(
 
 
             print(
-
                 "失败"
-
             )
-
 
 
 
@@ -448,6 +537,7 @@ results.sort(
     )
 
 )
+
 
 
 
@@ -464,23 +554,20 @@ with open(
 
     for item in results:
 
-        f.write(item+"\n")
+        f.write(
+            item+"\n"
+        )
 
 
 
 print("================")
 
 print(
-
     "生成 speed_rank.txt"
-
 )
 
 
 print(
-
     "有效节点:",
-
     len(results)
-
 )
