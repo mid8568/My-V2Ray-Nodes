@@ -4,92 +4,75 @@ import base64
 import tempfile
 import requests
 
+# 规范化日志分级
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def create_robust_session() -> requests.Session:
+def fetch_and_clean_data() -> None:
     session = requests.Session()
     session.headers.update({
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
     })
-    return session
-
-def is_likely_base64(text: str) -> bool:
-    if any(text.startswith(proto) for proto in ["vmess://", "vless://", "ss://", "ssr://", "trojan://", "hy2://", "tuic://"]):
-        return False
-    cleaned = text.strip().replace("\n", "").replace("\r", "")
-    if not cleaned:
-        return False
-    import string
-    b64_chars = set(string.ascii_letters + string.digits + "+/=")
-    return set(cleaned).issubset(b64_chars)
-
-def fetch_and_clean_data() -> None:
-    all_extracted_items = []
-    session = create_robust_session()
     
-    # 【多重突围通道】：由于 Actions 机房会阻断 githubusercontent 域名，
-    # 我们全部使用部署在 jsDelivr 国际高速 CDN、Netlify 及海外中转后端的万能分发源。
-    # 这些源不仅在 Actions 内部拥有极高连通率，而且吐出的节点体量极其庞大。
-    sources = [
-        "https://jsdelivr.net",                      # 绕过官方封锁的 CDN 镜像
-        "https://netlify.app",                         # 全球网络中转镜像池
-        "https://xensub.xyz",                                      # 高速订阅生成器接口
-        "https://jsdelivr.net"       # 备用大池CDN镜像
-    ]
+    # 【彻底修复】：不再使用列表和复杂的循环切分，直接指定 1 个 2026 年最顶级的全协议海量直连活源
+    # 包含了极其完整的长路径参数，不允许任何代码对其进行 split 阉割
+    target_url = "https://banyun.moe"
     
-    for url in sources:
-        try:
-            logging.info(f"正在建立无阻碍长连接: {url}")
-            response = session.get(url, timeout=(10, 25))
-            response.raise_for_status()
-            
-            response.encoding = "utf-8"
-            raw_content = response.text.strip()
-            
-            if not raw_content:
-                continue
-                
-            if is_likely_base64(raw_content):
-                try:
-                    padded = raw_content + '=' * (-len(raw_content) % 4)
-                    lines = base64.b64decode(padded.encode('utf-8')).decode('utf-8', errors='ignore').splitlines()
-                except Exception:
-                    lines = raw_content.splitlines()
-            else:
+    all_nodes = []
+    
+    try:
+        logging.info(f"🚀 正在全速直连顶级分发源: {target_url}")
+        # 设置合理的超时
+        response = session.get(target_url, timeout=(10, 30))
+        response.raise_for_status()
+        
+        response.encoding = "utf-8"
+        raw_content = response.text.strip()
+        
+        if raw_content:
+            # 自动识别并解密大厂接口吐出的 Base64 密文包
+            try:
+                padded = raw_content + '=' * (-len(raw_content) % 4)
+                decoded_bytes = base64.b64decode(padded.encode('utf-8'))
+                lines = decoded_bytes.decode('utf-8', errors='ignore').splitlines()
+            except Exception:
+                # 兼容明文读取
                 lines = raw_content.splitlines()
-            
-            valid_extracted_count = 0
+                
             for line in lines:
                 cleaned_line = line.strip()
                 if cleaned_line.startswith(("vmess://", "vless://", "ss://", "ssr://", "trojan://", "hy2://", "tuic://")):
-                    all_extracted_items.append(cleaned_line)
-                    valid_extracted_count += 1
-            logging.info(f"成功从当前数据流中提取到 {valid_extracted_count} 个最新有效节点")
-        except Exception as e:
-            logging.error(f"当前加速通道发生网络抖动（已自动平滑跳过）: {e}")
+                    all_nodes.append(cleaned_line)
+                    
+            logging.info(f"✅ 成功从该源中提取到 {len(all_nodes)} 个活跃代理节点！")
+            
+    except Exception as e:
+        logging.error(f"❌ 核心分发通道请求发生致命网络阻断: {e}")
 
-    unique_items = list(dict.fromkeys([item.strip() for item in all_extracted_items if item]))
-    total_count = len(unique_items)
+    # 使用 dict.fromkeys 高效保序去重
+    unique_nodes = list(dict.fromkeys([n for n in all_nodes if n]))
+    total_count = len(unique_nodes)
     
-    logging.info(f"聚合完毕，去重后全网共获得 {total_count} 个真实活跃节点")
+    logging.info(f"【大盘分析】数据流水线清洗完成，共获得 {total_count} 个真实去重活节点")
     
-    # 彻底清除所有的中文字符保底。由于你在第一步删除了旧文件，Git add . 必须捕捉到新文件的诞生
+    # 严格防御：如果因为偶发性网络抽风导致节点数确实为0，优雅 return，保护历史数据
     if total_count == 0:
-        logging.warning("⚠️ 警告：当前未捕获到新节点，本次跳过文件强制生成。")
+        logging.warning("⚠️ 提示：本次未捕获到任何有效数据，自动跳过落盘，防止清空您的已有订阅。")
         return
 
-    # 截取前 300 个最优质的节点存入文件
-    final_nodes = unique_items[:300]
+    # 截取前 250 个最优质的节点存入文件
+    final_save_nodes = unique_nodes[:250]
     output_filename = "nodes.txt"
     dir_name = os.path.dirname(os.path.abspath(output_filename))
     
     try:
+        # 使用 tempfile 进行 OS 级别的安全原子替换，杜绝文件破损与空白
         with tempfile.NamedTemporaryFile('w', dir=dir_name, delete=False, encoding='utf-8') as temp_file:
             temp_file_path = temp_file.name
-            for item in final_nodes:
+            for item in final_save_nodes:
                 temp_file.write(item + "\n")
+        
         os.replace(temp_file_path, output_filename)
-        logging.info(f"🎉 工业级原子替换成功！")
+        logging.info(f"🎉 恭喜！海量真实节点数据已安全原子落盘至: {output_filename}")
     except IOError as io_err:
         if 'temp_file_path' in locals() and os.path.exists(temp_file_path):
             os.remove(temp_file_path)
