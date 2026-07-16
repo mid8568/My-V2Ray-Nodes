@@ -232,8 +232,6 @@ jobs:
           EOF
 
           # 去除 Python 脚本中多余的 YAML 前置缩进，使其在容器中能够被 Python 引擎正常执行
-
-          sed -i 's/^[[:space:]]\{10\}//' score.py
           
           python3 -m py_compile score.py
 
