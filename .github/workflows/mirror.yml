@@ -1,0 +1,29 @@
+name: Repo Auto Mirror Sync
+
+on:
+  workflow_dispatch: # 强行启用手动触发按钮
+
+jobs:
+  mirror-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出本地仓库
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 强行拉取并重置对齐目标大库
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          
+          # 1. 强行把 1.3w 星的大库添加为你的数据源
+          git remote add target_repo https://github.com
+          git fetch target_repo main
+          
+          # 2. 暴力重置：无视你仓库里以前的任何空节点、老脚本，将本地直接荡平重改成和对方一模一样
+          git checkout main
+          git reset --hard target_repo/main
+          
+          # 3. 暴力死推回你自己的首页
+          git push --force origin main
