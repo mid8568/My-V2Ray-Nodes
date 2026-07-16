@@ -1,10 +1,10 @@
-cat > score.py << 'EOF'
+cat > score.py << 'PYEOF'
 
-  import sys
-  import asyncio
-  import re
-  import base64
-  import time
+import sys
+import asyncio
+import re
+import base64
+import time
 
 
   PROTOCOL_REGEX = re.compile(
@@ -17,9 +17,8 @@ cat > score.py << 'EOF'
       r'://[^@]*@?([\w\.\-\[\]:]+):(\d+)'
   )
 
-
   def decode_base64_safe(data):
-    try:
+      try:
         cleaned = re.sub(r'[\r\n\t ]', '', data)
 
         padding = len(cleaned) % 4
@@ -32,8 +31,8 @@ cat > score.py << 'EOF'
             errors='ignore'
         )
 
-    except:
-        return ""
+      except:
+          return ""
 
 
   async def test_tcp_node(line, sem):
@@ -115,7 +114,7 @@ cat > score.py << 'EOF'
 
 
 
-    if not PROTOCOL_REGEX.search(raw):
+     if not PROTOCOL_REGEX.search(raw):
 
         decoded=decode_base64_safe(raw)
 
@@ -225,7 +224,7 @@ cat > score.py << 'EOF'
         encoding='utf-8'
     ) as f:
 
-        for score,delay,node in results[:300]:
+        for score,delay,node in results[:200]:
 
             f.write(
                 node+'\n'
@@ -244,4 +243,5 @@ if __name__=="__main__":
 
     asyncio.run(main())
 
-EOF
+PYEOF
+python3 -m py_compile score.py
