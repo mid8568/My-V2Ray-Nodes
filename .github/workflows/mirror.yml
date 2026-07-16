@@ -235,6 +235,8 @@ jobs:
            echo "=== 开始真实代理测速 ==="
 
            mkdir -p singbox_test
+           
+           rm -f speed_rank.txt
 
            python3 scripts/node_parser.py
 
