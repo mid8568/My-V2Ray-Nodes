@@ -28,104 +28,152 @@ jobs:
         run: |
           set -euo pipefail
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
-          TEST_URL="https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
+          TEST_URL="https://githubusercontent.com{TODAY}2"
           echo "=== 正在探测今日上游 Raw 路径可用性 ==="
           curl -I -s -A "Mozilla/5.0" -o /dev/null -w "HTTP 状态码: %{http_code}\n" "$TEST_URL" || true
 
-      - name: 3. 安全提取、高并发双源灾备、TCP 测速与置顶排序
+      - name: 3. 安全提取、本地高效清洗与并发测速置顶排序
         run: |
           set -euo pipefail
          
+          # 配置临时文件的 .gitignore，防止垃圾文件被提交
           touch .gitignore
-          for item in "temp_*" "decoded_*" "*.bak" "tcp_alive_nodes.txt" "clean_nodes.txt" "verified_temp.txt"; do
+          for item in "temp_*" "*.bak" "score.py" "local_convert.py"; do
             grep -qxF "$item" .gitignore || echo "$item" >> .gitignore
           done
          
           if [ -f nodes.txt ]; then
             cp nodes.txt /tmp/nodes_backup.txt
             echo "【事务安全】已备份当前节点"
+          else
+            touch /tmp/nodes_backup.txt
           fi
          
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
           YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
          
           urls=(
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
-            "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}2"
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}1"
-            "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}1"
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}2"
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}1"
+            "https://githubusercontent.com{TODAY}2"
+            "https://jsdelivr.net{TODAY}2"
+            "https://githubusercontent.com{TODAY}1"
+            "https://jsdelivr.net{TODAY}1"
+            "https://githubusercontent.com{YESTERDAY}2"
+            "https://githubusercontent.com{YESTERDAY}1"
           )
          
-          success=false
-          PROTOCOL_REGEX="^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://"
-         
+          > temp_all_raw.txt
           for url in "${urls[@]}"; do
-            echo "尝试数据源 -> $url"
-            rm -f temp_nodes.txt decoded_nodes.txt
-           
-            temp_code=$(curl -A "Mozilla/5.0" -sL --connect-timeout 10 --max-time 20 -o temp_nodes.txt -w "%{http_code}" "$url" || true)
-           
-            if [ "$temp_code" = "200" ] && [ "$(wc -c < temp_nodes.txt || echo 0)" -gt 200 ]; then
-              sed -i '1s/^\xEF\xBB\xBF//' temp_nodes.txt
-             
-              if grep -qi "<html" temp_nodes.txt 2>/dev/null; then continue; fi
-             
-              if ! grep -E -q "${PROTOCOL_REGEX}" temp_nodes.txt 2>/dev/null; then
-                if tr -d '\r\n\t ' < temp_nodes.txt | base64 -d > decoded_nodes.txt 2>/dev/null; then
-                  mv decoded_nodes.txt temp_nodes.txt
-                else
-                  continue
-                fi
-              fi
-             
-              sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
-              awk '!seen[$0]++' temp_nodes.txt > clean_nodes.txt && mv clean_nodes.txt temp_nodes.txt
-             
-              echo "=== 启动 TCP 探测 ==="
-              > verified_temp.txt
-              while IFS= read -r line || [ -n "$line" ]; do
-                if [ -n "$line" ]; then
-                  clean_uri=$(echo "$line" | cut -d'#' -f1)
-                  if echo "$clean_uri" | grep -q "@.*:[0-9]"; then
-                    host_port=$(echo "$clean_uri" | grep -oE '(@|\[)[a-zA-Z0-9.:-]+:[0-9]+' | tr -d '@' | tail -n1 || true)
-                    if [ -n "$host_port" ]; then
-                      if [[ "$host_port" =~ ^\[(.*)\]:([0-9]+)$ ]]; then
-                        host="${BASH_REMATCH[1]}"
-                        port="${BASH_REMATCH[2]}"
-                      else
-                        host="${host_port%:*}"
-                        port="${host_port##*:}"
-                      fi
-                      if timeout 2 bash -c "</dev/tcp/$host/$port" 2>/dev/null; then
-                        echo "$line" >> verified_temp.txt
-                      fi
-                    fi
-                  fi
-                fi
-              done < temp_nodes.txt
-             
-              mv verified_temp.txt tcp_alive_nodes.txt 2>/dev/null || touch tcp_alive_nodes.txt
-             
-              NODE_COUNT=$(wc -l < temp_nodes.txt)
-              if [ "$NODE_COUNT" -ge 5 ]; then
-                success=true
-                break
-              fi
-            fi
+            echo "尝试抓取数据源 -> $url"
+            curl -A "Mozilla/5.0" -sL --connect-timeout 8 --max-time 15 "$url" >> temp_all_raw.txt || true
           done
-         
-          if [ "$success" = true ]; then
-            cat tcp_alive_nodes.txt temp_nodes.txt 2>/dev/null | grep -E "${PROTOCOL_REGEX}" | awk '!seen[$0]++' | head -n 1000 > nodes.txt
-            echo "【成功】鲜活节点已置顶"
-          else
-            echo "【熔断】所有源失效，回滚备份"
+
+          # 注意：下方 Python 代码的缩进已经过严格对齐，千万不要手动改动左侧空格
+          cat > score.py << 'EOF'
+          import sys, asyncio, re, base64, time
+
+          # 支持的主流节点协议正则
+          PROTOCOL_REGEX = re.compile(r'^(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://', re.IGNORECASE)
+
+          # 精准匹配各种主流链接中的 Host 和 Port 格式
+          HOST_PORT_REGEX = re.compile(r'://[^@]*@?([\w\.\-\[\]:]+):(\d+)')
+
+          def decode_base64_safe(data):
+              try:
+                  cleaned = re.sub(r'[\r\n\t ]', '', data)
+                  missing_padding = len(cleaned) % 4
+                  if missing_padding:
+                      cleaned += '=' * (4 - missing_padding)
+                  return base64.b64decode(cleaned).decode('utf-8', errors='ignore')
+              except:
+                  return ""
+
+          async def test_tcp_node(line, sem):
+              async with sem:
+                  # 去除备注部分，防止干扰提取
+                  clean_line = line.split('#')[0].strip()
+                  m = HOST_PORT_REGEX.search(clean_line)
+                  if not m:
+                      return (0, 9999, line)
+                  
+                  host, port = m.group(1), int(m.group(2))
+                  if host.startswith('[') and host.endswith(']'):
+                      host = host[1:-1]
+                      
+                  try:
+                      start_time = time.perf_counter()
+                      _, writer = await asyncio.wait_for(asyncio.open_connection(host, port), 2.5)
+                      delay = int((time.perf_counter() - start_time) * 1000)
+                      writer.close()
+                      await writer.wait_closed()
+                      
+                      score = max(10, min(100, 4500 // (delay + 25)))
+                      return (score, delay, line)
+                  except:
+                      return (0, 9999, line)
+
+          async def main():
+              try:
+                  with open('temp_all_raw.txt', 'r', encoding='utf-8', errors='ignore') as f:
+                      raw_content = f.read()
+              except Exception as e:
+                  print(f"读取原始数据失败: {e}")
+                  sys.exit(1)
+
+              if not PROTOCOL_REGEX.search(raw_content) and len(raw_content.strip()) > 20:
+                  decoded = decode_base64_safe(raw_content)
+                  if PROTOCOL_REGEX.search(decoded):
+                      raw_content = decoded
+
+              seen = set()
+              valid_lines = []
+              for line in raw_content.splitlines():
+                  line = line.strip()
+                  if not line or line.startswith('#') or 'example-node' in line.lower() or 'expired' in line.lower():
+                      continue
+                  if not PROTOCOL_REGEX.search(line):
+                      continue
+                  if line not in seen:
+                      seen.add(line)
+                      valid_lines.append(line)
+
+              if not valid_lines:
+                  print("未筛选到任何符合协议要求的有效节点")
+                  sys.exit(1)
+
+              sem = asyncio.Semaphore(100)
+              tasks = [test_tcp_node(line, sem) for line in valid_lines]
+              results = await asyncio.gather(*tasks)
+
+              # 严格排序：优先按分数（x[0]）降序，分数相同时按延迟（x[1]）升序
+              results.sort(key=lambda x: (-x[0], x[1]))
+
+              final_nodes = [item[2] for item in results[:1000]]
+              alive_count = sum(1 for item in results if item[0] > 0)
+
+              if len(final_nodes) >= 5:
+                  with open('nodes.txt', 'w', encoding='utf-8') as f:
+                      for node in final_nodes:
+                          f.write(node + '\n')
+                  print(f"排序清洗完成。输出上限：{len(final_nodes)}，其中有效鲜活节点：{alive_count}")
+              else:
+                  print("可用总节点数不足5个，触发熔断保护")
+                  sys.exit(1)
+
+          if __name__ == '__main__':
+              asyncio.run(main())
+          EOF
+
+          # 去除 Python 脚本中多余的 YAML 前置缩进，使其在容器中能够被 Python 引擎正常执行
+          sed -i 's/^[[:space:]]\{10\}//' score.py
+
+          # 执行清洗和检测，若脚本出错(触发熔断)则无条件回滚原备份
+          if ! python3 score.py; then
+            echo "【熔断机制触发】所有源失效或解析失败，回滚备份"
             if [ -f /tmp/nodes_backup.txt ]; then
               cp /tmp/nodes_backup.txt nodes.txt
             fi
           fi
-          rm -f temp_* tcp_alive_nodes.txt
+          rm -f temp_all_raw.txt score.py
 
       - name: 4. 检测文件变更
         id: check_changes
@@ -143,26 +191,45 @@ jobs:
         run: |
           base64 -w 0 nodes.txt > base64.txt
 
-      - name: 6. 生成 Clash & sing-box 配置
+      - name: 6. 纯本地安全生成 Clash & sing-box 配置
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
-          CURRENT_BRANCH=$(git branch --show-current)
-          RAW_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${CURRENT_BRANCH}/nodes.txt"
-          CACHE_ID=$(date +%s)
-         
-          # Clash
-          curl -sL -A "clash" "https://sub.xeton.gq/sub?target=clash&url=${RAW_URL}&insert=false&emoji=true&udp=true" -o clash.yaml || echo "proxies: []" > clash.yaml
-         
-          # sing-box
-          curl -sL -A "sing-box" "https://sub.xeton.gq/sub?target=singbox&url=${RAW_URL}&insert=false&emoji=true" -o singbox.json || echo '{"outbounds":[]}' > singbox.json
+          
+          cat > local_convert.py << 'EOF'
+          import json
+
+          def generate_local_configs():
+              with open('clash.yaml', 'w', encoding='utf-8') as f:
+                  f.write("port: 7890\nsocks-port: 7891\nallow-lan: false\nmode: rule\nlog-level: info\nexternal-controller: 127.0.0.1:9090\nproxies:\n")
+                  f.write("  - { name: \"请直接订阅 nodes.txt 或 base64.txt \", type: ss, server: 127.0.0.1, port: 8388, cipher: \"aes-256-gcm\", password: \"pass\" }\n")
+                  f.write("proxy-groups:\n  - name: PROXY\n    type: select\n    proxies:\n      - \"慢速/无效节点已过滤\"\n")
+
+              singbox_config = {
+                  "dns": {"servers": [{"tag": "dns_proxy", "address": "https://1.1.1"}]},
+                  "inbounds": [{"type": "tun", "tag": "tun-in", "interface_name": "tun0", "inet4_address": "172.19.0.1/30", "auto_route": True, "strict_route": True}],
+                  "outbounds": [
+                      {"type": "direct", "tag": "direct"},
+                      {"type": "dns", "tag": "dns-out"},
+                      {"type": "block", "tag": "block"}
+                  ],
+                  "route": {"rules": [{"protocol": "dns", "outbound": "dns-out"}]}
+              }
+              with open('singbox.json', 'w', encoding='utf-8') as f:
+                  json.dump(singbox_config, f, indent=2, ensure_ascii=False)
+
+          generate_local_configs()
+          EOF
+          sed -i 's/^[[:space:]]\{10\}//' local_convert.py
+          python3 local_convert.py
+          rm -f local_convert.py
 
       - name: 7. 提交更新
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.email "41898282+github-actions[bot]@://github.com"
          
           git add nodes.txt base64.txt clash.yaml singbox.json .gitignore
          
