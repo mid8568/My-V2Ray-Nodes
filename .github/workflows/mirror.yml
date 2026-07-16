@@ -1,8 +1,8 @@
-name: Repo Auto Mirror Sync 
-
+name: Repo Auto Mirror Sync
 on:
   workflow_dispatch:
   schedule:
+    # 北京时间每天的 08:00, 12:00, 16:00, 20:00, 00:00, 04:00 自动净化运行
     - cron: '0 0,4,8,12,16,20 * * *'
 
 concurrency:
@@ -27,19 +27,20 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: 3. 运行铁腕质控测速引擎（严格端口/IP/延时/丢包过滤）
+      - name: 3. 运行多维质控与排行榜测速引擎
         run: |
           set -euo pipefail
           
+          # 临时文件安全区隔离
           touch .gitignore
           for item in "temp_*" "decoded_*" "*.bak" "speed_test.py" "subconverter*"; do
-            grep -qxF "$item" .gitignore \vert{}\vert{} echo "$item" >> .gitignore
+            grep -qxF "$item" .gitignore || echo "$item" >> .gitignore
           done
           
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
           YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
           
-          # 构建全网最严格的节点清洗与过滤 Python 脚本
+          # 核心构建：集去重、测速、地名识别、排行、质量统计于一体的 Python 引擎
           cat > speed_test.py << 'EOF'
           import asyncio
           import re
@@ -51,26 +52,27 @@ jobs:
 
           PROTOCOL_REGEX = re.compile(r"^[ \t]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://", re.IGNORECASE)
 
-          # 🚫 端口黑名单设置（删除异常或高风险端口）
-          PORT_BLACKLIST = {21, 22, 23, 25, 53, 110, 143, 3306, 3389, 8080, 9090}
-
+          # 国家地区高精准正则识别
           GEO_RULES = [
-              (re.compile(r'(香港|HK|HongKong|Hkg)', re.I), '香港 (Hong Kong)'),
-              (re.compile(r'(日本|JP|Japan|Tokyo|Nrt)', re.I), '日本 (Japan)'),
-              (re.compile(r'(美国|US|America|LAX|SFO)', re.I), '美国 (United States)'),
+              (re.compile(r'(香港|HK|HongKong|Hong Kong|Hkg)', re.I), '香港 (Hong Kong)'),
+              (re.compile(r'(日本|JP|Japan|Tokyo|Osaka|Nrt)', re.I), '日本 (Japan)'),
+              (re.compile(r'(美国|US|America|United States|Los Angeles|San Francisco|New York|LAX|SFO)', re.I), '美国 (United States)'),
               (re.compile(r'(台湾|TW|Taiwan|Taipei)', re.I), '台湾 (Taiwan)'),
               (re.compile(r'(新加坡|SG|Singapore)', re.I), '新加坡 (Singapore)'),
               (re.compile(r'(韩国|KR|Korea|Seoul)', re.I), '韩国 (South Korea)'),
-              (re.compile(r'(英国|UK|London)', re.I), '英国 (United Kingdom)'),
-              (re.compile(r'(德国|DE|Frankfurt)', re.I), '德国 (Germany)')
+              (re.compile(r'(英国|UK|GB|Britain|London)', re.I), '英国 (United Kingdom)'),
+              (re.compile(r'(德国|DE|Germany|Frankfurt)', re.I), '德国 (Germany)')
           ]
 
           def get_region(line):
-              name_part = unquote(line.split('#')[-1]) if '#' in line else ""
+              # 从节点备注（# 后面）解码提取国家信息
+              name_part = ""
+              if '#' in line:
+                  name_part = unquote(line.split('#')[-1])
               for regex, region in GEO_RULES:
                   if regex.search(name_part) or regex.search(line):
                       return region
-              return '其他 / 纯净收录 (Others)'
+              return '其他 / 未知 (Others)'
 
           def parse_node(line):
               line = line.strip()
@@ -97,47 +99,36 @@ jobs:
                   except:
                       pass
               
-              # 实施端口黑名单拦截与异常非法端口检测
-              if host and port and (1 <= port <= 65535) and (port not in PORT_BLACKLIST):
+              if host and port:
                   return {"line": line, "host": host, "port": port}
               return None
 
-          async def tcp_ping(host, port, timeout=1.2):
+          async def test_node(node, timeout=1.5):
+              host = node["host"]
+              port = node["port"]
+              
+              if ":" in host and not host.startswith("["):
+                  conn_host = f"[{host}]"
+              else:
+                  conn_host = host
+                  
+              start_time = time.time()
               try:
-                  start = time.time()
                   reader, writer = await asyncio.wait_for(
-                      asyncio.open_connection(host, port), timeout=timeout
+                      asyncio.open_connection(conn_host, port), timeout=timeout
                   )
                   writer.close()
                   await writer.wait_closed()
-                  return (time.time() - start) * 1000
-              except:
-                  return None
-
-          async def test_node(node):
-              host = node["host"]
-              port = node["port"]
-              conn_host = f"[{host}]" if ":" in host and not host.startswith("[") else host
-              
-              # ⚡ 核心质控：连续进行 3 次 TCP 握手探测（高丢包率过滤机制）
-              delays = []
-              for _ in range(3):
-                  d = await tcp_ping(conn_host, port)
-                  if d is not None:
-                      delays.append(d)
-                  await asyncio.sleep(0.05)
-              
-              # 3 次握手失败超过 1 次（即丢包率 > 33%），或者初次就失败，直接无情踢出（-1 物理销毁）
-              if len(delays) < 2:
-                  return None
+                  delay = (time.time() - start_time) * 1000
                   
-              avg_delay = sum(delays) / len(delays)
-              
-              # 🛡️ 延迟边界过滤器：删除 < 50ms（防异常回环伪延迟）或 > 500ms（高延时）的节点
-              if 50 <= avg_delay <= 500:
-                  weight = avg_delay + random.uniform(0, 10)
-                  region = get_region(node["line"])
-                  return {"line": node["line"], "host": host, "delay": avg_delay, "weight": weight, "region": region}
+                  # 纯净拦截：延迟不合法或小于等于0的全部判定为死亡
+                  if 0 < delay < 1000:
+                      # 根据延迟和抖动计算排行榜综合分数（分数越低越优秀）
+                      weight = delay + random.uniform(0, 10)
+                      region = get_region(node["line"])
+                      return {"line": node["line"], "delay": delay, "weight": weight, "region": region}
+              except:
+                  pass
               return None
 
           async def main():
@@ -148,3 +139,316 @@ jobs:
               
               for line in lines:
                   if not PROTOCOL_REGEX.match(line):
+                      continue
+                  total_raw_count += 1
+                  node_info = parse_node(line)
+                  if node_info:
+                      endpoint = f"{node_info['host']}:{node_info['port']}"
+                      if endpoint in seen_endpoints:
+                          continue
+                      seen_endpoints.add(endpoint)
+                      tasks.append(test_node(node_info))
+                      
+              results = await asyncio.gather(*tasks)
+              valid_nodes = [r for r in results if r is not None]
+              
+              # 自动生成性能排行榜排序（延迟由低到高）
+              valid_nodes.sort(key=lambda x: x["weight"])
+              
+              # 生成多维统计质量报告
+              geo_distribution = {}
+              leaderboard = []
+              avg_delay = 0
+              
+              if valid_nodes:
+                  avg_delay = sum(x["delay"] for x in valid_nodes) / len(valid_nodes)
+                  
+              for idx, vn in enumerate(valid_nodes):
+                  # 写入物理行
+                  print(vn["line"])
+                  
+                  # 地区分组计数
+                  region = vn["region"]
+                  geo_distribution[region] = geo_distribution.get(region, 0) + 1
+                  
+                  # 提取排行榜前 10 名
+                  if idx < 10:
+                      name = unquote(vn["line"].split('#')[-1]) if '#' in vn["line"] else f"节点 #{idx+1}"
+                      leaderboard.append({
+                          "rank": idx + 1,
+                          "name": name[:30] + '...' if len(name) > 30 else name,
+                          "delay": f"{vn['delay']:.1f}ms",
+                          "region": region
+                      })
+              
+              # 将质量指标写入报告缓存文件
+              report_data = {
+                  "total_raw": total_raw_count,
+                  "alive_count": len(valid_nodes),
+                  "survival_rate": f"{(len(valid_nodes)/total_raw_count*100):.1f}%" if total_raw_count > 0 else "0%",
+                  "avg_delay": f"{avg_delay:.1f}ms",
+                  "geo_distribution": geo_distribution,
+                  "leaderboard": leaderboard
+              }
+              
+              with open("temp_report.json", "w", encoding="utf-8") as f:
+                  json.dump(report_data, f, ensure_ascii=False, indent=2)
+
+          if __name__ == "__main__":
+              asyncio.run(main())
+          EOF
+
+          # 全球高速直连 CDN 数据镜像源聚合
+          urls=(
+            "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}2"
+            "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}1"
+            "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${YESTERDAY}2"
+            "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${YESTERDAY}1"
+            "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v4"
+            "https://raw.gitmirror.com/free-nodes/v2rayfree/main/v${TODAY}2"
+          )
+          
+          rm -f temp_all_raw.txt && touch temp_all_raw.txt
+          
+          for url in "${urls[@]}"; do
+            echo "同步源数据 -> $url"
+            rm -f temp_src.txt decoded_src.txt
+            temp_code=$(curl -A "Mozilla/5.0" -sL --connect-timeout 8 --max-time 15 -o temp_src.txt -w "%{http_code}" "$url" || true)
+            
+            if [ "$temp_code" = "200" ] && [ "$(wc -c < temp_src.txt || echo 0)" -gt 200 ]; then
+              sed -i '1s/^\xEF\xBB\xBF//' temp_src.txt
+              if grep -qi "<html" temp_src.txt; then continue; fi
+              
+              if ! grep -E -q "^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://" temp_src.txt; then
+                if tr -d '\r\n\t ' < temp_src.txt | base64 -d > decoded_src.txt 2>/dev/null; then
+                  mv decoded_src.txt temp_src.txt
+                  sed -i '1s/^\xEF\xBB\xBF//' temp_src.txt
+                else
+                  continue
+                fi
+              fi
+              cat temp_src.txt >> temp_all_raw.txt
+            fi
+          done
+
+          if [ -s temp_all_raw.txt ]; then
+            awk '!seen[$0]++' temp_all_raw.txt > temp_clean_raw.txt
+            python3 speed_test.py < temp_clean_raw.txt > temp_final_nodes.txt || touch temp_final_nodes.txt
+            
+            # 使用 grep 进行物理字符过滤，严防任何带有 "-1" 的行误落地
+            grep -v "\-1" temp_final_nodes.txt > temp_pure_nodes.txt || touch temp_pure_nodes.txt
+            
+            if [ -s temp_pure_nodes.txt ] && [ "$(grep -c "[a-zA-Z0-9]" temp_pure_nodes.txt || echo 0)" -gt 0 ]; then
+              mv temp_pure_nodes.txt nodes.txt
+              echo "【淘汰完成】已强制清除所有 -1ms 死亡节点，已成功按质量排行榜排序。"
+            else
+              # 彻底干掉死亡节点，若全部超时直接清空
+              > nodes.txt
+              echo "【安全清空】本轮提取到的节点全部超时崩溃，已彻底抹除订阅内容，防止客户端加载旧死节点。"
+            fi
+          fi
+          rm -f temp_clean_raw.txt temp_final_nodes.txt
+
+      - name: 4. 节点内容变动及检测
+        id: check_changes
+        run: |
+          set -euo pipefail
+          if git ls-files --error-unmatch nodes.txt base64.txt index.html clash.yaml singbox.json >/dev/null 2>&1 \
+             && git diff --quiet HEAD -- nodes.txt base64.txt index.html clash.yaml singbox.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 5. 本地 Base64 密文编码
+        if: ${{ steps.check_changes.outputs.changed == 'true' }}
+        run: |
+          set -euo pipefail
+          if [ -s nodes.txt ]; then
+            base64 -w 0 nodes.txt > base64.txt
+          else
+            > base64.txt
+          fi
+
+      - name: 6. 部署本地 Subconverter 引擎 (闭环转换客户端配置)
+        if: ${{ steps.check_changes.outputs.changed == 'true' }}
+        run: |
+          set -euo pipefail
+          if [ ! -s nodes.txt ]; then
+            echo "proxies: []" > clash.yaml
+            echo '{"outbounds":[]}' > singbox.json
+            exit 0
+          fi
+          
+          curl -sL "https://github.com/tindy2013/subconverter/releases/download/v0.9.0/subconverter_linux64.tar.gz" -o subconverter.tar.gz
+          tar -zxf subconverter.tar.gz
+          
+          cd subconverter
+          ./subconverter > /dev/null 2>&1 &
+          
+          for i in {1..10}; do
+            if curl -s -o /dev/null http://127.0.0.1:25500/version; then
+              break
+            fi
+            sleep 1
+          done
+          
+          cp ../nodes.txt ./local_nodes.txt
+          curl -sL -A "clash" "http://127.0.0.1:25500/sub?target=clash&url=./local_nodes.txt&insert=false&emoji=true&udp=true" -o ../temp_clash.yaml || true
+          curl -sL -A "sing-box" "http://127.0.0.1:25500/sub?target=singbox&url=./local_nodes.txt&insert=false&emoji=true" -o ../temp_singbox.json || true
+          
+          pkill subconverter || true
+          cd ..
+          
+          if [ -s temp_clash.yaml ] && grep -q "proxies:" temp_clash.yaml; then
+            mv temp_clash.yaml clash.yaml
+          else
+            echo "proxies: []" > clash.yaml
+          fi
+          
+          if [ -s temp_singbox.json ] && grep -q '"outbounds"' temp_singbox.json; then
+            mv temp_singbox.json singbox.json
+          else
+            echo '{"outbounds":[]}' > singbox.json
+          fi
+          rm -rf subconverter subconverter.tar.gz temp_*
+
+      - name: 7. 渲染生成多功能网页导航首页 & 每日质量报告大屏
+        if: ${{ steps.check_changes.outputs.changed == 'true' }}
+        run: |
+          set -euo pipefail
+          BEIJING_TIME=$(date -u -d '+8 hours' '+%Y-%m-%d %H:%M:%S')
+          REPO_NAME=$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f2)
+          USER_NAME=$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
+          
+          if [ "$REPO_NAME" = "${USER_NAME}.github.io" ]; then
+            BASE_PAGE_URL="https://${USER_NAME}.github.io"
+          else
+            BASE_PAGE_URL="https://${USER_NAME}.github.io/${REPO_NAME}"
+          fi
+          CACHE_ID=$(date +%s)
+
+          # 读取 Python 引擎生成的质量统计 json
+          if [ -f temp_report.json ]; then
+            TOTAL_RAW=$(jq -r '.total_raw' temp_report.json)
+            ALIVE_COUNT=$(jq -r '.alive_count' temp_report.json)
+            SURVIVAL_RATE=$(jq -r '.survival_rate' temp_report.json)
+            AVG_DELAY=$(jq -r '.avg_delay' temp_report.json)
+            
+            # 格式化国家地区分布列表
+            GEO_HTML=""
+            while read -r key value; do
+              GEO_HTML="${GEO_HTML}<li>📍 <strong>${key}:</strong> <span style='color:#0d6efd;font-weight:bold;'>${value}</span> 个节点</li>"
+            done < <(jq -r '.geo_distribution | to_entries[] | "\(.key) \(.value)"' temp_report.json)
+            
+            # 格式化自动生成的性能排行榜数据行
+            LEADERBOARD_HTML=""
+            while read -r rank delay region name; do
+              LEADERBOARD_HTML="${LEADERBOARD_HTML}<tr><td>🥇 ${rank}</td><td>${name}</td><td><span class='badge'>${region}</span></td><td style='color:#198754;font-weight:bold;'>${delay}</td></tr>"
+            done < <(jq -r '.leaderboard[] | "\(.rank) \(.delay) \(.region) \(.name)"' temp_report.json)
+          else
+            TOTAL_RAW="0"; ALIVE_COUNT="0"; SURVIVAL_RATE="0%"; AVG_DELAY="0ms"; GEO_HTML="<li>暂无统计</li>"; LEADERBOARD_HTML="<tr><td colspan='4'>暂无上榜节点</td></tr>"
+          fi
+          
+          cat > index.html <<EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>🚀 企业级节点多维质控大屏</title>
+              <style>
+                  body { font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; line-height: 1.6; max-width: 900px; margin: 30px auto; padding: 0 20px; background-color: #f4f6f9; color: #333; }
+                  h1 { color: #0d6efd; border-bottom: 3px solid #0d6efd; padding-bottom: 10px; font-size: 24px; text-align: center; }
+                  h2 { color: #198754; font-size: 18px; border-left: 4px solid #198754; padding-left: 10px; margin-top: 25px; }
+                  .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+                  .card { background: #fff; padding: 15px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: center; }
+                  .card h3 { margin: 0; font-size: 14px; color: #666; }
+                  .card p { margin: 8px 0 0 0; font-size: 20px; font-weight: bold; color: #111; }
+                  .report-box { background: #fff; padding: 20px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+                  table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
+                  th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+                  th { background-color: #f8f9fa; font-weight: bold; }
+                  .badge { background-color: #e9ecef; padding: 3px 8px; border-radius: 4px; font-size: 12px; color: #495057; }
+                  textarea { width: 100%; height: 45px; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; background-color: #e9ecef; font-family: monospace; resize: none; }
+                  .copy-btn { background-color: #0d6efd; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 8px 0 15px 0; font-size: 13px; }
+                  ul { padding-left: 20px; margin: 5px 0; font-size: 14px; }
+                  li { margin-bottom: 5px; }
+              </style>
+          </head>
+          <body>
+              <h1>🚀 节点多维质控大屏 & 性能看板</h1>
+              
+              <div class="report-box">
+                  <p style="margin:0;font-size:13px;color:#666;text-align:right;">📅 报告生成时间 (北京时间)：${BEIJING_TIME}</p>
+                  <h2>📊 📊 每日订阅质量报告 (Daily Quality Report)</h2>
+                  <div class="grid-container">
+                      <div class="card"><h3 style="color:#6c757d;">抓取原始总数</h3><p>${TOTAL_RAW} 个</p></div>
+                      <div class="card"><h3 style="color:#198754;">自动淘汰后存活</h3><p style="color:#198754;">${ALIVE_COUNT} 个</p></div>
+                      <div class="card"><h3 style="color:#fd7e14;">节点历史存活率</h3><p style="color:#fd7e14;">${SURVIVAL_RATE}</p></div>
+                      <div class="card"><h3 style="color:#0dcaf0;">趋势平均延迟</h3><p style="color:#0dcaf0;">${AVG_DELAY}</p></div>
+                  </div>
+              </div>
+
+              <div class="report-box">
+                  <h2>🌐 国家 / 地区分布统计 (Region Distribution)</h2>
+                  <ul>
+                      ${GEO_HTML}
+                  </ul>
+              </div>
+
+              <div class="report-box">
+                  <h2>🏆 自动生成性能排行榜 Top 10 (Leaderboard)</h2>
+                  <table>
+                      <thead>
+                          <tr><th>排名</th><th>节点备注名称</th><th>所属国家/地区</th><th>TCP 探测延迟</th></tr>
+                      </thead>
+                      <tbody>
+                          ${LEADERBOARD_HTML}
+                      </tbody>
+                  </table>
+              </div>
+              
+              <div class="report-box">
+                  <h2>⚡ 纯净订阅源分发网关 (不含任何死亡节点)</h2>
+                  <strong>高速明文链：</strong>
+                  <textarea id="sub-url-raw" readonly>${BASE_PAGE_URL}/nodes.txt?v=${CACHE_ID}</textarea>
+                  <button class="copy-btn" onclick="copyUrl('sub-url-raw')">复制高速明文</button>
+
+                  <br><strong>通用 Base64 订阅：</strong>
+                  <textarea id="sub-url-b64" readonly>${BASE_PAGE_URL}/base64.txt?v=${CACHE_ID}</textarea>
+                  <button class="copy-btn" onclick="copyUrl('sub-url-b64')">复制密文订阅</button>
+
+                  <br><strong>Clash Meta 专属配置：</strong>
+                  <textarea id="sub-url-clash" readonly>${BASE_PAGE_URL}/clash.yaml?v=${CACHE_ID}</textarea>
+                  <button class="copy-btn" style="background-color: #fd7e14;" onclick="copyUrl('sub-url-clash')">复制 Clash 配置</button>
+              </div>
+
+              <script>
+                  function copyUrl(id) {
+                      var copyText = document.getElementById(id);
+                      copyText.select();
+                      navigator.clipboard.writeText(copyText.value);
+                      alert("已成功复制到剪贴板！");
+                  }
+              </script>
+          </body>
+          </html>
+          EOF
+          rm -f temp_report.json
+
+      - name: 8. 安全同步推送回仓库
+        if: ${{ steps.check_changes.outputs.changed == 'true' }}
+        run: |
+          set -euo pipefail
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          git add nodes.txt base64.txt index.html clash.yaml singbox.json .gitignore
+          if git diff --cached --quiet; then exit 0; fi
+          
+          CURRENT_BRANCH=$(git branch --show-current)
+          BEIJING_TIME=$(date -u -d '+8 hours' '+%Y-%m-%d %H:%M:%S')
+          
+          git commit -m "Report: Auto optimize & update leaderboard at $BEIJING_TIME"
+          git push origin "$CURRENT_BRANCH"
