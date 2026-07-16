@@ -1,3 +1,7 @@
 temp_*
 decoded_*
 *.bak
+tcp_alive_nodes.txt
+tcp_sorted.txt
+clean_nodes.txt
+verified_temp.txt
