@@ -1,5 +1,4 @@
 name: Repo Auto Mirror Sync
-
 on:
   workflow_dispatch:
   schedule:
@@ -28,7 +27,7 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: 3. 安全提取、Python Asyncio 高并发测速并清除无效节点
+      - name: 3. 安全提取、Python Asyncio 高并发测速、移除重复与无效节点
         run: |
           set -euo pipefail
           
@@ -46,7 +45,7 @@ jobs:
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
           YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
           
-          # 构建核心测速、严格过滤与清除脚本
+          # 构建核心测速、严格过滤与深度去重脚本
           cat > speed_test.py << 'EOF'
           import asyncio
           import re
@@ -98,7 +97,6 @@ jobs:
                   
               start_time = time.time()
               try:
-                  # 使用 asyncio 核心异步建立握手，连不上直接抛出异常
                   reader, writer = await asyncio.wait_for(
                       asyncio.open_connection(conn_host, port), timeout=timeout
                   )
@@ -106,33 +104,39 @@ jobs:
                   await writer.wait_closed()
                   delay = (time.time() - start_time) * 1000
                   
-                  # 严格过滤：去掉 999ms 垃圾节点，无效或超时节点在此处被过滤（返回 None）
+                  # 严格过滤垃圾节点
                   if delay < 999:
                       weight = delay + random.uniform(0, 50)
                       return {"line": node["line"], "delay": delay, "weight": weight}
               except:
-                  # 捕获所有连接失败、拒绝、超时错误，判定为无效节点
                   pass
               return None
 
           async def main():
               lines = sys.stdin.read().splitlines()
               tasks = []
+              seen_endpoints = set()  # 用于存储已经遇过的 "host:port"，实现深度去重
               
               for line in lines:
                   if not PROTOCOL_REGEX.match(line):
                       continue
                   if any(x in line.lower() for x in ["example-node", "expired"]):
                       continue
+                      
                   node_info = parse_node(line)
                   if node_info:
+                      # 💡 核心改动：移出重复的底层节点服务器
+                      endpoint = f"{node_info['host']}:{node_info['port']}"
+                      if endpoint in seen_endpoints:
+                          continue  # 如果相同的IP/域名和端口已存在，直接丢弃该重复节点
+                      seen_endpoints.add(endpoint)
+                      
                       tasks.append(test_node(node_info))
                       
               results = await asyncio.gather(*tasks)
-              # 核心清洗：只保留非 None 的有效活节点，无效节点在这里被彻底从列表中删除
               valid_nodes = [r for r in results if r is not None]
               
-              # 根据计算的动态权重升序排列
+              # 随机扰动加权排序
               valid_nodes.sort(key=lambda x: x["weight"])
               
               for vn in valid_nodes:
@@ -142,7 +146,7 @@ jobs:
               asyncio.run(main())
           EOF
 
-          # 数据流清洗与双源聚合
+          # 数据流清洗与多源灾备聚合
           urls=(
             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}2"
@@ -180,25 +184,25 @@ jobs:
             fi
           done
 
-          # 去重去杂质并执行测速删除
+          # 执行全局测速与去重
           if [ -s temp_all_raw.txt ]; then
+            # 第一层文本行去重
             awk '!seen[$0]++' temp_all_raw.txt > temp_clean_raw.txt
             
-            echo "=== ⚙️ 启动 Python Asyncio 并发测速并剔除死节点 ==="
+            echo "=== ⚙️ 启动 Python Asyncio 高级去重与并发测速引擎 ==="
             python3 speed_test.py < temp_clean_raw.txt > temp_final_nodes.txt || touch temp_final_nodes.txt
             
             NODE_COUNT=$(wc -l < temp_final_nodes.txt || echo 0)
-            # 设置阈值：只有筛选出的有效节点数 >= 3 时才允许覆盖落盘，防止因网络波动删光所有节点
             if [ "$NODE_COUNT" -ge 3 ]; then
               mv temp_final_nodes.txt nodes.txt
               success=true
-              echo "【清洗完成】已剔除所有无效/慢节点，共有 $NODE_COUNT 个优质节点落盘。"
+              echo "【深度清洗完成】已移除重复节点和无效节点，剩余 $NODE_COUNT 个独立优质节点。"
             fi
           fi
           
-          # 熔断恢复机制
+          # 熔断安全回滚
           if [ "$success" = false ]; then
-            echo "【⚠️ 安全熔断】本次未检测到足够的有效活节点！正在回滚保持上一次版本，防止空壳..."
+            echo "【⚠️ 安全熔断】有效独立活节点不足！正在回滚保持上一次版本，拒绝生成空订阅..."
             if [ -f /tmp/nodes_backup.txt ]; then
               cp /tmp/nodes_backup.txt nodes.txt
             else
@@ -258,7 +262,6 @@ jobs:
             echo "❌ 所有在线 Subconverter API 均健康检查失败！触发防空壳熔断机制。"
           fi
 
-          # 执行 Clash 转换
           if [ -n "$SELECTED_API" ]; then
             rm -f temp_clash.yaml
             curl -sL -A "clash" --connect-timeout 15 --max-time 30 "${SELECTED_API}/sub?target=clash&url=${RAW_URL}&insert=false&emoji=true&udp=true" -o temp_clash.yaml || true
@@ -271,7 +274,6 @@ jobs:
             fi
           fi
 
-          # 执行 Sing-box 转换
           if [ -n "$SELECTED_API" ]; then
             rm -f temp_singbox.json
             curl -sL -A "sing-box" --connect-timeout 15 --max-time 30 "${SELECTED_API}/sub?target=singbox&url=${RAW_URL}&insert=false&emoji=true" -o temp_singbox.json || true
@@ -284,7 +286,6 @@ jobs:
             fi
           fi
 
-          # 保底初始化规避文件丢失
           [ -f clash.yaml ] || echo "proxies: []" > clash.yaml
           [ -f singbox.json ] || echo '{"outbounds":[]}' > singbox.json
 
@@ -327,8 +328,8 @@ jobs:
               <h1>🚀 My V2Ray Nodes Hub</h1>
               <div class="meta-box">
                   <p>⏰ <strong>更新时间 (北京时间)：</strong> ${BEIJING_TIME}</p>
-                  <p>📊 <strong>纯净筛选高动态排序节点总数（已完全剔除无效）：</strong> <span style="color: #198754; font-weight: bold;">${TOTAL_COUNT}</span></p>
-                  <p>🌐 <strong>去重独立节点服务器数量：</strong> <span style="color: #0d6efd; font-weight: bold;">${IP_COUNT}</span></p>
+                  <p>📊 <strong>独立有效节点总数（已去重、剔除无效）：</strong> <span style="color: #198754; font-weight: bold;">${TOTAL_COUNT}</span></p>
+                  <p>🌐 <strong>去重独立服务器数量：</strong> <span style="color: #0d6efd; font-weight: bold;">${IP_COUNT}</span></p>
               </div>
               
               <h2>⚡ 方案 A：通用订阅链</h2>
