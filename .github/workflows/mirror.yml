@@ -1,38 +1,29 @@
 name: Repo Auto Mirror Sync
 
 on:
-  workflow_dispatch: # 支持手动触发
+  workflow_dispatch: # 支持网页端手动点击按钮触发
 
 jobs:
   mirror-sync:
     runs-on: ubuntu-latest
     steps:
-      # 💡 第一步：直接利用官方组件把 free-nodes 的大库完整克隆到临时目录中
-      - name: 克隆目标大库
+      - name: Checkout My Repo
         uses: actions/checkout@v4
         with:
-          repository: 'free-nodes/v2rayfree'
-          path: 'target_files'
+          # 必须拉取完整的历史记录，否则无法进行强制合并
+          fetch-depth: 0
 
-      # 💡 第二步：克隆你自己的本地仓库
-      - name: 克隆我的仓库
-        uses: actions/checkout@v4
-        with:
-          path: 'my_repo'
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      # 💡 第三步：把大库里的文件原封不动复制到你的仓库，并强行推送到你的首页
-      - name: 复制并强推
+      - name: Force Pull From Target Repo
         run: |
-          cd my_repo
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           
-          # 清除你现有的旧文件（保留工作流），然后把大库文件全量拷贝进来
-          find . -maxdepth 1 ! -name '.github' ! -name '.' ! -name '..' -exec rm -rf {} +
-          cp -r ../target_files/* .
-          
-          # 强制提交并刷新
-          git add .
-          git commit --allow-empty -m "Auto sync nodes from target repo"
+          # 1. 强行把 free-nodes 的大库节点拉取到本地，并允许毫无关联的历史记录进行合并
+          # --allow-unrelated-histories 是为了防止两个库结构不同而报错
+          # -X theirs 代表如果遇到任何节点文件冲突，一律以对方的最新文件为准
+          git pull https://github.com main --allow-unrelated-histories -X theirs --no-edit
+
+      - name: Commit and Push
+        run: |
+          # 2. 将拉取到的全套最新日期节点文件强行推送到你的仓库首页
           git push origin main
