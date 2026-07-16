@@ -1,0 +1,25 @@
+name: Sync to Free Nodes Repo
+
+on:
+  workflow_dispatch: # 支持手动触发
+  schedule:
+    - cron: '0 */3 * * *' # 每 3 小时把对方的仓库整个全自动“搬”到你的仓库里
+
+jobs:
+  repo-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出当前仓库
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: 全自动搬运并对齐目标仓库
+        uses: repo-sync/github-sync@v2
+        with:
+          # 💡 直接死死锁定目标仓库，无需任何复杂的网址拼接
+          source_repo: "https://github.com"
+          source_branch: "main"
+          destination_branch: "main"
+          # 使用 GitHub 自动生成的默认高权限密钥进行强行推送到首页
+          github_token: ${{ secrets.GITHUB_TOKEN }}
