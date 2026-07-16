@@ -232,43 +232,40 @@ jobs:
           wc -l tcp_alive_nodes.txt
 
 
-          echo "=== 开始真实代理测速 ==="
+           echo "=== 开始真实代理测速 ==="
+
+           mkdir -p singbox_test
+
+           python3 scripts/node_parser.py
 
 
-          mkdir -p singbox_test
+             if [ -f speed_rank.txt ]; then
 
-          python3 scripts/node_parser.py
-          
-          echo "=== 使用TCP有效节点 ==="
-
-           cat tcp_alive_nodes.txt \
-           | awk '!seen[$0]++' \
-           | sed -n '1,80p' \
-           > nodes.txt
-
-           echo "最终节点数量:"
-            wc -l nodes.txt
-        
-          if [ "$success" = true ]; then
-          if [ -f speed_rank.txt ]; then
-
-           echo "=== 使用测速结果生成节点 ==="
+           echo "=== 使用真实测速结果 ==="
 
            cat speed_rank.txt \
-           | sort -nr \
-           | cut -d'|' -f2 \
-           | awk '!seen[$0]++' \
-           | sed -n '1,80p' \
-           > nodes.txt
-            else
-            echo "=== 无测速结果，使用TCP节点 ==="
-
-           cat tcp_alive_nodes.txt \
-           | awk '!seen[$0]++' \
-           | sed -n '1,80p' \
+            | sort -nr \
+             | cut -d'|' -f2 \
+             | awk '!seen[$0]++' \
+             | sed -n '1,80p' \
            > nodes.txt
 
-           fi
+
+           else
+
+              echo "=== 没有测速结果，使用TCP备用 ==="
+
+             cat tcp_alive_nodes.txt \
+              | awk '!seen[$0]++' \
+               | sed -n '1,80p' \
+               > nodes.txt
+
+                 fi
+
+
+              echo "最终节点数量:"
+               wc -l nodes.txt
+          
             echo "【成功】鲜活节点已置顶"
           else
             echo "【熔断】所有源失效，回滚备份"
