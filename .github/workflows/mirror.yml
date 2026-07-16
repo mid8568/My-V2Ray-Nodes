@@ -3,8 +3,8 @@ name: Remote Repo Node Scanner
 on:
   workflow_dispatch:
   schedule:
-    # 调整为每 6 小时查杀一次，防止被上游防火墙拉黑 IP
-    - cron: '0 */6 * * *'
+    # 调整为每 14 小时查杀一次，防止被上游防火墙拉黑 IP
+    - cron: '0 */14 * * *'
 
 concurrency:
   group: remote-nodes-scan
