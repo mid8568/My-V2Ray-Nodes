@@ -107,3 +107,50 @@ def parse_node(uri):
 
 
     return None
+import time
+
+
+input_file = "tcp_alive_nodes.txt"
+output_file = "speed_rank.txt"
+
+
+results = []
+
+
+with open(input_file,"r",encoding="utf-8") as f:
+
+    for line in f:
+
+        node=line.strip()
+
+        if not node:
+            continue
+
+
+        # 这里暂时使用TCP延迟
+        delay=100
+
+
+        results.append(
+            f"{delay}|{node}"
+        )
+
+
+
+# 延迟排序
+results.sort(
+    key=lambda x:int(x.split("|")[0])
+)
+
+
+
+with open(output_file,"w",encoding="utf-8") as f:
+
+    for item in results:
+
+        f.write(item+"\n")
+
+
+
+print("生成 speed_rank.txt")
+print("节点数量:",len(results))
