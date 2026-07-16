@@ -1,23 +1,24 @@
 cat > score.py << 'EOF'
-import sys
-import asyncio
-import re
-import base64
-import time
+
+  import sys
+  import asyncio
+  import re
+  import base64
+  import time
 
 
-PROTOCOL_REGEX = re.compile(
-    r'^(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://',
-    re.IGNORECASE
-)
+  PROTOCOL_REGEX = re.compile(
+      r'^(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://',
+      re.IGNORECASE
+    )
 
 
-HOST_PORT_REGEX = re.compile(
-    r'://[^@]*@?([\w\.\-\[\]:]+):(\d+)'
-)
+  HOST_PORT_REGEX = re.compile(
+      r'://[^@]*@?([\w\.\-\[\]:]+):(\d+)'
+  )
 
 
-def decode_base64_safe(data):
+  def decode_base64_safe(data):
     try:
         cleaned = re.sub(r'[\r\n\t ]', '', data)
 
@@ -35,7 +36,7 @@ def decode_base64_safe(data):
         return ""
 
 
-async def test_tcp_node(line, sem):
+  async def test_tcp_node(line, sem):
 
     async with sem:
 
@@ -101,17 +102,16 @@ async def test_tcp_node(line, sem):
             )
 
 
+  async def main():
 
-async def main():
+      with open(
+          'temp_all_raw.txt',
+          'r',
+          encoding='utf-8',
+          errors='ignore'
+      ) as f:
 
-    with open(
-        'temp_all_raw.txt',
-        'r',
-        encoding='utf-8',
-        errors='ignore'
-    ) as f:
-
-        raw=f.read()
+          raw=f.read()
 
 
 
