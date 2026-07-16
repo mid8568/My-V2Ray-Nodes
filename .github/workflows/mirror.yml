@@ -1,9 +1,8 @@
-name: Repo Auto Mirror Sync
+name: Repo Auto Mirror Sync - V5.9 Ultra
 
 on:
   workflow_dispatch:
   schedule:
-    # 北京时间每天的 08:00, 12:00, 16:00, 20:00, 00:00, 04:00 运行
     - cron: '0 0,4,8,12,16,20 * * *'
 
 concurrency:
@@ -19,34 +18,28 @@ jobs:
     continue-on-error: false
     steps:
       - name: 1. 检出本地仓库
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: 2. 初始化 Python 环境
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.10'
 
-      - name: 3. 安全提取、Python Asyncio 高并发测速、移除重复与无效节点
+      - name: 3. 增强版 Python 测速过滤（完美兼容 IPv6 & 彻底剔除 -1）
         run: |
           set -euo pipefail
           
-          # 临时文件防脏提交
           touch .gitignore
           for item in "temp_*" "decoded_*" "*.bak" "speed_test.py" "subconverter*"; do
             grep -qxF "$item" .gitignore || echo "$item" >> .gitignore
           done
           
-          if [ -f nodes.txt ]; then
-            cp nodes.txt /tmp/nodes_backup.txt
-            echo "【事务安全】已将当前线上节点备份至内存区: /tmp/nodes_backup.txt"
-          fi
-          
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
           YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
           
-          # 构建核心测速、严格过滤与深度去重脚本
+          # 重新构建更加健壮的测速清洗脚本
           cat > speed_test.py << 'EOF'
           import asyncio
           import re
@@ -68,7 +61,7 @@ jobs:
                   right_part = clean_uri.split('@')[-1]
                   host_port_match = re.search(r'([^/\\?#]+):([0-9]+)', right_part)
                   if host_port_match:
-                      host = host_port_match.group(1).strip("[]")
+                      host = host_port_match.group(1).strip()
                       port = int(host_port_match.group(2))
               else:
                   try:
@@ -77,7 +70,7 @@ jobs:
                           hp = parsed.netloc.split('@')[-1]
                           if ':' in hp:
                               h, p = hp.rsplit(':', 1)
-                              host = h.strip("[]")
+                              host = h.strip()
                               port = int(p)
                   except:
                       pass
@@ -90,7 +83,7 @@ jobs:
               host = node["host"]
               port = node["port"]
               
-              # IPv6 修复机制
+              # 💡 修复核心：智能处理 IPv6 地址，防止 asyncio 建立连接时崩溃
               if ":" in host and not host.startswith("["):
                   conn_host = f"[{host}]"
               else:
@@ -98,6 +91,7 @@ jobs:
                   
               start_time = time.time()
               try:
+                  # 严格执行四层 TCP 握手验证
                   reader, writer = await asyncio.wait_for(
                       asyncio.open_connection(conn_host, port), timeout=timeout
                   )
@@ -105,11 +99,12 @@ jobs:
                   await writer.wait_closed()
                   delay = (time.time() - start_time) * 1000
                   
-                  # 严格过滤垃圾节点
-                  if delay < 999:
-                      weight = delay + random.uniform(0, 50)
-                      return {"line": node["line"], "delay": delay, "weight": weight}
+                  # 过滤掉不稳定的高延时垃圾节点
+                  if delay < 1000:
+                      weight = delay + random.uniform(0, 30)
+                      return {"line": node["line"], "weight": weight}
               except:
+                  # 连接失败（即原先显示的 -1 节点）直接在此处被过滤丢弃
                   pass
               return None
 
@@ -126,6 +121,7 @@ jobs:
                       
                   node_info = parse_node(line)
                   if node_info:
+                      # 底层 IP+端口 去重机制
                       endpoint = f"{node_info['host']}:{node_info['port']}"
                       if endpoint in seen_endpoints:
                           continue
@@ -133,7 +129,10 @@ jobs:
                       tasks.append(test_node(node_info))
                       
               results = await asyncio.gather(*tasks)
+              # 💡 核心清洗：只允许测速成功（非 None）的优质节点通过
               valid_nodes = [r for r in results if r is not None]
+              
+              # 动态按延迟权重排序
               valid_nodes.sort(key=lambda x: x["weight"])
               for vn in valid_nodes:
                   print(vn["line"])
@@ -142,7 +141,7 @@ jobs:
               asyncio.run(main())
           EOF
 
-          # 💡 优化 1：直连抗环境干扰调整，优先使用全球高可用的 CDN 镜像链源
+          # 使用高可用的高速直连接入链
           urls=(
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}2"
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}1"
@@ -150,14 +149,12 @@ jobs:
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${YESTERDAY}1"
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v4"
             "https://raw.gitmirror.com/free-nodes/v2rayfree/main/v${TODAY}2"
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
           )
           
-          success=false
           rm -f temp_all_raw.txt && touch temp_all_raw.txt
           
           for url in "${urls[@]}"; do
-            echo "尝试获取数据源 -> $url"
+            echo "正在直连同步 -> $url"
             rm -f temp_src.txt decoded_src.txt
             temp_code=$(curl -A "Mozilla/5.0" -sL --connect-timeout 8 --max-time 15 -o temp_src.txt -w "%{http_code}" "$url" || true)
             
@@ -177,26 +174,18 @@ jobs:
             fi
           done
 
-          # 执行全局测速与去重
           if [ -s temp_all_raw.txt ]; then
             awk '!seen[$0]++' temp_all_raw.txt > temp_clean_raw.txt
-            echo "=== ⚙️ 启动 Python Asyncio 高级去重与并发测速引擎 ==="
+            echo "=== ⚙️ 启动 Python 测速并强制剔除无效节点 ==="
             python3 speed_test.py < temp_clean_raw.txt > temp_final_nodes.txt || touch temp_final_nodes.txt
             
-            NODE_COUNT=$(wc -l < temp_final_nodes.txt || echo 0)
-            if [ "$NODE_COUNT" -ge 3 ]; then
+            # 💡 取消以前的保守熔断，只要有成功测出存活的节点就直接覆盖，哪怕只有1个，也坚决不要 -1 垃圾节点
+            if [ -s temp_final_nodes.txt ]; then
               mv temp_final_nodes.txt nodes.txt
-              success=true
-              echo "【深度清洗完成】独立优质节点数量: $NODE_COUNT"
-            fi
-          fi
-          
-          if [ "$success" = false ]; then
-            echo "【⚠️ 安全熔断】未获取到足够的有效活节点，自动回滚历史备份。"
-            if [ -f /tmp/nodes_backup.txt ]; then
-              cp /tmp/nodes_backup.txt nodes.txt
+              echo "【清洗成功】已完全剔除所有无效 `-1` 节点，优质节点已成功写入。"
             else
-              touch nodes.txt
+              echo "【⚠️ 警报】本次未测出任何存活节点，清空订阅列表，拒绝使用含 `-1` 的旧配置。"
+              echo "# 暂无可用活节点，等待下一轮测速刷新" > nodes.txt
             fi
           fi
           rm -f temp_* speed_test.py
@@ -218,53 +207,43 @@ jobs:
           set -euo pipefail
           base64 -w 0 nodes.txt > base64.txt
 
-      - name: 6. 💡 部署本地 Subconverter 引擎 (彻底告别外部网页 API)
+      - name: 6. 部署本地 Subconverter 引擎 (脱离外网 API 转换)
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
-          echo "=== ⏬ 正在下载并初始化本地化 Subconverter 二进制程序 ==="
-          # 下载官方专为 Linux 优化的全协议静态二进制包
+          echo "=== ⏬ 下载本地化转换程序 ==="
           curl -sL "https://github.com/tindy2013/subconverter/releases/download/v0.9.0/subconverter_linux64.tar.gz" -o subconverter.tar.gz
           tar -zxf subconverter.tar.gz
           
-          echo "=== 🚀 正在后台启动本地转换网关 ==="
           cd subconverter
           ./subconverter > /dev/null 2>&1 &
           
-          # 等待本地进程就绪并进行健康检查
           for i in {1..10}; do
             if curl -s -o /dev/null http://127.0.0.1:25500/version; then
-              echo "✅ 本地 Subconverter 服务已成功冷启动！"
+              echo "✅ 本地转换网关已就绪！"
               break
             fi
             sleep 1
           done
           
-          # 拷贝当前轮清洗完的本地物理节点文本到工作目录，避开对网络 raw URL 缓存的依赖
           cp ../nodes.txt ./local_nodes.txt
           
-          echo "=== 🛠️ 正在通过环回网关执行本地安全转换 ==="
-          # 直接读取本地 local_nodes.txt，不依赖远程 GitHub 链接，断网也能转换
           curl -sL -A "clash" "http://127.0.0.1:25500/sub?target=clash&url=./local_nodes.txt&insert=false&emoji=true&udp=true" -o ../temp_clash.yaml || true
           curl -sL -A "sing-box" "http://127.0.0.1:25500/sub?target=singbox&url=./local_nodes.txt&insert=false&emoji=true" -o ../temp_singbox.json || true
           
-          # 优雅关闭本地后台引擎
           pkill subconverter || true
           cd ..
           
-          # 拦截与重写配置
           if [ -s temp_clash.yaml ] && grep -q "proxies:" temp_clash.yaml; then
             mv temp_clash.yaml clash.yaml
-            echo "Clash 本地转换大成功。"
           else
-            [ -f clash.yaml ] || echo "proxies: []" > clash.yaml
+            echo "proxies: []" > clash.yaml
           fi
           
           if [ -s temp_singbox.json ] && grep -q '"outbounds"' temp_singbox.json; then
             mv temp_singbox.json singbox.json
-            echo "sing-box 本地转换大成功。"
           else
-            [ -f singbox.json ] || echo '{"outbounds":[]}' > singbox.json
+            echo '{"outbounds":[]}' > singbox.json
           fi
           
           rm -rf subconverter subconverter.tar.gz temp_*
@@ -293,40 +272,33 @@ jobs:
           <head>
               <meta charset="utf-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>🚀 My V2Ray Nodes Subscription Hub</title>
+              <title>🚀 Nodes Subscription Hub</title>
               <style>
-                  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; line-height: 1.6; max-width: 850px; margin: 40px auto; padding: 0 20px; background-color: #f8f9fa; color: #212529; }
+                  body { font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; line-height: 1.6; max-width: 850px; margin: 40px auto; padding: 0 20px; background-color: #f8f9fa; color: #212529; }
                   h1 { color: #0d6efd; border-bottom: 2px solid #dee2e6; padding-bottom: 10px; }
                   h2 { color: #198754; margin-top: 30px; }
-                  .meta-box { background: #fff; border-left: 4px solid #0d6efd; padding: 15px; margin: 20px 0; border-radius: 0 4px 4px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-                  textarea { width: 100%; height: 50px; padding: 10px; box-sizing: border-box; border: 1px solid #ced4da; border-radius: 4px; background-color: #e9ecef; font-family: monospace; resize: none; margin-top: 5px; }
-                  .copy-btn { background-color: #0d6efd; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 5px; font-weight: bold; margin-bottom: 15px; }
-                  .copy-btn:hover { background-color: #0b5ed7; }
+                  .meta-box { background: #fff; border-left: 4px solid #0d6efd; padding: 15px; margin: 20px 0; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+                  textarea { width: 100%; height: 50px; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; background-color: #e9ecef; font-family: monospace; resize: none; }
+                  .copy-btn { background-color: #0d6efd; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 10px 0 20px 0; }
               </style>
           </head>
           <body>
               <h1>🚀 My V2Ray Nodes Hub</h1>
               <div class="meta-box">
                   <p>⏰ <strong>更新时间 (北京时间)：</strong> ${BEIJING_TIME}</p>
-                  <p>📊 <strong>独立有效节点总数（去重测速直连优化）：</strong> <span style="color: #198754; font-weight: bold;">${TOTAL_COUNT}</span></p>
-                  <p>🌐 <strong>去重独立服务器数量：</strong> <span style="color: #0d6efd; font-weight: bold;">${IP_COUNT}</span></p>
+                  <p>📊 <strong>纯净筛选高动态排序节点总数（已剔除无效）：</strong> <span style="color: #198754; font-weight: bold;">${TOTAL_COUNT}</span></p>
+                  <p>🌐 <strong>去重独立节点服务器数量：</strong> <span style="color: #0d6efd; font-weight: bold;">${IP_COUNT}</span></p>
               </div>
               
               <h2>⚡ 方案 A：通用订阅链</h2>
-              <h3>🔗 1. 通用明文 (带强刷防缓存)：</h3>
               <textarea id="sub-url-raw-cache" readonly>${BASE_PAGE_URL}/nodes.txt?v=${CACHE_ID}</textarea>
               <button class="copy-btn" onclick="copyUrl('sub-url-raw-cache')">复制高速明文</button>
-
-              <h3>🔗 2. 通用 Base64 密文：</h3>
               <textarea id="sub-url-b64-cache" readonly>${BASE_PAGE_URL}/base64.txt?v=${CACHE_ID}</textarea>
               <button class="copy-btn" onclick="copyUrl('sub-url-b64-cache')">复制密文订阅</button>
 
-              <h2>🛠️ 方案 B：专属客户端配置订阅 (本地闭环转换)</h2>
-              <h3>🔗 1. Clash Meta YAML 专用配置链接：</h3>
+              <h2>🛠️ 方案 B：专属客户端配置订阅</h2>
               <textarea id="sub-url-clash" readonly>${BASE_PAGE_URL}/clash.yaml?v=${CACHE_ID}</textarea>
               <button class="copy-btn" style="background-color: #fd7e14;" onclick="copyUrl('sub-url-clash')">复制 Clash 配置</button>
-
-              <h3>🔗 2. sing-box JSON 专用配置链接：</h3>
               <textarea id="sub-url-singbox" readonly>${BASE_PAGE_URL}/singbox.json?v=${CACHE_ID}</textarea>
               <button class="copy-btn" style="background-color: #6f42c1;" onclick="copyUrl('sub-url-singbox')">复制 sing-box 配置</button>
 
@@ -335,14 +307,14 @@ jobs:
                       var copyText = document.getElementById(id);
                       copyText.select();
                       navigator.clipboard.writeText(copyText.value);
-                      alert("链接已复制到剪贴板！");
+                      alert("链接已复制！");
                   }
               </script>
           </body>
           </html>
           EOF
 
-      - name: 8. 稳健回归普通提交与安全推送
+      - name: 8. 安全推送至 GitHub 仓库
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
@@ -350,12 +322,10 @@ jobs:
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
           git add nodes.txt base64.txt index.html clash.yaml singbox.json .gitignore
-          
           if git diff --cached --quiet; then exit 0; fi
           
           CURRENT_BRANCH=$(git branch --show-current)
           BEIJING_TIME=$(date -u -d '+8 hours' '+%Y-%m-%d %H:%M:%S')
           
-          git commit -m "Auto update nodes at $BEIJING_TIME (Beijing)"
+          git commit -m "Auto clean and update nodes at $BEIJING_TIME (Beijing)"
           git push origin "$CURRENT_BRANCH"
-          echo "【数据闭环】流程完美收工！"
