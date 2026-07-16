@@ -1,9 +1,9 @@
 name: Auto Fetch Nodes
 
 on:
-  workflow_dispatch: # 支持网页手动点击运行
+  workflow_dispatch: # 支持手动触发
   schedule:
-    - cron: '0 */4 * * *' # 每 4 小时在后台自动执行一次
+    - cron: '0 */4 * * *' # 每 4 小时自动运行一次
 
 jobs:
   run-python-script:
@@ -25,23 +25,11 @@ jobs:
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           
-          # 强制创建/更新时间戳
-          touch nodes.txt
-          
+          # 💡 核心修复：添加并追踪变更
           git add nodes.txt
           
-          # 无论有无变化，在有手动触发或定时触发时，都允许强制推送到仓库
-          git commit -m "Auto sync nodes at $(date)" || echo "No changes to commit"
+          # 💡 终极修复：允许空提交。即使文件无变化，也强行生成一个带时间戳的新 Commit，确保首页文件绝对刷新
+          git commit --allow-empty -m "Auto sync nodes at $(date -u -d '+8 hours' '+%Y-%m-%d %H:%M:%S') Beijing Time"
+          
+          # 强行推送到主分支
           git push origin main
-
-          
-          # 💡 终极修复：保底强制创建，彻底消灭 fatal: pathspec 128 错误
-          touch nodes.txt
-          
-          git add nodes.txt
-          if ! git diff --cached --quiet; then
-            git commit -m "Auto sync nodes at $(date)"
-            git push origin main
-          else
-            echo "Nodes have no changes."
-          fi
