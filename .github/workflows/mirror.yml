@@ -120,12 +120,9 @@ jobs:
           mv temp_clean.txt temp_all_raw.txt
           
           # 注意：下方 Python 代码的缩进已经过严格对齐，千万不要手动改动左侧空格
+          
           cat > score.py << 'EOF'
           import sys, asyncio, re, base64, time
-
-          sed -i 's/^[[:space:]]\{10\}//' score.py
-
-          python3 -m py_compile score.py
           
           # 支持的主流节点协议正则
           PROTOCOL_REGEX = re.compile(r'^(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://', re.IGNORECASE)
@@ -214,11 +211,9 @@ jobs:
                   if item[0] > 0
               ]
 
-
               alive_results.sort(
                   key=lambda x: (-x[0], x[1])
               )
-
 
               final_nodes = [
                   item[2]
@@ -242,6 +237,8 @@ jobs:
 
           # 去除 Python 脚本中多余的 YAML 前置缩进，使其在容器中能够被 Python 引擎正常执行
           
+          sed -i 's/^[[:space:]]\{10\}//' score.py
+
           python3 -m py_compile score.py
 
           # 执行清洗和检测，若脚本出错(触发熔断)则无条件回滚原备份
