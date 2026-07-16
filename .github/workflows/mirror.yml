@@ -161,15 +161,40 @@ jobs:
 
 
           # 只保留300ms以内节点
-          if [ "$delay" -le 300 ]
-          then
+          if [ "$delay" -le 300 ];then
           echo "${delay}|${line}" >> speed_nodes.txt
           fi
 
            fi
 
            done < temp_nodes.txt
+          echo "=== TCP检测完成 ==="
 
+          sort -n speed_nodes.txt \
+          | cut -d'|' -f2 \
+          | awk '!seen[$0]++' \
+          > verified_temp.txt
+
+
+          mv verified_temp.txt tcp_alive_nodes.txt
+
+
+          COUNT=$(wc -l < tcp_alive_nodes.txt)
+
+          echo "有效TCP节点: $COUNT"
+
+
+          if [ "$COUNT" -ge 5 ]; then
+              success=true
+              break
+          fi
+
+
+          fi   # 关闭 if [ "$temp_code" = "200" ]
+
+
+          done   # 关闭 for url
+          
 
           echo "=== 延迟排序 ==="
 
