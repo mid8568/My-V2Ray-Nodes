@@ -212,8 +212,7 @@ jobs:
           cp tcp_alive_nodes.txt nodes.txt
 
           fi
-          done
-         
+        
           if [ "$success" = true ]; then
           if [ -f speed_rank.txt ]; then
 
