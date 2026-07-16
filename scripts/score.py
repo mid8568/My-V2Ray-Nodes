@@ -1,11 +1,5 @@
-cat > score.py << 'PYEOF'
-
-import sys
-import asyncio
-import re
-import base64
-import time
-
+cat > score.py << 'EOF'
+import sys, asyncio, re, base64, time
 
 PROTOCOL_REGEX = re.compile(
     r'^(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://',
@@ -16,7 +10,6 @@ PROTOCOL_REGEX = re.compile(
 HOST_PORT_REGEX = re.compile(
     r'://[^@]*@?([\w\.\-\[\]:]+):(\d+)'
 )
-
 
 def decode_base64_safe(data):
 
@@ -291,6 +284,4 @@ if __name__ == "__main__":
 
     asyncio.run(main())
 
-PYEOF
-
-python3 -m py_compile score.py
+EOF
