@@ -29,32 +29,41 @@ jobs:
           set -euo pipefail
 
           sudo apt update
-          sudo apt install -y curl jq bc tar
+          sudo apt install -y curl bc tar
 
-          echo "=== 获取 sing-box 最新版本 ==="
 
-          VERSION=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest \
-          | jq -r '.tag_name')
+          echo "=== 固定 sing-box 版本 ==="
+
+          VERSION=v1.12.0
 
           echo "版本: $VERSION"
 
 
           echo "=== 下载 sing-box ==="
 
+
           curl -L \
+          --fail \
           "https://github.com/SagerNet/sing-box/releases/download/${VERSION}/sing-box-${VERSION#v}-linux-amd64.tar.gz" \
           -o sing-box.tar.gz
 
 
-          echo "=== 解压 ==="
+          echo "=== 检查下载文件 ==="
 
-          tar -xf sing-box.tar.gz
+          ls -lh sing-box.tar.gz
 
+
+          echo "=== 解压 sing-box ==="
+
+          tar -xzf sing-box.tar.gz
+
+
+          echo "=== 安装 ==="
 
           sudo mv sing-box-*/sing-box /usr/local/bin/sing-box
 
 
-          echo "=== 测试安装 ==="
+          echo "=== 测试 ==="
 
           sing-box version
           
