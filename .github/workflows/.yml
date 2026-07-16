@@ -1,25 +1,32 @@
-name: Sync to Free Nodes Repo
+name: Repo Auto Mirror Sync
 
 on:
-  workflow_dispatch: # 支持手动触发
+  workflow_dispatch:
   schedule:
-    - cron: '0 */3 * * *' # 每 3 小时自动把对方全套文件强行“搬”过来
+    - cron: '0 */3 * * *'
 
 jobs:
-  repo-sync:
+  mirror-sync:
     runs-on: ubuntu-latest
     steps:
-      - name: 检出当前仓库
-        uses: actions/checkout@v6
+      - name: Checkout Local Repo
+        uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 镜像级全自动强推对齐
-        uses: repo-sync/github-sync@v2
-        with:
-          source_repo: "https://github.com"
-          source_branch: "main"
-          destination_branch: "main"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # 💡 极其重要：强制覆盖！无视你本地已有的任何空 nodes.txt，用对方的全套文件强行洗荡你的主页
-          force: true
+      - name: Force Sync From Target Repo
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          
+          # 1. 强行拉取并注入对方仓库的最新全部历史数据
+          git remote add target https://github.com
+          git fetch target main
+          
+          # 2. 强行将本地 main 分支重置并对齐为对方 main 分支的模样，无视任何冲突
+          git checkout main
+          git reset --hard target/main
+          
+          # 3. 使用本地高权限令牌强行推送回你自己的首页
+          git push --force origin main
