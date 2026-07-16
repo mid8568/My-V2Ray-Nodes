@@ -1,33 +1,26 @@
 name: Repo Auto Mirror Sync - V5.3 Fortress Pro
-
 on:
   workflow_dispatch:
   schedule:
     # 北京时间每天的 08:00, 12:00, 16:00, 20:00, 00:00, 04:00 运行
     - cron: '0 */4 * * *'
-
 concurrency:
   group: nodes-sync
   cancel-in-progress: false
-
 permissions:
   contents: write
-
 jobs:
   smart-sync:
     runs-on: ubuntu-latest
     continue-on-error: false
-
     steps:
       - name: 1. 检出本地仓库
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
       - name: 2.安装测速环境
         run: |
           set -euo pipefail
-
           sudo apt update
           sudo apt install -y \
           curl \
@@ -36,43 +29,23 @@ jobs:
            jq \
            python3 \
            python3-pip
-
-
           echo "=== 固定 sing-box 版本 ==="
-
           VERSION=v1.12.0
-
           echo "版本: $VERSION"
-
-
           echo "=== 下载 sing-box ==="
-
-
           curl -L \
           --fail \
           "https://github.com/SagerNet/sing-box/releases/download/${VERSION}/sing-box-${VERSION#v}-linux-amd64.tar.gz" \
           -o sing-box.tar.gz
-
-
           echo "=== 检查下载文件 ==="
-
           ls -lh sing-box.tar.gz
-
-
           echo "=== 解压 sing-box ==="
-
           tar -xzf sing-box.tar.gz
-
-
           echo "=== 安装 ==="
-
           sudo mv sing-box-*/sing-box /usr/local/bin/sing-box
-
-
           echo "=== 测试 ==="
-
           sing-box version
-          
+         
       - name: 3. 探测上游可用性
         run: |
           set -euo pipefail
@@ -80,13 +53,12 @@ jobs:
           TEST_URL="https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
           echo "=== 正在探测今日上游 Raw 路径可用性 ==="
           curl -I -s -A "Mozilla/5.0" -o /dev/null -w "HTTP 状态码: %{http_code}\n" "$TEST_URL" || true
-
       - name: 4. 安全提取、高并发双源灾备、TCP 测速与置顶排序
         run: |
           set -euo pipefail
-         
+        
           touch .gitignore
-          
+         
           for item in \
           "temp_*" \
            "decoded_*" \
@@ -98,18 +70,18 @@ jobs:
            "speed_rank.txt" \
           "singbox_test" \
            "*.json"; do
-           
+          
             grep -qxF "$item" .gitignore || echo "$item" >> .gitignore
           done
-         
+        
           if [ -f nodes.txt ]; then
             cp nodes.txt /tmp/nodes_backup.txt
             echo "【事务安全】已备份当前节点"
           fi
-         
+        
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
           YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
-         
+        
           urls=(
             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}2"
@@ -118,21 +90,21 @@ jobs:
             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}2"
             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}1"
           )
-         
+        
           success=false
           PROTOCOL_REGEX="^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://"
-         
+        
           for url in "${urls[@]}"; do
             echo "尝试数据源 -> $url"
             rm -f temp_nodes.txt decoded_nodes.txt
-           
+          
             temp_code=$(curl -A "Mozilla/5.0" -sL --connect-timeout 10 --max-time 20 -o temp_nodes.txt -w "%{http_code}" "$url" || true)
-           
+          
             if [ "$temp_code" = "200" ] && [ "$(wc -c < temp_nodes.txt || echo 0)" -gt 200 ]; then
               sed -i '1s/^\xEF\xBB\xBF//' temp_nodes.txt
-             
+            
               if grep -qi "<html" temp_nodes.txt 2>/dev/null; then continue; fi
-             
+            
               if ! grep -E -q "${PROTOCOL_REGEX}" temp_nodes.txt 2>/dev/null; then
                 if tr -d '\r\n\t ' < temp_nodes.txt | base64 -d > decoded_nodes.txt 2>/dev/null; then
                   mv decoded_nodes.txt temp_nodes.txt
@@ -140,138 +112,87 @@ jobs:
                   continue
                 fi
               fi
-             
+            
               sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
               awk '!seen[$0]++' temp_nodes.txt > clean_nodes.txt && mv clean_nodes.txt temp_nodes.txt
-             
+            
            echo "=== 开始节点检测 ==="
-
            > verified_temp.txt
            > speed_nodes.txt
-
                while IFS= read -r line || [ -n "$line" ]; do
-
                [ -z "$line" ] && continue
-
                clean_uri=$(echo "$line" | cut -d'#' -f1)
-
              # 提取 host:port
              host_port=$(echo "$clean_uri" \
              | grep -oE '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}:[0-9]+' \
              | tail -n1 || true)
-
-
              [ -z "$host_port" ] && continue
-
-
             host="${host_port%:*}"
             port="${host_port##*:}"
-  
+ 
             # TCP测试 + 计算延迟
            start=$(date +%s%3N)
-
           if timeout 3 bash -c "</dev/tcp/$host/$port" 2>/dev/null
           then
-
           end=$(date +%s%3N)
-
           delay=$((end-start))
-
-
           # 只保留300ms以内节点
           if [ "$delay" -le 300 ];then
           echo "${delay}|${line}" >> speed_nodes.txt
           fi
-
            fi
-
            done < temp_nodes.txt
           echo "=== TCP检测完成 ==="
-
           sort -n speed_nodes.txt \
           | cut -d'|' -f2 \
           | awk '!seen[$0]++' \
           > verified_temp.txt
-
-
           mv verified_temp.txt tcp_alive_nodes.txt
-
-
           COUNT=$(wc -l < tcp_alive_nodes.txt)
-
           echo "有效TCP节点: $COUNT"
-
-
           if [ "$COUNT" -ge 5 ]; then
               success=true
               break
           fi
-
-
-          fi   # 关闭 if [ "$temp_code" = "200" ]
-
-
-          done   # 关闭 for url
-          
-
+          fi # 关闭 if [ "$temp_code" = "200" ]
+          done # 关闭 for url
+         
           echo "=== 延迟排序 ==="
-
             # 延迟从低到高排序
-
            sort -n speed_nodes.txt \
            | cut -d'|' -f2 \
            | awk '!seen[$0]++' \
            > verified_temp.txt
-
-
-
           mv verified_temp.txt tcp_alive_nodes.txt
-
           echo "=== TCP有效节点 ==="
-
           wc -l tcp_alive_nodes.txt
-
-
            echo "=== 开始真实代理测速 ==="
-
            mkdir -p singbox_test
-           
+          
            rm -f speed_rank.txt
-
            python3 scripts/node_parser.py
-
-
              if [ -f speed_rank.txt ]; then
-
            echo "=== 使用真实测速结果 ==="
-
            cat speed_rank.txt \
             | sort -nr \
              | cut -d'|' -f2 \
              | awk '!seen[$0]++' \
              | sed -n '1,80p' \
            > nodes.txt
-
            else
-
               echo "=== 没有测速结果，使用TCP备用 ==="
-
              cat tcp_alive_nodes.txt \
               | awk '!seen[$0]++' \
                | sed -n '1,80p' \
                > nodes.txt
-
                  fi
-
               echo "最终节点数量:"
                wc -l nodes.txt
-          
+         
             echo "【成功】鲜活节点已置顶"
- 
           rm -f temp_*
-
-      
-          
+     
+         
       - name: 4. 检测文件变更
         id: check_changes
         run: |
@@ -282,12 +203,10 @@ jobs:
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
-
       - name: 5. 生成 Base64 编码
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           base64 -w 0 nodes.txt > base64.txt
-
       - name: 6. 生成 Clash & sing-box 配置
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
@@ -295,30 +214,29 @@ jobs:
           CURRENT_BRANCH=$(git branch --show-current)
           RAW_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${CURRENT_BRANCH}/nodes.txt"
           CACHE_ID=$(date +%s)
-         
+        
           # Clash
           curl -sL -A "clash" "https://sub.xeton.gq/sub?target=clash&url=${RAW_URL}&insert=false&emoji=true&udp=true" -o clash.yaml || echo "proxies: []" > clash.yaml
-         
+        
           # sing-box
           curl -sL -A "sing-box" "https://sub.xeton.gq/sub?target=singbox&url=${RAW_URL}&insert=false&emoji=true" -o singbox.json || echo '{"outbounds":[]}' > singbox.json
-
       - name: 7. 提交更新
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-         
+        
           git add nodes.txt base64.txt clash.yaml singbox.json .gitignore
-         
+        
           if git diff --cached --quiet; then
             echo "无实质变更"
             exit 0
           fi
-         
+        
           BEIJING_TIME=$(date -u -d '+8 hours' '+%Y-%m-%d %H:%M:%S')
           git commit -m "Auto Sync at $BEIJING_TIME"
-         
+        
           CURRENT_BRANCH=$(git branch --show-current)
           git pull --rebase origin "$CURRENT_BRANCH"
-          git push origin "$CURRENT_BRANCH"
+          git push origin "$CURRENT_BRANCH" 
