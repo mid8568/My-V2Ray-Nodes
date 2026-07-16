@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # 每 6 小时自动全量抓取、去重与测速净化，防止被上游防火墙限流
-    - cron: '0 */6 * * *'
+    - cron: '0 */12 * * *'
 
 concurrency:
   group: remote-nodes-scan
@@ -131,11 +131,11 @@ jobs:
                       return None
                       
                   avg_delay = sum(delays) / len(delays)
-                  if not (30 <= avg_delay <= 450):
+                  if not (30 <= avg_delay <= 800):
                       return None
 
                   speed_mb_s = random.uniform(8.0, 58.0) - (avg_delay * 0.01)
-                  if speed_mb_s < 2.0: 
+                  if speed_mb_s < 0.2: 
                       return None
                       
                   region = get_region(node["line"])
