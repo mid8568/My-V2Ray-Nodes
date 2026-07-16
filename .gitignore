@@ -8,3 +8,6 @@ verified_temp.txt
 speed_test.py
 subconverter*
 speed_nodes.txt
+speed_rank.txt
+singbox_test
+*.json
