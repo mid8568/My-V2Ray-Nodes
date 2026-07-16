@@ -56,14 +56,57 @@ jobs:
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
           YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
          
-          urls=(
-             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
-             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}2"
-             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}1"
-             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}1"
-             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}2"
-             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}1"
-             )
+          urls=()
+
+          BASE_URLS=(
+             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v"
+             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v"
+          )
+
+          echo "=== 自动检测可用订阅源 ==="
+
+          for DATE in "$TODAY" "$YESTERDAY"
+          do
+
+              for NUM in 2 1
+              do
+
+                  for BASE in "${BASE_URLS[@]}"
+                  do
+
+                      URL="${BASE}${DATE}${NUM}"
+
+                      echo "检测: $URL"
+
+                      STATUS=$(curl \
+                          -L \
+                          -s \
+                          -o /dev/null \
+                          -w "%{http_code}" \
+                          -A "Mozilla/5.0" \
+                          --connect-timeout 5 \
+                          --max-time 10 \
+                          "$URL" || true)
+
+                      if [ "$STATUS" = "200" ]; then
+
+                          echo "✓ 可用: $URL"
+
+                          urls+=("$URL")
+
+                      else
+
+                          echo "× 跳过: $URL ($STATUS)"
+
+                      fi
+
+                  done
+
+              done
+
+          done
+
+          echo "=== 有效源数量: ${#urls[@]} ==="
          
           > temp_all_raw.txt
           for url in "${urls[@]}"; do
