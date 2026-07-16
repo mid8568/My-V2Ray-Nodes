@@ -29,7 +29,7 @@ jobs:
           set -euo pipefail
 
           sudo apt update
-          sudo apt install -y curl bc tar
+          sudo apt install -y curl bc tar jq python3
 
 
           echo "=== 固定 sing-box 版本 ==="
@@ -227,7 +227,7 @@ jobs:
           | sort -nr \
           | cut -d'|' -f2 \
           | awk '!seen[$0]++' \
-          | sed -n '1,100p' \
+          | sed -n '1,80p' \
           > nodes.txt
 
           else
@@ -247,7 +247,7 @@ jobs:
            | sort -nr \
            | cut -d'|' -f2 \
            | awk '!seen[$0]++' \
-           | sed -n '1,100p' \
+           | sed -n '1,80p' \
            > nodes.txt
             else
             echo "=== 无测速结果，使用TCP节点 ==="
