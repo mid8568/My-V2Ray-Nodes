@@ -190,10 +190,25 @@ jobs:
           done
          
           if [ "$success" = true ]; then
-            cat tcp_alive_nodes.txt \
-             | grep -E "${PROTOCOL_REGEX}" \
-             | awk '!seen[$0]++' \
-             | head -n 300 > nodes.txt
+          if [ -f speed_rank.txt ]; then
+
+           echo "=== 使用测速结果生成节点 ==="
+
+           cat speed_rank.txt \
+           | sort -nr \
+           | cut -d'|' -f2 \
+           | awk '!seen[$0]++' \
+           | head -n 100 \
+           > nodes.txt
+            else
+            echo "=== 无测速结果，使用TCP节点 ==="
+
+           cat tcp_alive_nodes.txt \
+           | awk '!seen[$0]++' \
+           | head -n 100 \
+           > nodes.txt
+
+           fi
             echo "【成功】鲜活节点已置顶"
           else
             echo "【熔断】所有源失效，回滚备份"
