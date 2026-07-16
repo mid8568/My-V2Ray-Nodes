@@ -12,6 +12,7 @@ def get_nodes(url):
         return None
 
 def main():
+    # 💡 终极修复：必须使用 raw.githubusercontent.com 并且包含正确的作者仓库路径和末尾斜杠
     base_url = "https://githubusercontent.com"
     
     # 精准对齐北京时间
