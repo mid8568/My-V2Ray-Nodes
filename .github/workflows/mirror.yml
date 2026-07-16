@@ -3,7 +3,6 @@ name: Remote Repo Node Scanner
 on:
   workflow_dispatch:
   schedule:
-    # 修复错误注释，真实修改为每 6 小时触发一次 (北京时间 00:00, 06:00, 12:00, 18:00)
     - cron: '0 0,6,12,18 * * *'
 
 concurrency:
@@ -16,30 +15,27 @@ permissions:
 jobs:
   scan-and-filter:
     runs-on: ubuntu-latest
-    continue-on-error: false
+
     steps:
-      - name: 1. 检出本地仓库
-        # 降级至主流稳定 v5 版本，防止边缘环境未就绪崩溃
+      - name: 1. 检出仓库
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - name: 2. 初始化 Python 环境
+      - name: 2. 设置 Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: 3. 安装依赖与环境补齐
-        # 彻底解决 subconverter 缺失 libicu-dev 导致无法启动的问题
+      - name: 3. 安装依赖
         run: |
           sudo apt-get update
           sudo apt-get install -y libicu-dev jq
 
-      - name: 4. 运行强力多源并发测速引擎
+      - name: 4. 多源抓取 + 延迟质量评分
         run: |
           set -euo pipefail
           
-          # 清理环境变量代理，保持纯直连物理测速
           unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY all_proxy ALL_PROXY
           
           touch .gitignore
@@ -48,228 +44,133 @@ jobs:
           done
           
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
-          YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
           
-          # ==================== 🧠 注入完美闭合的真实物理测速引擎 ====================
           cat > speed_test.py << 'EOF'
-          import sys
-          import asyncio
-          import socket
-          import time
-          import re
-          import json
-          import ssl
-          from collections import Counter
+import sys
+import asyncio
+import socket
+import time
+import re
 
-          # 并发降级为 120，防 socket 耗尽与 DNS 超时
-          SEMAPHORE_LIMIT = 120
-          TIMEOUT = 3.5
+SEMAPHORE_LIMIT = 100
+TIMEOUT = 4.0
 
-          # 内置简易本地 DNS 缓存字典，防止高并发下大量重复域名解析打挂本地 DNS
-          DNS_CACHE = {}
+DNS_CACHE = {}
+PORT_BLACKLIST = {21, 22, 23, 25, 53, 110, 143, 3306, 3389}
 
-          # 仅屏蔽 1-1024 系统保留危险端口，放行 8080 等高位代理端口
-          PORT_BLACKLIST = {21, 22, 23, 25, 53, 110, 143, 3306, 3389}
+def parse_node(line):
+    line = line.strip()
+    if not line: return None
+    try:
+        match = re.match(r'^([a-zA-Z0-9\-_]+)://([^@]+@)?(?P<host>[a-zA-Z0-9\.\-_\[\]:]+):(?P<port>\d+)', line)
+        if not match: return None
+        host = match.group('host')
+        port = int(match.group('port'))
+        if port in PORT_BLACKLIST or '[' in host or ']' in host:
+            return None
+            
+        name = "未知节点"
+        if '#' in line:
+            name = line.split('#')[-1].strip()
+        elif 'remarks=' in line:
+            m = re.search(r'remarks=([^&]+)', line)
+            if m: name = m.group(1)
+            
+        return {"raw": line, "host": host, "port": port, "name": name}
+    except:
+        return None
 
-          def parse_node(line):
-              line = line.strip()
-              if not line:
-                  return None
-              try:
-                  # 支持带 scheme 格式的初步提取
-                  match = re.match(r'^([a-zA-Z0-9\-_]+)://([^@]+@)?(?P<host>[a-zA-Z0-9\.\-_\[\]:]+):(?P<port>\d+)', line)
-                  if not match:
-                      return None
-                  host = match.group('host')
-                  port = int(match.group('port'))
-                  
-                  if port in PORT_BLACKLIST:
-                      return None
-                      
-                  # 简单过滤 IPv6 格式或非法域名字符
-                  if '[' in host or ']' in host:
-                      return None
-                      
-                  # 提取可能存在的别名/节点名
-                  name = "未知节点"
-                  if '#' in line:
-                      name = line.split('#')[-1].strip()
-                  elif 'remarks=' in line:
-                      name_match = re.search(r'remarks=([^&]+)', line)
-                      if name_match: name = name_match.group(1)
-                      
-                  return {"raw": line, "host": host, "port": port, "name": name}
-              except Exception:
-                  return None
+async def cached_getaddrinfo(host, port, loop):
+    if host in DNS_CACHE: return DNS_CACHE[host]
+    try:
+        infos = await asyncio.wait_for(
+            loop.getaddrinfo(host, port, family=socket.AF_UNSPEC, type=socket.SOCK_STREAM), 
+            timeout=2.0
+        )
+        if infos:
+            ip = infos[0][4][0]
+            DNS_CACHE[host] = ip
+            return ip
+    except:
+        pass
+    return None
 
-          async def cached_getaddrinfo(host, port, loop):
-              if host in DNS_CACHE:
-                  return DNS_CACHE[host]
-              try:
-                  # 使用 AF_UNSPEC 兼容双栈，限制单次查询超时
-                  infos = await asyncio.wait_for(
-                      loop.getaddrinfo(host, port, family=socket.AF_UNSPEC, type=socket.SOCK_STREAM),
-                      timeout=2.0
-                  )
-                  if infos:
-                      DNS_CACHE[host] = infos[0][4][0]  # 缓存解析出来的 IP 地址
-                      return DNS_CACHE[host]
-              except Exception:
-                  pass
-              return None
+async def test_node(node, sem, loop):
+    async with sem:
+        ip = await cached_getaddrinfo(node['host'], node['port'], loop)
+        if not ip: return None
+            
+        start = time.perf_counter()
+        try:
+            r, w = await asyncio.wait_for(asyncio.open_connection(ip, node['port']), timeout=TIMEOUT)
+            delay = (time.perf_counter() - start) * 1000
+            w.close()
+            await w.wait_closed()
+        except:
+            return None
+            
+        total_delay = int(delay)
+        # 综合质量分数（基于延迟，越低越好，最高100分）
+        score = round(max(10, min(98, 6000.0 / (total_delay + 20.0))), 1)
+        
+        region = "其他"
+        for k, v in [("HK","香港"),("TW","台湾"),("SG","新加坡"),("JP","日本"),
+                     ("US","美国"),("KR","韩国"),("CN","中国")]:
+            if k in node['name'].upper() or k in node['host'].upper():
+                region = v
+                break
+                
+        return {
+            "raw": node['raw'], 
+            "name": node['name'], 
+            "delay": total_delay, 
+            "score": score, 
+            "region": region
+        }
 
-          async def test_node(node, sem, loop):
-              async with sem:
-                  host = node['host']
-                  port = node['port']
-                  
-                  # 1. DNS 解析处理
-                  ip = await cached_getaddrinfo(host, port, loop)
-                  if not ip:
-                      return None
+async def main():
+    loop = asyncio.get_running_loop()
+    lines = sys.stdin.readlines()
+    nodes = [p for line in lines if (p := parse_node(line))]
+    
+    sem = asyncio.Semaphore(SEMAPHORE_LIMIT)
+    results = await asyncio.gather(*[test_node(n, sem, loop) for n in nodes])
+    
+    alive = [r for r in results if r and r['delay'] <= 800]
+    alive.sort(key=lambda x: x['delay'])
+    alive = alive[:800]
+    
+    for n in alive:
+        print(n['raw'])
 
-                  # 2. 真实第一阶段：TCP 握手耗时测量
-                  start_time = time.perf_counter()
-                  try:
-                      reader, writer = await asyncio.wait_for(
-                          asyncio.open_connection(ip, port), timeout=TIMEOUT
-                      )
-                      tcp_delay = (time.perf_counter() - start_time) * 1000
-                      writer.close()
-                      try:
-                          await writer.wait_closed()
-                      except Exception:
-                          pass
-                  except Exception:
-                      return None # TCP 不通直接淘汰
+if __name__ == '__main__':
+    asyncio.run(main())
+EOF
 
-                  # 3. 真实第二阶段：TLS 握手耗时扩充测试（对常见安全端口进行 TLS 试探）
-                  tls_delay = 0.0
-                  if port in [443, 8443, 2053, 2083, 2087, 2096]:
-                      start_tls = time.perf_counter()
-                      try:
-                          ssl_ctx = ssl.create_default_context()
-                          ssl_ctx.check_hostname = False
-                          ssl_ctx.verify_mode = ssl.CERT_NONE
-                          
-                          # 异步建立带 TLS 的连接
-                          tls_reader, tls_writer = await asyncio.wait_for(
-                              asyncio.open_connection(ip, port, ssl=ssl_ctx, server_hostname=host), 
-                              timeout=TIMEOUT
-                          )
-                          tls_delay = (time.perf_counter() - start_tls) * 1000
-                          tls_writer.close()
-                          try:
-                              await tls_writer.wait_closed()
-                          except Exception:
-                              pass
-                      except Exception:
-                          # TLS 握手失败不代表节点死，可能是非加密节点，给予惩罚延迟
-                          tls_delay = 500.0
-
-                  # 综合物理延迟算法 (权重: TCP 占 60%, TLS 扩展占 40%)
-                  total_delay = tcp_delay * 0.6 + tls_delay * 0.4 if tls_delay > 0 else tcp_delay
-                  
-                  # 基于真实延迟反推物理直连测速吞吐量（摆脱 random.uniform 伪数据）
-                  # 延迟越低，说明物理带宽响应和链路质量越好，最高拟合速度 100MB/s 阶梯下降
-                  inferred_speed = max(1.2, min(98.5, 6000.0 / (total_delay + 20.0)))
-                  
-                  # 物理归属地伪解析（从节点别名中粗暴提取）
-                  region = "其他"
-                  for keyword, reg_name in [("HK", "香港"), ("TW", "台湾"), ("SG", "新加坡"), ("JP", "日本"), ("US", "美国"), ("KR", "韩国"), ("CN", "中国")]:
-                      if keyword in node['name'].upper() or keyword in host.upper():
-                          region = reg_name
-                          break
-                          
-                  return {
-                      "raw": node['raw'],
-                      "name": node['name'],
-                      "delay": int(total_delay),
-                      "speed": round(inferred_speed, 1),
-                      "region": region
-                  }
-
-          async def main():
-              loop = asyncio.get_running_loop()
-              lines = sys.stdin.readlines()
-              total_raw = len(lines)
-              
-              nodes = []
-              for line in lines:
-                  parsed = parse_node(line)
-                  if parsed:
-                      nodes.append(parsed)
-                      
-              sem = asyncio.Semaphore(SEMAPHORE_LIMIT)
-              tasks = [test_node(n, sem, loop) for n in nodes]
-              results = await asyncio.gather(*tasks)
-              
-              # 过滤出存活的节点
-              alive_nodes = [r for r in results if r is not None]
-              # 按真实物理延迟从小到大降序排列（延迟越小越靠前）
-              alive_nodes.sort(key=lambda x: x['delay'])
-              
-              # 生成用于大屏渲染的指标数据 report.json
-              top_15 = alive_nodes[:15]
-              leaderboard = []
-              for idx, n in enumerate(top_15, 1):
-                  leaderboard.append({
-                      "rank": idx,
-                      "name": n['name'][:25],
-                      "region": n['region'],
-                      "speed": f"{n['speed']} MB/s",
-                      "delay": f"{n['delay']} ms"
-                  })
-                  
-              regions = [n['region'] for n in alive_nodes]
-              geo_dist = dict(Counter(regions))
-              
-              report = {
-                  "total_raw": total_raw,
-                  "alive_count": len(alive_nodes),
-                  "survival_rate": f"{round((len(alive_nodes)/total_raw)*100, 1)}%" if total_raw > 0 else "0%",
-                  "max_speed": f"{alive_nodes[0]['speed']} MB/s" if alive_nodes else "0 MB/s",
-                  "geo_distribution": geo_dist,
-                  "leaderboard": leaderboard
-              }
-              
-              with open("temp_report.json", "w", encoding="utf-8") as f:
-                  json.dump(report, f, ensure_ascii=False, indent=2)
-                  
-              # 输出最终洗净的明文节点队列
-              for n in alive_nodes:
-                  print(n['raw'])
-
-          if __name__ == '__main__':
-              asyncio.run(main())
-          EOF
-          # ===========================================================================
-
-          # 多库、多协议抗灾聚合直连池
+          # ==================== 抓取节点源 ====================
           urls=(
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}2"
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}1"
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}2"
             "https://raw.githubusercontent.com/aiboboxme/v2rayfree/main/v2ray"
             "https://raw.githubusercontent.com/v2ray-links/v2ray-free-nodes/main/nodes"
-            "https://raw.githubusercontent.com/pawpie/free-nodes/main/nodes.txt"
+            "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
             "https://raw.githubusercontent.com/mianfeifq/share/main/data.txt"
+            "https://raw.githubusercontent.com/freefq/free/master/v2"
           )
           
           rm -f temp_all_raw.txt && touch temp_all_raw.txt
           for url in "${urls[@]}"; do
-            echo "正在多路由抓取源 -> $url"
+            echo "正在抓取: $url"
             rm -f temp_src.txt decoded_src.txt
-            temp_code=$(curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" -sL --connect-timeout 10 --max-time 20 -o temp_src.txt -w "%{http_code}" "$url" || true)
+            code=$(curl -A "Mozilla/5.0" -sL --connect-timeout 10 --max-time 20 -o temp_src.txt -w "%{http_code}" "$url" || true)
             
-            if [ "$temp_code" = "200" ] && [ "$(wc -c < temp_src.txt || echo 0)" -gt 200 ]; then
+            if [ "$code" = "200" ] && [ "$(wc -c < temp_src.txt || echo 0)" -gt 200 ]; then
               sed -i '1s/^\xEF\xBB\xBF//' temp_src.txt
               if grep -qi "<html" temp_src.txt; then continue; fi
               
               if ! grep -E -q "^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://" temp_src.txt; then
                 if tr -d '\r\n\t ' < temp_src.txt | base64 -d > decoded_src.txt 2>/dev/null; then
                   mv decoded_src.txt temp_src.txt
-                  sed -i '1s/^\xEF\xBB\xBF//' temp_src.txt
                 else
                   continue
                 fi
@@ -277,44 +178,39 @@ jobs:
               cat temp_src.txt >> temp_all_raw.txt
             fi
           done
-
+          
           if [ -s temp_all_raw.txt ]; then
-            awk '!seen[$0]++' temp_all_raw.txt > temp_clean_raw.txt
-            python3 speed_test.py < temp_clean_raw.txt > temp_final_nodes.txt || touch temp_final_nodes.txt
+            awk '!seen[$0]++' temp_all_raw.txt > temp_clean.txt
+            python3 speed_test.py < temp_clean.txt > temp_final.txt || touch temp_final.txt
             
-            grep -v "\-1" temp_final_nodes.txt > temp_pure_nodes.txt || touch temp_pure_nodes.txt
+            grep -v "\-1" temp_final.txt > temp_pure.txt || touch temp_pure.txt
             
-            if [ -s temp_pure_nodes.txt ] && [ "$(grep -c "[a-zA-Z0-9]" temp_pure_nodes.txt || echo 0)" -gt 0 ]; then
-              mv temp_pure_nodes.txt nodes.txt
-              echo "【检测完成】多源高质量节点已成功分发。"
+            if [ -s temp_pure.txt ] && [ "$(grep -c "[a-zA-Z0-9]" temp_pure.txt || echo 0)" -gt 5 ]; then
+              mv temp_pure.txt nodes.txt
+              echo "节点更新成功"
             else
-              > nodes.txt
-              echo "【提示】当前池中无满足高速要求的节点。"
+              echo "节点不足，保留旧版本"
+              [ ! -f nodes.txt ] && touch nodes.txt
             fi
+          else
+            echo "抓取失败，保留旧版本"
+            [ ! -f nodes.txt ] && touch nodes.txt
           fi
-          rm -f temp_clean_raw.txt temp_final_nodes.txt
+          
+          rm -f temp_*.txt
 
-      - name: 5. 节点内容变动检测（引入 Jaccard 节流防乱提交机制）
+      - name: 5. 检测文件变更
         id: check_changes
         run: |
           set -euo pipefail
-          # 如果文件不存在，标记为需要变更
-          if [ ! -f nodes.txt ]; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          
-          # 检查 git 状态与变更
-          if git ls-files --error-unmatch nodes.txt index.html clash.yaml >/dev/null 2>&1 \
-             && git diff --quiet HEAD -- nodes.txt index.html clash.yaml; then
+          if git ls-files --error-unmatch nodes.txt clash.yaml >/dev/null 2>&1 && \
+             git diff --quiet HEAD -- nodes.txt clash.yaml; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # 第 5 步：根据您的建议，完全移除完全没必要的本地 base64.txt 密文编码步骤，节约频繁的 Commit 资源
-
-      - name: 6. 部署本地 Subconverter 引擎
+      - name: 6. 生成 Clash 配置
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
@@ -323,168 +219,48 @@ jobs:
             exit 0
           fi
           
-          curl -sL "https://github.com/tindy2013/subconverter/releases/download/v0.9.0/subconverter_linux64.tar.gz" -o subconverter.tar.gz
-          tar -zxf subconverter.tar.gz
-          
+          curl -sL "https://github.com/tindy2013/subconverter/releases/latest/download/subconverter_linux64.tar.gz" -o sub.tar.gz
+          tar -zxf sub.tar.gz
           cd subconverter
-          # 修复后端启动，屏蔽多余输出
-          ./subconverter > /dev/null 2>&1 &
           
-          for i in {1..10}; do
-            if curl -s --noproxy "127.0.0.1" -o /dev/null http://127.0.0.1:25500/version; then
-              break
-            fi
+          cat > base.conf << EOF
+          api_mode=true
+          listen=127.0.0.1:25500
+          EOF
+          
+          ./subconverter --config base.conf > /dev/null 2>&1 &
+          SUB_PID=$!
+          
+          for i in {1..15}; do
+            if curl -s --noproxy "127.0.0.1" -o /dev/null http://127.0.0.1:25500/version; then break; fi
             sleep 1
           done
           
           cp ../nodes.txt ./local_nodes.txt
-          curl -s --noproxy "127.0.0.1" -L -A "clash" "http://127.0.0.1:25500/sub?target=clash&url=./local_nodes.txt&insert=false&emoji=true&udp=true" -o ../temp_clash.yaml || true
+          curl -s --noproxy "127.0.0.1" -L \
+            "http://127.0.0.1:25500/sub?target=clash&url=./local_nodes.txt&insert=false&emoji=true&udp=true&sort=true" \
+            -o ../clash.yaml || echo "proxies: []" > ../clash.yaml
           
-          pkill subconverter || true
+          kill $SUB_PID || true
           cd ..
-          
-          if [ -s temp_clash.yaml ] && grep -q "proxies:" temp_clash.yaml; then
-            mv temp_clash.yaml clash.yaml
-          else
-            echo "proxies: []" > clash.yaml
-          fi
-          rm -rf subconverter subconverter.tar.gz temp_*
+          rm -rf subconverter sub.tar.gz base.conf
 
-      - name: 7. 渲染生成多功能网页导航首页
-        if: ${{ steps.check_changes.outputs.changed == 'true' }}
-        run: |
-          set -euo pipefail
-          BEIJING_TIME=$(date -u -d '+8 hours' '+%Y-%m-%d %H:%M:%S')
-          REPO_NAME=$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f2)
-          USER_NAME=$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
-          
-          if [ "$REPO_NAME" = "${USER_NAME}.github.io" ]; then
-            BASE_PAGE_URL="https://${USER_NAME}.github.io"
-          else
-            BASE_PAGE_URL="https://${USER_NAME}.github.io/${REPO_NAME}"
-          fi
-          CACHE_ID=$(date +%s)
-
-          if [ -f temp_report.json ]; then
-            TOTAL_RAW=$(jq -r '.total_raw' temp_report.json)
-            ALIVE_COUNT=$(jq -r '.alive_count' temp_report.json)
-            SURVIVAL_RATE=$(jq -r '.survival_rate' temp_report.json)
-            MAX_SPEED=$(jq -r '.max_speed' temp_report.json)
-            
-            GEO_HTML=""
-            while read -r key value; do
-              GEO_HTML="${GEO_HTML}<li>📍 <strong>${key}:</strong> <span style='color:#0d6efd;font-weight:bold;'>${value}</span> 个可用节点</li>"
-            done < <(jq -r '.geo_distribution | to_entries[] | "\(.key) \(.value)"' temp_report.json || echo "其他 0")
-            
-            LEADERBOARD_HTML=""
-            while read -r rank speed delay region name; do
-              LEADERBOARD_HTML="${LEADERBOARD_HTML}<tr><td>⚡ 0${rank}</td><td>${name}</td><td><span class='badge'>${region}</span></td><td style='color:#dc3545;font-weight:bold;'>${speed}</td><td>${delay}</td></tr>"
-            done < <(jq -r '.leaderboard[] | "\(.rank) \(.speed) \(.delay) \(.region) \(.name)"' temp_report.json || echo "1 0ms 0MB/s 暂无 暂无")
-          else
-            TOTAL_RAW="0"; ALIVE_COUNT="0"; SURVIVAL_RATE="0%"; MAX_SPEED="0 MB/s"; GEO_HTML="<li>无留存节点</li>"; LEADERBOARD_HTML="<tr><td colspan='5'>暂无达标高网速直连节点</td></tr>"
-          fi
-          
-          cat > index.html <<EOF
-          <!DOCTYPE html>
-          <html>
-          <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>🚀 多源高可用测速分发大屏</title>
-              <style>
-                  body { font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; line-height: 1.6; max-width: 950px; margin: 30px auto; padding: 0 20px; background-color: #f4f6f9; color: #333; }
-                  h1 { color: #0d6efd; border-bottom: 3px solid #0d6efd; padding-bottom: 10px; font-size: 24px; text-align: center; }
-                  h2 { color: #dc3545; font-size: 18px; border-left: 4px solid #dc3545; padding-left: 10px; margin-top: 25px; }
-                  .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
-                  .card { background: #fff; padding: 15px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: center; }
-                  .card h3 { margin: 0; font-size: 14px; color: #666; }
-                  .card p { margin: 8px 0 0 0; font-size: 20px; font-weight: bold; color: #111; }
-                  .report-box { background: #fff; padding: 20px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
-                  table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
-                  th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
-                  th { background-color: #f8f9fa; font-weight: bold; }
-                  .badge { background-color: #e9ecef; padding: 3px 8px; border-radius: 4px; font-size: 12px; color: #495057; }
-                  textarea { width: 100%; height: 45px; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; background-color: #e9ecef; font-family: monospace; resize: none; }
-                  .copy-btn { background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 8px 0 15px 0; font-size: 13px; }
-              </style>
-          </head>
-          <body>
-              <h1>🚀 多源抗灾聚合高带宽分发看板</h1>
-              
-              <div class="report-box">
-                  <p style="margin:0;font-size:13px;color:#666;text-align:right;">📅 聚合时间：${BEIJING_TIME}</p>
-                  <h2>📊 多源过筛看板</h2>
-                  <div class="grid-container">
-                      <div class="card"><h3>多源原始总数</h3><p>${TOTAL_RAW} 个</p></div>
-                      <div class="card"><h3 style="color:#198754;">极速达标数</h3><p style="color:#198754;">${ALIVE_COUNT} 个</p></div>
-                      <div class="card"><h3 style="color:#fd7e14;">综合接通率</h3><p style="color:#fd7e14;">${SURVIVAL_RATE}</p></div>
-                      <div class="card"><h3 style="color:#dc3545;">最顶配带宽速度</h3><p style="color:#dc3545;">${MAX_SPEED}</p></div>
-                  </div>
-              </div>
-
-              <div class="report-box">
-                  <h2>🌐 国别地域分布</h2>
-                  <ul>
-                      ${GEO_HTML}
-                  </ul>
-              </div>
-
-              <div class="report-box">
-                  <h2>🏆 真实传输性能极速排行榜 Top 15</h2>
-                  <table>
-                      <thead>
-                          <tr><th>名次</th><th>节点名称</th><th>物理分布</th><th>直连吞吐网速</th><th>TCP/TLS 综合延迟</th></tr>
-                      </thead>
-                      <tbody>
-                          ${LEADERBOARD_HTML}
-                      </tbody>
-                  </table>
-              </div>
-              
-              <div class="report-box">
-                  <h2>⚡ 稳定分发链路</h2>
-                  <strong>明文订阅：</strong>
-                  <textarea id="sub-url-raw" readonly>${BASE_PAGE_URL}/nodes.txt?v=${CACHE_ID}</textarea>
-                  <button class="copy-btn" onclick="copyUrl('sub-url-raw')">复制明文订阅</button>
-                  <br><strong>Clash 配置：</strong>
-                  <textarea id="sub-url-clash" readonly>${BASE_PAGE_URL}/clash.yaml?v=${CACHE_ID}</textarea>
-                  <button class="copy-btn" style="background-color: #fd7e14;" onclick="copyUrl('sub-url-clash')">复制 Clash 配置</button>
-              </div>
-
-              <script>
-                  function copyUrl(id) {
-                      var copyText = document.getElementById(id);
-                      copyText.select();
-                      navigator.clipboard.writeText(copyText.value);
-                      alert("极速订阅链复制成功！");
-                  }
-              </script>
-          </body>
-          </html>
-          EOF
-          rm -f temp_report.json
-
-      - name: 8. 推送最新全聚合高可用结果 (健壮无死锁版)
+      - name: 7. 提交更新
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          # 仅跟踪真实变更文件，剔除了已删除的 base64.txt
-          git add nodes.txt index.html clash.yaml .gitignore
+          git add nodes.txt clash.yaml .gitignore
           
-          if git diff --cached --quiet; then 
-            echo "没有产生任何实质性文件修改，跳过推送。"
+          if git diff --cached --quiet; then
+            echo "无实质变更"
             exit 0
           fi
           
-          CURRENT_BRANCH=$(git branch --show-current)
           BEIJING_TIME=$(date -u -d '+8 hours' '+%Y-%m-%d %H:%M:%S')
-          git commit -m "Ultimate Sync Commit: Multi-source harvested at $BEIJING_TIME"
+          git commit -m "Auto update nodes ${BEIJING_TIME}"
           
-          # 🛠️ 彻底根治 Bug #10：去掉危险的 || true。强行拉取远程更新并使用 rebase 合并
-          git pull --rebase origin "$CURRENT_BRANCH"
-          
-          # 显式推送到当前分支，确保 fast-forward 成功
-          git push origin "$CURRENT_BRANCH"
+          git pull --rebase origin $(git branch --show-current)
+          git push origin $(git branch --show-current)
