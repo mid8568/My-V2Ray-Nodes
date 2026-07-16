@@ -218,6 +218,18 @@ jobs:
           fi
           rm -f temp_* tcp_alive_nodes.txt
 
+      - name: 3.5 节点代理测速
+        run: |
+          set -euo pipefail
+
+          echo "=== 开始测速 ==="
+
+          python3 scripts/speed_test.py
+
+          echo "=== 测速完成 ==="
+
+          cat speed_rank.txt | head -20
+          
       - name: 4. 检测文件变更
         id: check_changes
         run: |
