@@ -4,42 +4,26 @@ from datetime import datetime, timedelta, timezone
 
 def get_nodes(url):
     try:
-        # 伪装浏览器请求，防止被 GitHub 拦截
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
+        # 伪装浏览器，防止被拦截
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
         with urllib.request.urlopen(req, timeout=15) as response:
-            return response.read().decode('utf-8')
+            return response.read().decode('utf-8').strip()
     except Exception as e:
-        print(f"请求失败的链接: {url}，原因: {e}")
+        print(f"请求失败: {url}，原因: {e}")
         return None
 
-def check_and_filter_nodes(raw_content):
-    """
-    检查并过滤出格式合法的有效节点，剔除垃圾文本与广告
-    """
-    valid_protocols = ('vmess://', 'vless://', 'ss://', 'ssr://', 'trojan://', 'shadowsocks://')
-    filtered_nodes = []
-    
-    lines = raw_content.splitlines()
-    for line in lines:
-        line = line.strip()
-        # 验证是否以合法代理协议开头，且长度合理（防止损坏节点）
-        if line.startswith(valid_protocols) and len(line) > 30:
-            filtered_nodes.append(line)
-                
-    return filtered_nodes
-
 def main():
-    # 目标作者 free-nodes/v2rayfree 的原始文件基础路径
+    # 目标作者的基础路径
     base_url = "https://githubusercontent.com"
     
-    # 强制锁定东八区（北京时间），完美解决 GitHub 位于美国的服务器时区慢 8 小时的问题
+    # 对齐北京时间
     tz_beijing = timezone(timedelta(hours=8))
     now_beijing = datetime.now(tz_beijing)
     
     today_str = now_beijing.strftime("%Y%m%d")
     yesterday_str = (now_beijing - timedelta(days=1)).strftime("%Y%m%d")
     
-    # 智能构造由于对方早晚更新导致可能出现的文件名优先级列表
+    # 备选文件名列表
     possible_files = [
         f"v{today_str}2",
         f"v{today_str}1",
@@ -50,36 +34,35 @@ def main():
     raw_content = None
     success_file = ""
     
-    # 循环对齐目标库的文件，直到成功抓取到一个最新的有效文件
     for file_name in possible_files:
         target_url = base_url + file_name
-        print(f"正在尝试连接目标库文件: {target_url}")
+        print(f"正在尝试下载: {target_url}")
         raw_content = get_nodes(target_url)
-        if raw_content and len(raw_content) > 100:
+        if raw_content and len(raw_content) > 50: # 只要文件有内容就立即采用
             success_file = file_name
             break
             
     if raw_content:
-        # 开始清洗与安全性筛选
-        valid_nodes_list = check_and_filter_nodes(raw_content)
-        print(f"【对齐成功】从目标库的 {success_file} 中成功筛选出 {len(valid_nodes_list)} 个有效节点。")
+        print(f"【对齐成功】已成功获取到目标库文件: {success_file}，文件大小: {len(raw_content)} 字符")
         
-        if not valid_nodes_list:
-            print("【中断】筛选后的有效节点数量为0，为保护本地旧订阅，本次不写入任何文件。")
-            return
+        # 判断对方的数据是否已经是 Base64 加密串。如果是，则直接保存；如果不是，则帮它转码
+        # 绝不进行单行过滤，防止误删有效数据
+        try:
+            # 尝试解密，如果能解密说明对方给的就是密文，我们直接存
+            base64.b64decode(raw_content.encode('utf-8'), validate=True)
+            final_output = raw_content
+            print("检测到目标源已经是标准的 Base64 加密串，将直接保存。")
+        except Exception:
+            # 如果解密报错，说明对方给的是明文，我们将其整体转换为标准的 Base64 订阅密文
+            final_output = base64.b64encode(raw_content.encode('utf-8')).decode('utf-8')
+            print("检测到目标源为明文节点，已自动为您打包为全平台标准 Base64 订阅。")
 
-        # 把有效节点重新用换行符拼接
-        cleaned_plaintext = "\n".join(valid_nodes_list)
-        
-        # 转换为全球通用的标准 Base64 密文格式（各客户端均能完美识别）
-        base64_encoded = base64.b64encode(cleaned_plaintext.encode('utf-8')).decode('utf-8')
-        
         # 写入本地存储
         with open("nodes.txt", "w", encoding="utf-8") as f:
-            f.write(base64_encoded)
-        print("【大功告成】加密后的有效节点已成功保存至 nodes.txt！")
+            f.write(final_output)
+        print("【保存成功】有效数据已写入 nodes.txt！")
     else:
-        print("【极度危险】未能从目标仓库的任何备选链接中获取到数据，请检查网络或目标库结构。")
+        print("【同步失败】未能从目标仓库抓取到任何数据。")
 
 if __name__ == "__main__":
     main()
