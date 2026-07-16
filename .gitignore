@@ -11,3 +11,5 @@ speed_nodes.txt
 speed_rank.txt
 singbox_test
 *.json
+score.py
+local_convert.py
