@@ -123,6 +123,10 @@ jobs:
           cat > score.py << 'EOF'
           import sys, asyncio, re, base64, time
 
+          sed -i 's/^[[:space:]]\{10\}//' score.py
+
+          python3 -m py_compile score.py
+          
           # 支持的主流节点协议正则
           PROTOCOL_REGEX = re.compile(r'^(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://', re.IGNORECASE)
 
@@ -204,7 +208,7 @@ jobs:
 
               MAX_NODES = 200
 
-                            alive_results = [
+              alive_results = [
                   item
                   for item in results
                   if item[0] > 0
@@ -220,7 +224,6 @@ jobs:
                   item[2]
                   for item in alive_results[:MAX_NODES]
               ]
-
 
               alive_count = len(alive_results)
 
