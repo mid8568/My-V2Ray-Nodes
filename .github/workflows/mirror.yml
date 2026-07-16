@@ -26,14 +26,35 @@ jobs:
 
       - name: 2.安装测速环境
         run: |
+          set -euo pipefail
+
           sudo apt update
-          sudo apt install -y curl jq bc
+          sudo apt install -y curl jq bc tar
 
-          wget -q https://github.com/SagerNet/sing-box/releases/latest/download/sing-box-linux-amd64.tar.gz
+          echo "=== 获取 sing-box 最新版本 ==="
 
-          tar -xf sing-box-linux-amd64.tar.gz
+          VERSION=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest \
+          | jq -r '.tag_name')
+
+          echo "版本: $VERSION"
+
+
+          echo "=== 下载 sing-box ==="
+
+          curl -L \
+          "https://github.com/SagerNet/sing-box/releases/download/${VERSION}/sing-box-${VERSION#v}-linux-amd64.tar.gz" \
+          -o sing-box.tar.gz
+
+
+          echo "=== 解压 ==="
+
+          tar -xf sing-box.tar.gz
+
 
           sudo mv sing-box-*/sing-box /usr/local/bin/sing-box
+
+
+          echo "=== 测试安装 ==="
 
           sing-box version
           
