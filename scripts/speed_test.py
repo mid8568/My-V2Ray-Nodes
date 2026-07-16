@@ -1,31 +1,63 @@
 #!/usr/bin/env python3
 
-import time
 import subprocess
+import time
+import os
+import json
 
 
-INPUT="tcp_alive_nodes.txt"
-OUTPUT="speed_rank.txt"
+INPUT = "tcp_alive_nodes.txt"
+OUTPUT = "speed_rank.txt"
+
+TEST_URL = "https://speed.cloudflare.com/__down?bytes=1000000"
+
+PROXY_PORT = 10809
 
 
-def fake_speed_test(node):
+def test_speed(node):
 
-    """
-    这里以后替换成真实 sing-box测速
-    """
+    config = {
+        "log": {
+            "level": "error"
+        },
 
-    start=time.time()
+        "inbounds": [
+            {
+                "type": "mixed",
+                "listen": "127.0.0.1",
+                "listen_port": PROXY_PORT
+            }
+        ],
 
-    # 模拟检测
-    time.sleep(0.1)
+        "outbounds": [
+            {
+                "type": "selector",
+                "tag": "proxy",
+                "outbounds": [
+                    "node"
+                ]
+            },
 
-    delay=time.time()-start
+            {
+                "type": "direct",
+                "tag": "direct"
+            },
+
+            {
+                "type": "vmess",
+                "tag": "node",
+                "server": "",
+                "server_port": 443
+            }
+        ]
+    }
 
 
-    # 临时评分
-    speed=max(1,int(300/(delay*1000+1)))
+    # 暂时跳过无法解析节点
+    # 真实版本需要解析 vless/vmess/trojan
 
-    return speed
+
+    return 0
 
 
 
@@ -37,7 +69,8 @@ with open(INPUT,"r",encoding="utf-8") as f:
     nodes=f.readlines()
 
 
-for i,node in enumerate(nodes):
+
+for index,node in enumerate(nodes):
 
     node=node.strip()
 
@@ -46,25 +79,22 @@ for i,node in enumerate(nodes):
 
 
     print(
-        f"测速 {i+1}/{len(nodes)}"
+        f"测速 {index+1}/{len(nodes)}"
     )
 
 
-    speed=fake_speed_test(node)
+    speed=test_speed(node)
 
 
-    print(
-        speed,
-        "Mbps"
-    )
+    if speed>0:
 
-
-    results.append(
-        (
-            speed,
-            node
+        results.append(
+            (
+                speed,
+                node
+            )
         )
-    )
+
 
 
 results.sort(
@@ -73,12 +103,12 @@ results.sort(
 )
 
 
+
 with open(
     OUTPUT,
     "w",
     encoding="utf-8"
 ) as f:
-
 
     for speed,node in results:
 
@@ -88,6 +118,6 @@ with open(
 
 
 print(
-    "测速完成:",
+    "真实测速完成:",
     len(results)
 )
