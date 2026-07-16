@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # 北京时间每天的 08:00, 12:00, 16:00, 20:00, 00:00, 04:00 运行
-    - cron: '0 */4 * * *'
+    - cron: '0 0,4,8,12,16,20 * * *'
 
 concurrency:
   group: nodes-sync
@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: 1. 检出本地仓库
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -83,74 +83,33 @@ jobs:
               sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
               awk '!seen[$0]++' temp_nodes.txt > clean_nodes.txt && mv clean_nodes.txt temp_nodes.txt
              
-           echo "=== 开始节点检测 ==="
-
-           > verified_temp.txt
-           > speed_nodes.txt
-
-               while IFS= read -r line || [ -n "$line" ]; do
-
-               [ -z "$line" ] && continue
-
-               clean_uri=$(echo "$line" | cut -d'#' -f1)
-
-             # 提取 host:port
-              host_port=$(echo "$clean_uri" \
-              | grep -oE '(@|\])[a-zA-Z0-9.-]+:[0-9]+' \
-              | tr -d '@]' \
-              | tail -n1 || true)
-
-
-             [ -z "$host_port" ] && continue
-
-
-            host="${host_port%:*}"
-            port="${host_port##*:}"
-  
-            # TCP测试 + 计算延迟
-           start=$(date +%s%3N)
-
-          if timeout 3 bash -c "</dev/tcp/$host/$port" 2>/dev/null
-          then
-
-          end=$(date +%s%3N)
-
-          delay=$((end-start))
-
-
-          # 只保留300ms以内节点
-          if [ "$delay" -le 300 ]
-          then
-          echo "${delay}|${line}" >> speed_nodes.txt
-          fi
-
-           fi
-
-           done < temp_nodes.txt
-
-
-          echo "=== 延迟排序 ==="
-
-            # 延迟从低到高排序
-
-           sort -n speed_nodes.txt \
-           | cut -d'|' -f2 \
-           | awk '!seen[$0]++' \
-           > verified_temp.txt
-
-
-
-          mv verified_temp.txt tcp_alive_nodes.txt
-
-
-
-           COUNT=$(wc -l < tcp_alive_nodes.txt)
-
-          echo "高速节点数量: $COUNT"
+              echo "=== 启动 TCP 探测 ==="
+              > verified_temp.txt
+              while IFS= read -r line || [ -n "$line" ]; do
+                if [ -n "$line" ]; then
+                  clean_uri=$(echo "$line" | cut -d'#' -f1)
+                  if echo "$clean_uri" | grep -q "@.*:[0-9]"; then
+                    host_port=$(echo "$clean_uri" | grep -oE '(@|\[)[a-zA-Z0-9.:-]+:[0-9]+' | tr -d '@' | tail -n1 || true)
+                    if [ -n "$host_port" ]; then
+                      if [[ "$host_port" =~ ^\[(.*)\]:([0-9]+)$ ]]; then
+                        host="${BASH_REMATCH[1]}"
+                        port="${BASH_REMATCH[2]}"
+                      else
+                        host="${host_port%:*}"
+                        port="${host_port##*:}"
+                      fi
+                      if timeout 2 bash -c "</dev/tcp/$host/$port" 2>/dev/null; then
+                        echo "$line" >> verified_temp.txt
+                      fi
+                    fi
+                  fi
+                fi
+              done < temp_nodes.txt
              
-              NODE_COUNT=$(wc -l < tcp_alive_nodes.txt)
-
-             if [ "$NODE_COUNT" -ge 5 ]; then
+              mv verified_temp.txt tcp_alive_nodes.txt 2>/dev/null || touch tcp_alive_nodes.txt
+             
+              NODE_COUNT=$(wc -l < temp_nodes.txt)
+              if [ "$NODE_COUNT" -ge 5 ]; then
                 success=true
                 break
               fi
@@ -158,10 +117,7 @@ jobs:
           done
          
           if [ "$success" = true ]; then
-            cat tcp_alive_nodes.txt \
-             | grep -E "${PROTOCOL_REGEX}" \
-             | awk '!seen[$0]++' \
-             | head -n 300 > nodes.txt
+            cat tcp_alive_nodes.txt temp_nodes.txt 2>/dev/null | grep -E "${PROTOCOL_REGEX}" | awk '!seen[$0]++' | head -n 1000 > nodes.txt
             echo "【成功】鲜活节点已置顶"
           else
             echo "【熔断】所有源失效，回滚备份"
