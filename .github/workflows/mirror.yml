@@ -1,228 +1,179 @@
-name: Remote Repo Node Scanner
+name: Repo Auto Mirror Sync - V5.3 Fortress Pro
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0,6,12,18 * * *'
+    # 北京时间每天的 08:00, 12:00, 16:00, 20:00, 00:00, 04:00 运行
+    - cron: '0 0,12 * * *'
 
 concurrency:
-  group: remote-nodes-scan
-  cancel-in-progress: true
+  group: nodes-sync
+  cancel-in-progress: false
 
 permissions:
   contents: write
 
 jobs:
-  scan-and-filter:
+  smart-sync:
     runs-on: ubuntu-latest
+    continue-on-error: false
 
     steps:
-      - name: 1. 检出仓库
-        uses: actions/checkout@v5
+      - name: 1. 检出本地仓库
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: 2. 设置 Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: 3. 安装依赖
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libicu-dev jq
-
-      - name: 4. 写入测速脚本
-        run: |
-          cat > speed_test.py << 'PYEOF'
-import sys
-import asyncio
-import socket
-import time
-import re
-
-SEMAPHORE_LIMIT = 100
-TIMEOUT = 4.0
-
-DNS_CACHE = {}
-PORT_BLACKLIST = {21, 22, 23, 25, 53, 110, 143, 3306, 3389}
-
-def parse_node(line):
-    line = line.strip()
-    if not line: return None
-    try:
-        match = re.match(r'^([a-zA-Z0-9\-_]+)://([^@]+@)?(?P<host>[a-zA-Z0-9\.\-_\[\]:]+):(?P<port>\d+)', line)
-        if not match: return None
-        host = match.group('host')
-        port = int(match.group('port'))
-        if port in PORT_BLACKLIST or '[' in host or ']' in host: return None
-        name = "未知节点"
-        if '#' in line:
-            name = line.split('#')[-1].strip()
-        elif 'remarks=' in line:
-            m = re.search(r'remarks=([^&]+)', line)
-            if m: name = m.group(1)
-        return {"raw": line, "host": host, "port": port, "name": name}
-    except:
-        return None
-
-async def cached_getaddrinfo(host, port, loop):
-    if host in DNS_CACHE: return DNS_CACHE[host]
-    try:
-        infos = await asyncio.wait_for(loop.getaddrinfo(host, port, family=socket.AF_UNSPEC, type=socket.SOCK_STREAM), timeout=2.0)
-        if infos:
-            ip = infos[0][4][0]
-            DNS_CACHE[host] = ip
-            return ip
-    except:
-        pass
-    return None
-
-async def test_node(node, sem, loop):
-    async with sem:
-        ip = await cached_getaddrinfo(node['host'], node['port'], loop)
-        if not ip: return None
-        start = time.perf_counter()
-        try:
-            r, w = await asyncio.wait_for(asyncio.open_connection(ip, node['port']), timeout=TIMEOUT)
-            delay = (time.perf_counter() - start) * 1000
-            w.close()
-            await w.wait_closed()
-        except:
-            return None
-        total_delay = int(delay)
-        score = round(max(10, min(98, 6000.0 / (total_delay + 20.0))), 1)
-        region = "其他"
-        for k, v in [("HK","香港"),("TW","台湾"),("SG","新加坡"),("JP","日本"),("US","美国"),("KR","韩国"),("CN","中国")]:
-            if k in node['name'].upper() or k in node['host'].upper():
-                region = v
-                break
-        return {"raw": node['raw'], "name": node['name'], "delay": total_delay, "score": score, "region": region}
-
-async def main():
-    loop = asyncio.get_running_loop()
-    lines = sys.stdin.readlines()
-    nodes = [p for line in lines if (p := parse_node(line))]
-    sem = asyncio.Semaphore(SEMAPHORE_LIMIT)
-    results = await asyncio.gather(*[test_node(n, sem, loop) for n in nodes])
-    alive = [r for r in results if r and r['delay'] <= 800]
-    alive.sort(key=lambda x: x['delay'])
-    alive = alive[:800]
-    for n in alive:
-        print(n['raw'])
-
-if __name__ == '__main__':
-    asyncio.run(main())
-PYEOF
-
-      - name: 5. 多源抓取 + 测速过滤
+      - name: 2. 探测上游可用性
         run: |
           set -euo pipefail
-          unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY all_proxy ALL_PROXY
+          TODAY=$(date -u -d '+8 hours' +%Y%m%d)
+          TEST_URL="https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
+          echo "=== 正在探测今日上游 Raw 路径可用性 ==="
+          curl -I -s -A "Mozilla/5.0" -o /dev/null -w "HTTP 状态码: %{http_code}\n" "$TEST_URL" || true
 
+      - name: 3. 安全提取、高并发双源灾备、TCP 测速与置顶排序
+        run: |
+          set -euo pipefail
+         
           touch .gitignore
-          for item in "temp_*" "decoded_*" "*.bak" "subconverter*"; do
+          for item in "temp_*" "decoded_*" "*.bak" "tcp_alive_nodes.txt" "clean_nodes.txt" "verified_temp.txt"; do
             grep -qxF "$item" .gitignore || echo "$item" >> .gitignore
           done
-
+         
+          if [ -f nodes.txt ]; then
+            cp nodes.txt /tmp/nodes_backup.txt
+            echo "【事务安全】已备份当前节点"
+          fi
+         
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
-
+          YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
+         
           urls=(
+            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}2"
+            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}1"
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}1"
-            "https://raw.githubusercontent.com/aiboboxme/v2rayfree/main/v2ray"
-            "https://raw.githubusercontent.com/v2ray-links/v2ray-free-nodes/main/nodes"
-            "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
-            "https://raw.githubusercontent.com/mianfeifq/share/main/data.txt"
-            "https://raw.githubusercontent.com/freefq/free/master/v2"
+            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}2"
+            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}1"
           )
-
-          rm -f temp_all_raw.txt && touch temp_all_raw.txt
+         
+          success=false
+          PROTOCOL_REGEX="^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://"
+         
           for url in "${urls[@]}"; do
-            echo "正在抓取: $url"
-            rm -f temp_src.txt decoded_src.txt
-            code=$(curl -A "Mozilla/5.0" -sL --connect-timeout 10 --max-time 20 -o temp_src.txt -w "%{http_code}" "$url" || true)
-            if [ "$code" = "200" ] && [ "$(wc -c < temp_src.txt || echo 0)" -gt 200 ]; then
-              sed -i '1s/^\xEF\xBB\xBF//' temp_src.txt
-              if grep -qi "<html" temp_src.txt; then continue; fi
-              if ! grep -E -q "^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://" temp_src.txt; then
-                if tr -d '\r\n\t ' < temp_src.txt | base64 -d > decoded_src.txt 2>/dev/null; then
-                  mv decoded_src.txt temp_src.txt
+            echo "尝试数据源 -> $url"
+            rm -f temp_nodes.txt decoded_nodes.txt
+           
+            temp_code=$(curl -A "Mozilla/5.0" -sL --connect-timeout 10 --max-time 20 -o temp_nodes.txt -w "%{http_code}" "$url" || true)
+           
+            if [ "$temp_code" = "200" ] && [ "$(wc -c < temp_nodes.txt || echo 0)" -gt 200 ]; then
+              sed -i '1s/^\xEF\xBB\xBF//' temp_nodes.txt
+             
+              if grep -qi "<html" temp_nodes.txt 2>/dev/null; then continue; fi
+             
+              if ! grep -E -q "${PROTOCOL_REGEX}" temp_nodes.txt 2>/dev/null; then
+                if tr -d '\r\n\t ' < temp_nodes.txt | base64 -d > decoded_nodes.txt 2>/dev/null; then
+                  mv decoded_nodes.txt temp_nodes.txt
                 else
                   continue
                 fi
               fi
-              cat temp_src.txt >> temp_all_raw.txt
+             
+              sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
+              awk '!seen[$0]++' temp_nodes.txt > clean_nodes.txt && mv clean_nodes.txt temp_nodes.txt
+             
+              echo "=== 启动 TCP 探测 ==="
+              > verified_temp.txt
+              while IFS= read -r line || [ -n "$line" ]; do
+                if [ -n "$line" ]; then
+                  clean_uri=$(echo "$line" | cut -d'#' -f1)
+                  if echo "$clean_uri" | grep -q "@.*:[0-9]"; then
+                    host_port=$(echo "$clean_uri" | grep -oE '(@|\[)[a-zA-Z0-9.:-]+:[0-9]+' | tr -d '@' | tail -n1 || true)
+                    if [ -n "$host_port" ]; then
+                      if [[ "$host_port" =~ ^\[(.*)\]:([0-9]+)$ ]]; then
+                        host="${BASH_REMATCH[1]}"
+                        port="${BASH_REMATCH[2]}"
+                      else
+                        host="${host_port%:*}"
+                        port="${host_port##*:}"
+                      fi
+                      if timeout 2 bash -c "</dev/tcp/$host/$port" 2>/dev/null; then
+                        echo "$line" >> verified_temp.txt
+                      fi
+                    fi
+                  fi
+                fi
+              done < temp_nodes.txt
+             
+              mv verified_temp.txt tcp_alive_nodes.txt 2>/dev/null || touch tcp_alive_nodes.txt
+             
+              NODE_COUNT=$(wc -l < temp_nodes.txt)
+              if [ "$NODE_COUNT" -ge 5 ]; then
+                success=true
+                break
+              fi
             fi
           done
-
-          if [ -s temp_all_raw.txt ]; then
-            awk '!seen[$0]++' temp_all_raw.txt > temp_clean.txt
-            python3 speed_test.py < temp_clean.txt > temp_final.txt || touch temp_final.txt
-            grep -v "\-1" temp_final.txt > temp_pure.txt || touch temp_pure.txt
-            if [ -s temp_pure.txt ] && [ "$(grep -c "[a-zA-Z0-9]" temp_pure.txt || echo 0)" -gt 5 ]; then
-              mv temp_pure.txt nodes.txt
-              echo "节点更新成功"
-            else
-              echo "节点不足，保留旧版本"
-              [ ! -f nodes.txt ] && touch nodes.txt
-            fi
+         
+          if [ "$success" = true ]; then
+            cat tcp_alive_nodes.txt temp_nodes.txt 2>/dev/null | grep -E "${PROTOCOL_REGEX}" | awk '!seen[$0]++' | head -n 1000 > nodes.txt
+            echo "【成功】鲜活节点已置顶"
           else
-            echo "抓取失败，保留旧版本"
-            [ ! -f nodes.txt ] && touch nodes.txt
+            echo "【熔断】所有源失效，回滚备份"
+            if [ -f /tmp/nodes_backup.txt ]; then
+              cp /tmp/nodes_backup.txt nodes.txt
+            fi
           fi
-          rm -f temp_*.txt
+          rm -f temp_* tcp_alive_nodes.txt
 
-      - name: 6. 检测文件变更
+      - name: 4. 检测文件变更
         id: check_changes
         run: |
           set -euo pipefail
-          if git ls-files --error-unmatch nodes.txt clash.yaml >/dev/null 2>&1 && \
-             git diff --quiet HEAD -- nodes.txt clash.yaml; then
+          if git ls-files --error-unmatch nodes.txt base64.txt clash.yaml singbox.json >/dev/null 2>&1 \
+             && git diff --quiet HEAD -- nodes.txt base64.txt clash.yaml singbox.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: 7. 生成 Clash 配置
+      - name: 5. 生成 Base64 编码
+        if: ${{ steps.check_changes.outputs.changed == 'true' }}
+        run: |
+          base64 -w 0 nodes.txt > base64.txt
+
+      - name: 6. 生成 Clash & sing-box 配置
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
-          if [ ! -s nodes.txt ]; then
-            echo "proxies: []" > clash.yaml
-            exit 0
-          fi
-          curl -sL "https://github.com/tindy2013/subconverter/releases/latest/download/subconverter_linux64.tar.gz" -o sub.tar.gz
-          tar -zxf sub.tar.gz
-          cd subconverter
-          cat > base.conf << EOF
-          api_mode=true
-          listen=127.0.0.1:25500
-          EOF
-          ./subconverter --config base.conf > /dev/null 2>&1 &
-          SUB_PID=$!
-          for i in {1..15}; do
-            if curl -s --noproxy "127.0.0.1" -o /dev/null http://127.0.0.1:25500/version; then break; fi
-            sleep 1
-          done
-          cp ../nodes.txt ./local_nodes.txt
-          curl -s --noproxy "127.0.0.1" -L "http://127.0.0.1:25500/sub?target=clash&url=./local_nodes.txt&insert=false&emoji=true&udp=true&sort=true" -o ../clash.yaml || echo "proxies: []" > ../clash.yaml
-          kill $SUB_PID || true
-          cd ..
-          rm -rf subconverter sub.tar.gz base.conf
+          CURRENT_BRANCH=$(git branch --show-current)
+          RAW_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${CURRENT_BRANCH}/nodes.txt"
+          CACHE_ID=$(date +%s)
+         
+          # Clash
+          curl -sL -A "clash" "https://sub.xeton.gq/sub?target=clash&url=${RAW_URL}&insert=false&emoji=true&udp=true" -o clash.yaml || echo "proxies: []" > clash.yaml
+         
+          # sing-box
+          curl -sL -A "sing-box" "https://sub.xeton.gq/sub?target=singbox&url=${RAW_URL}&insert=false&emoji=true" -o singbox.json || echo '{"outbounds":[]}' > singbox.json
 
-      - name: 8. 提交更新
+      - name: 7. 提交更新
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add nodes.txt clash.yaml .gitignore
+         
+          git add nodes.txt base64.txt clash.yaml singbox.json .gitignore
+         
           if git diff --cached --quiet; then
             echo "无实质变更"
             exit 0
           fi
+         
           BEIJING_TIME=$(date -u -d '+8 hours' '+%Y-%m-%d %H:%M:%S')
-          git commit -m "Auto update nodes ${BEIJING_TIME}"
-          git pull --rebase origin $(git branch --show-current)
-          git push origin $(git branch --show-current)
+          git commit -m "Auto Sync at $BEIJING_TIME"
+         
+          CURRENT_BRANCH=$(git branch --show-current)
+          git pull --rebase origin "$CURRENT_BRANCH"
+          git push origin "$CURRENT_BRANCH"
