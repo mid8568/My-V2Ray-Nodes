@@ -234,29 +234,20 @@ jobs:
 
           echo "=== 开始真实代理测速 ==="
 
+
           mkdir -p singbox_test
 
-          python3 scripts/speed_test.py
+          python3 scripts/node_parser.py
+          
+          echo "=== 使用TCP有效节点 ==="
 
+           cat tcp_alive_nodes.txt \
+           | awk '!seen[$0]++' \
+           | sed -n '1,80p' \
+           > nodes.txt
 
-           if [ -f speed_rank.txt ]; then
-
-          echo "=== 使用测速结果生成节点 ==="
-
-          cat speed_rank.txt \
-          | sort -nr \
-          | cut -d'|' -f2 \
-          | awk '!seen[$0]++' \
-          | sed -n '1,80p' \
-          > nodes.txt
-
-          else
-
-          echo "测速失败"
-
-          cp tcp_alive_nodes.txt nodes.txt
-
-          fi
+           echo "最终节点数量:"
+            wc -l nodes.txt
         
           if [ "$success" = true ]; then
           if [ -f speed_rank.txt ]; then
@@ -274,7 +265,7 @@ jobs:
 
            cat tcp_alive_nodes.txt \
            | awk '!seen[$0]++' \
-           | sed -n '1,100p' \
+           | sed -n '1,80p' \
            > nodes.txt
 
            fi
