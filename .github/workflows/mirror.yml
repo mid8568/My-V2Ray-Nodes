@@ -29,7 +29,13 @@ jobs:
           set -euo pipefail
 
           sudo apt update
-          sudo apt install -y curl bc tar jq python3
+          sudo apt install -y \
+          curl \
+          bc \
+           tar \
+           jq \
+           python3 \
+           python3-pip
 
 
           echo "=== 固定 sing-box 版本 ==="
@@ -80,7 +86,19 @@ jobs:
           set -euo pipefail
          
           touch .gitignore
-          for item in "temp_*" "decoded_*" "*.bak" "tcp_alive_nodes.txt" "clean_nodes.txt" "verified_temp.txt" "speed_nodes.txt"; do
+          
+          for item in \
+          "temp_*" \
+           "decoded_*" \
+          "*.bak" \
+          "tcp_alive_nodes.txt" \
+          "clean_nodes.txt" \
+            "verified_temp.txt" \
+           "speed_nodes.txt" \
+           "speed_rank.txt" \
+          "singbox_test" \
+           "*.json"; do
+           
             grep -qxF "$item" .gitignore || echo "$item" >> .gitignore
           done
          
@@ -216,10 +234,12 @@ jobs:
 
           echo "=== 开始真实代理测速 ==="
 
+          mkdir -p singbox_test
+
           python3 scripts/speed_test.py
 
 
-          if [ -f speed_rank.txt ]; then
+           if [ -f speed_rank.txt ]; then
 
           echo "=== 使用测速结果生成节点 ==="
 
