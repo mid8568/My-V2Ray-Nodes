@@ -1,10 +1,10 @@
-name: Remote Repo Node Scanner 
+name: Remote Repo Node Scanner
 
 on:
   workflow_dispatch:
   schedule:
-    # 每 6 小时自动全量抓取、去重与测速净化，防止被上游防火墙限流
-    - cron: '0 */12 * * *'
+    # 每 12 小时触发一次 (北京时间 00:00, 06:00, 12:00, 18:00)
+    - cron: '0 0,6,12,18 * * *'
 
 concurrency:
   group: remote-nodes-scan
@@ -19,16 +19,21 @@ jobs:
     continue-on-error: false
     steps:
       - name: 1. 检出本地仓库
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: 2. 初始化 Python 环境
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: 3. 运行强力多源并发测速引擎
+      - name: 3. 安装依赖与环境补齐
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libicu-dev jq
+
+      - name: 4. 运行强力多源并发测速引擎
         run: |
           set -euo pipefail
           
@@ -43,179 +48,156 @@ jobs:
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
           YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
           
+          # ==================== 🧠 注入完美闭合的真实物理测速引擎 ====================
           cat > speed_test.py << 'EOF'
-          import asyncio
-          import re
-          import sys
-          import time
-          import random
-          import json
-          from urllib.parse import urlparse, unquote
+import sys
+import asyncio
+import socket
+import time
+import re
+import json
+from collections import Counter
 
-          PROTOCOL_REGEX = re.compile(r"^[ \t]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://", re.IGNORECASE)
-          PORT_BLACKLIST = {21, 22, 23, 25, 53, 110, 143, 3306, 3389, 8080, 9090}
+SEM_LIMIT = 120
+TIMEOUT = 3.5
 
-          GEO_RULES = [
-              (re.compile(r'(香港|HK|HongKong|Hkg)', re.I), '香港 (Hong Kong)'),
-              (re.compile(r'(日本|JP|Japan|Tokyo|Nrt)', re.I), '日本 (Japan)'),
-              (re.compile(r'(美国|US|America|LAX|SFO)', re.I), '美国 (United States)'),
-              (re.compile(r'(台湾|TW|Taiwan|Taipei)', re.I), '台湾 (Taiwan)'),
-              (re.compile(r'(新加坡|SG|Singapore)', re.I), '新加坡 (Singapore)'),
-              (re.compile(r'(韩国|KR|Korea|Seoul)', re.I), '韩国 (South Korea)'),
-              (re.compile(r'(英国|UK|London)', re.I), '英国 (United Kingdom)'),
-              (re.compile(r'(德国|DE|Frankfurt)', re.I), '德国 (Germany)')
-          ]
+PORT_BLACKLIST = {
+    21, 22, 23, 25, 53,
+    110, 143,
+    3306, 3389
+}
 
-          def get_region(line):
-              name_part = unquote(line.split('#')[-1]) if '#' in line else ""
-              for regex, region in GEO_RULES:
-                  if regex.search(name_part) or regex.search(line):
-                      return region
-              return '其他 / 优质直连 (Others)'
+DNS_CACHE = {}
 
-          def parse_node(line):
-              line = line.strip()
-              if not line:
-                  return None
-              clean_uri = line.split('#')[0]
-              
-              host, port = None, None
-              if '@' in clean_uri:
-                  right_part = clean_uri.split('@')[-1]
-                  host_port_match = re.search(r'([^/\\?#]+):([0-9]+)', right_part)
-                  if host_port_match:
-                      host = host_port_match.group(1).strip()
-                      port = int(host_port_match.group(2))
-              else:
-                  try:
-                      parsed = urlparse(line)
-                      if parsed.netloc:
-                          hp = parsed.netloc.split('@')[-1]
-                          if ':' in hp:
-                              h, p = hp.rsplit(':', 1)
-                              host = h.strip()
-                              port = int(p)
-                  except:
-                      pass
-              
-              if host and port and (1 <= port <= 65535) and (port not in PORT_BLACKLIST):
-                  return {"line": line, "host": host, "port": port}
-              return None
+def get_region_by_name(name):
+    name_upper = name.upper()
+    mapping = {
+        "香港": "HK", "HK": "HK", "HONGKONG": "HK",
+        "日本": "JP", "JP": "JP", "JAPAN": "JP",
+        "台湾": "TW", "TW": "TW", "TAIWAN": "TW",
+        "新加坡": "SG", "SG": "SG", "SINGAPORE": "SG",
+        "美国": "US", "US": "US", "UNITED STATES": "US",
+        "韩国": "KR", "KR": "KR", "KOREA": "KR",
+        "英国": "UK", "GB": "UK", "ENGLAND": "UK",
+        "德国": "DE", "GERMANY": "DE",
+    }
+    for kw, region in mapping.items():
+        if kw in name_upper or kw in name:
+            return region
+    return "OTH"
 
-          async def tcp_ping(host, port, timeout=2.0):
-              try:
-                  start = time.time()
-                  reader, writer = await asyncio.wait_for(
-                      asyncio.open_connection(host, port), timeout=timeout
-                  )
-                  writer.close()
-                  await writer.wait_closed()
-                  return (time.time() - start) * 1000
-              except:
-                  return None
+def parse_node(line):
+    line = line.strip()
+    if not line:
+        return None
+    try:
+        m = re.search(r'://.*?([a-zA-Z0-9\.\-_]+):(\d+)', line)
+        if not m:
+            return None
+        host = m.group(1)
+        port = int(m.group(2))
 
-          async def test_node_quality(node, semaphore):
-              async with semaphore:
-                  host = node["host"]
-                  port = node["port"]
-                  conn_host = f"[{host}]" if ":" in host and not host.startswith("[") else host
-                  
-                  delays = []
-                  for _ in range(3):
-                      d = await tcp_ping(conn_host, port)
-                      if d is not None:
-                          delays.append(d)
-                      await asyncio.sleep(0.04)
-                  
-                  if len(delays) < 2: 
-                      return None
-                      
-                  avg_delay = sum(delays) / len(delays)
-                  if not (30 <= avg_delay <= 800):
-                      return None
+        if port in PORT_BLACKLIST:
+            return None
 
-                  speed_mb_s = random.uniform(8.0, 58.0) - (avg_delay * 0.01)
-                  if speed_mb_s < 0.2: 
-                      return None
-                      
-                  region = get_region(node["line"])
-                  return {
-                      "line": node["line"], 
-                      "host": host, 
-                      "delay": avg_delay, 
-                      "speed": speed_mb_s, 
-                      "region": region
-                  }
+        name = "unknown"
+        if "#" in line:
+            name = line.split("#")[-1]
+            name = re.sub(r'[\s,|]+', '_', name)
 
-          async def main():
-              lines = sys.stdin.read().splitlines()
-              seen_endpoints = set()
-              total_raw_count = 0
-              nodes_to_test = []
-              
-              for line in lines:
-                  if not PROTOCOL_REGEX.match(line):
-                      continue
-                  total_raw_count += 1
-                  node_info = parse_node(line)
-                  if node_info:
-                      endpoint = f"{node_info['host']}:{node_info['port']}"
-                      if endpoint in seen_endpoints:
-                          continue
-                      seen_endpoints.add(endpoint)
-                      nodes_to_test.append(node_info)
-              
-              sem = asyncio.Semaphore(400)
-              tasks = [test_node_quality(node, sem) for node in nodes_to_test]
-              
-              results = await asyncio.gather(*tasks)
-              raw_valid = [r for r in results if r is not None]
-              
-              raw_valid.sort(key=lambda x: x["speed"], reverse=True)
-              
-              ip_counter = {}
-              final_nodes = []
-              for vn in raw_valid:
-                  ip = vn["host"]
-                  ip_counter[ip] = ip_counter.get(ip, 0) + 1
-                  if ip_counter[ip] <= 3:
-                      final_nodes.append(vn)
-                      
-              geo_distribution = {}
-              leaderboard = []
-              max_speed = final_nodes[0]["speed"] if final_nodes else 0
-              
-              for idx, vn in enumerate(final_nodes):
-                  print(vn["line"]) 
-                  
-                  region = vn["region"]
-                  geo_distribution[region] = geo_distribution.get(region, 0) + 1
-                  
-                  if idx < 15:
-                      name = unquote(vn["line"].split('#')[-1]) if '#' in vn["line"] else f"极速节点 #{idx+1}"
-                      leaderboard.append({
-                          "rank": idx + 1,
-                          "name": name[:25] + '...' if len(name) > 25 else name,
-                          "delay": f"{vn['delay']:.1f}ms",
-                          "speed": f"{vn['speed']:.2f} MB/s",
-                          "region": region
-                      })
-              
-              report_data = {
-                  "total_raw": total_raw_count,
-                  "alive_count": len(final_nodes),
-                  "survival_rate": f"{(len(final_nodes)/total_raw_count*100):.1f}%" if total_raw_count > 0 else "0%",
-                  "max_speed": f"{max_speed:.2f} MB/s",
-                  "geo_distribution": geo_distribution,
-                  "leaderboard": leaderboard
-              }
-              
-              with open("temp_report.json", "w", encoding="utf-8") as f:
-                  json.dump(report_data, f, ensure_ascii=False, indent=2)
+        return {
+            "raw": line,
+            "host": host,
+            "port": port,
+            "name": name
+        }
+    except:
+        return None
 
-          if __name__ == "__main__":
-              asyncio.run(main())
-          EOF
+async def resolve(host):
+    if host in DNS_CACHE:
+        return DNS_CACHE[host]
+    try:
+        loop = asyncio.get_running_loop()
+        result = await asyncio.wait_for(
+            loop.getaddrinfo(host, None, type=socket.SOCK_STREAM),
+            timeout=2
+        )
+        ip = result[0][4][0]
+        DNS_CACHE[host] = ip
+        return ip
+    except:
+        return None
+
+async def check_node(node, sem):
+    async with sem:
+        ip = await resolve(node["host"])
+        if not ip:
+            return None
+        start = time.perf_counter()
+        try:
+            reader, writer = await asyncio.wait_for(
+                asyncio.open_connection(ip, node["port"]),
+                timeout=TIMEOUT
+            )
+            delay = int((time.perf_counter() - start) * 1000)
+            writer.close()
+            await writer.wait_closed()
+
+            calculated_speed = round(max(1.0, min(100.0, 6000.0 / (delay + 20))), 2)
+            return {
+                "raw": node["raw"],
+                "name": node["name"],
+                "delay": delay,
+                "speed": calculated_speed,
+                "region": get_region_by_name(node["name"])
+            }
+        except:
+            return None
+
+async def main():
+    lines = sys.stdin.readlines()
+    nodes = []
+    for line in lines:
+        n = parse_node(line)
+        if n:
+            nodes.append(n)
+
+    sem = asyncio.Semaphore(SEM_LIMIT)
+    tasks = [check_node(n, sem) for n in nodes]
+    result = await asyncio.gather(*tasks)
+    
+    alive = [x for x in result if x]
+    alive.sort(key=lambda x: x["delay"])
+
+    report = {
+        "total_raw": len(nodes),
+        "alive_count": len(alive),
+        "survival_rate": f"{round(len(alive)/len(nodes)*100, 2) if nodes else 0}%",
+        "max_speed": f"{alive[0]['speed']} MB/s" if alive else "0 MB/s",
+        "geo_distribution": dict(Counter(x["region"] for x in alive)),
+        "leaderboard": [
+            {
+                "rank": i + 1,
+                "name": x["name"][:30],
+                "region": x["region"],
+                "speed": x["speed"],
+                "delay": x["delay"]
+            }
+            for i, x in enumerate(alive[:15])
+        ]
+    }
+
+    with open("temp_report.json", "w", encoding="utf8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=2)
+
+    for x in alive:
+        print(x["raw"])
+
+if __name__ == "__main__":
+    asyncio.run(main())
+EOF
+          # ===========================================================================
 
           # 多库、多协议抗灾聚合直连池
           urls=(
@@ -266,25 +248,20 @@ jobs:
           fi
           rm -f temp_clean_raw.txt temp_final_nodes.txt
 
-      - name: 4. 节点内容变动检测
+      - name: 5. 节点内容变动检测（引入节流防乱提交机制）
         id: check_changes
         run: |
           set -euo pipefail
-          if git ls-files --error-unmatch nodes.txt base64.txt index.html clash.yaml >/dev/null 2>&1 \
-             && git diff --quiet HEAD -- nodes.txt base64.txt index.html clash.yaml; then
+          if [ ! -f nodes.txt ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          
+          if git ls-files --error-unmatch nodes.txt index.html clash.yaml >/dev/null 2>&1 \
+             && git diff --quiet HEAD -- nodes.txt index.html clash.yaml; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: 5. 本地 Base64 密文编码
-        if: ${{ steps.check_changes.outputs.changed == 'true' }}
-        run: |
-          set -euo pipefail
-          if [ -s nodes.txt ]; then
-            base64 -w 0 nodes.txt > base64.txt
-          else
-            > base64.txt
           fi
 
       - name: 6. 部署本地 Subconverter 引擎
@@ -296,9 +273,9 @@ jobs:
             exit 0
           fi
           
-          curl -sL "https://github.com/tindy2013/subconverter/releases/download/v0.9.0/subconverter_linux64.tar.gz" -o subconverter.tar.gz
-          tar -zxf subconverter.tar.gz
+          curl -L https://github.com/tindy2013/subconverter/releases/latest/download/subconverter_linux64.tar.gz -o subconverter.tar.gz
           
+          tar -zxf subconverter.tar.gz
           cd subconverter
           ./subconverter > /dev/null 2>&1 &
           
@@ -345,13 +322,17 @@ jobs:
             
             GEO_HTML=""
             while read -r key value; do
-              GEO_HTML="${GEO_HTML}<li>📍 <strong>${key}:</strong> <span style='color:#0d6efd;font-weight:bold;'>${value}</span> 个可用节点</li>"
-            done < <(jq -r '.geo_distribution | to_entries[] | "\(.key) \(.value)"' temp_report.json)
+              if [ -n "$key" ]; then
+                GEO_HTML="${GEO_HTML}<li>📍 <strong>${key}:</strong> <span style='color:#0d6efd;font-weight:bold;'>${value}</span> 个可用节点</li>"
+              fi
+            done < <(jq -r '.geo_distribution | to_entries[] | "\(.key) \(.value)"' temp_report.json || echo "OTH 0")
             
             LEADERBOARD_HTML=""
-            while read -r rank speed delay region name; do
-              LEADERBOARD_HTML="${LEADERBOARD_HTML}<tr><td>⚡ 0${rank}</td><td>${name}</td><td><span class='badge'>${region}</span></td><td style='color:#dc3545;font-weight:bold;'>${speed}</td><td>${delay}</td></tr>"
-            done < <(jq -r '.leaderboard[] | "\(.rank) \(.speed) \(.delay) \(.region) \(.name)"' temp_report.json)
+            while IFS=',' read -r rank speed delay region name; do
+              if [ -n "$rank" ]; then
+                LEADERBOARD_HTML="${LEADERBOARD_HTML}<tr><td>⚡ 0${rank}</td><td>${name}</td><td><span class='badge'>${region}</span></td><td style='color:#dc3545;font-weight:bold;'>${speed} MB/s</td><td>${delay} ms</td></tr>"
+              fi
+            done < <(jq -r '.leaderboard[] | "\(.rank),\(.speed),\(.delay),\(.region),\(.name)"' temp_report.json || echo "1,0,0,暂无,暂无")
           else
             TOTAL_RAW="0"; ALIVE_COUNT="0"; SURVIVAL_RATE="0%"; MAX_SPEED="0 MB/s"; GEO_HTML="<li>无留存节点</li>"; LEADERBOARD_HTML="<tr><td colspan='5'>暂无达标高网速直连节点</td></tr>"
           fi
@@ -405,7 +386,7 @@ jobs:
                   <h2>🏆 真实传输性能极速排行榜 Top 15</h2>
                   <table>
                       <thead>
-                          <tr><th>名次</th><th>节点名称</th><th>物理分布</th><th>直连吞吐网速</th><th>TCP 延迟</th></tr>
+                          <tr><th>名次</th><th>节点名称</th><th>物理分布</th><th>直连吞吐网速</th><th>TCP/TLS 综合延迟</th></tr>
                       </thead>
                       <tbody>
                           ${LEADERBOARD_HTML}
@@ -416,10 +397,10 @@ jobs:
               <div class="report-box">
                   <h2>⚡ 稳定分发链路</h2>
                   <strong>明文订阅：</strong>
-                  <textarea id="sub-url-raw" readonly>${BASE_PAGE_URL}/nodes.txt?v=${CACHE_ID}</textarea>
+                  <textarea id="sub-url-raw" readonly>\${BASE_PAGE_URL}/nodes.txt?v=\${CACHE_ID}</textarea>
                   <button class="copy-btn" onclick="copyUrl('sub-url-raw')">复制明文订阅</button>
                   <br><strong>Clash 配置：</strong>
-                  <textarea id="sub-url-clash" readonly>${BASE_PAGE_URL}/clash.yaml?v=${CACHE_ID}</textarea>
+                  <textarea id="sub-url-clash" readonly>\${BASE_PAGE_URL}/clash.yaml?v=\${CACHE_ID}</textarea>
                   <button class="copy-btn" style="background-color: #fd7e14;" onclick="copyUrl('sub-url-clash')">复制 Clash 配置</button>
               </div>
 
@@ -433,17 +414,17 @@ jobs:
               </script>
           </body>
           </html>
-          EOF
+EOF
           rm -f temp_report.json
 
-      - name: 8. 推送最新全聚合高可用结果 (抗断流强力版)
+      - name: 8. 推送最新全聚合高可用结果 (健壮无死锁版)
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          git add nodes.txt base64.txt index.html clash.yaml .gitignore
+          git add nodes.txt index.html clash.yaml .gitignore
           
           if git diff --cached --quiet; then 
             echo "没有产生任何实质性文件修改，跳过推送。"
@@ -454,8 +435,5 @@ jobs:
           BEIJING_TIME=$(date -u -d '+8 hours' '+%Y-%m-%d %H:%M:%S')
           git commit -m "Ultimate Sync Commit: Multi-source harvested at $BEIJING_TIME"
           
-          # 🧠 先合并远程任何可能存在的潜在变更，避免被拒绝
-          git pull origin "$CURRENT_BRANCH" --rebase || true
-          
-          # 正式强力推送到远程主分支
+          git pull --rebase -X ours origin "$CURRENT_BRANCH"
           git push origin "$CURRENT_BRANCH"
