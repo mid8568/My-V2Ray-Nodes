@@ -1,29 +1,38 @@
 name: Repo Auto Mirror Sync
 
 on:
-  workflow_dispatch: # 强行启用手动触发按钮
+  workflow_dispatch: # 支持手动触发
 
 jobs:
   mirror-sync:
     runs-on: ubuntu-latest
     steps:
-      - name: 检出本地仓库
+      # 💡 第一步：直接利用官方组件把 free-nodes 的大库完整克隆到临时目录中
+      - name: 克隆目标大库
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          repository: 'free-nodes/v2rayfree'
+          path: 'target_files'
 
-      - name: 强行拉取并重置对齐目标大库
+      # 💡 第二步：克隆你自己的本地仓库
+      - name: 克隆我的仓库
+        uses: actions/checkout@v4
+        with:
+          path: 'my_repo'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # 💡 第三步：把大库里的文件原封不动复制到你的仓库，并强行推送到你的首页
+      - name: 复制并强推
         run: |
+          cd my_repo
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           
-          # 1. 强行把 1.3w 星的大库添加为你的数据源
-          git remote add target_repo https://github.com
-          git fetch target_repo main
+          # 清除你现有的旧文件（保留工作流），然后把大库文件全量拷贝进来
+          find . -maxdepth 1 ! -name '.github' ! -name '.' ! -name '..' -exec rm -rf {} +
+          cp -r ../target_files/* .
           
-          # 2. 暴力重置：无视你仓库里以前的任何空节点、老脚本，将本地直接荡平重改成和对方一模一样
-          git checkout main
-          git reset --hard target_repo/main
-          
-          # 3. 暴力死推回你自己的首页
-          git push --force origin main
+          # 强制提交并刷新
+          git add .
+          git commit --allow-empty -m "Auto sync nodes from target repo"
+          git push origin main
