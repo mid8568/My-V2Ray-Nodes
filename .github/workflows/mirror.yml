@@ -16,7 +16,11 @@ permissions:
 jobs:
   smart-sync:
     runs-on: ubuntu-latest
-    continue-on-error: false
+    
+    env:
+      HTTPS_PROXY: ""
+      HTTP_PROXY: ""
+      ALL_PROXY: ""
 
     steps:
       - name: 1. 检出本地仓库
@@ -66,7 +70,12 @@ jobs:
             echo "尝试抓取数据源 -> $url"
             curl -A "Mozilla/5.0" -sL --connect-timeout 8 --max-time 15 "$url" >> temp_all_raw.txt || true
           done
+          echo "=== 原始节点去重 ==="
 
+          awk '!seen[$0]++' temp_all_raw.txt > temp_clean.txt
+
+          mv temp_clean.txt temp_all_raw.txt
+          
           # 注意：下方 Python 代码的缩进已经过严格对齐，千万不要手动改动左侧空格
           cat > score.py << 'EOF'
           import sys, asyncio, re, base64, time
@@ -128,10 +137,13 @@ jobs:
               valid_lines = []
               for line in raw_content.splitlines():
                   line = line.strip()
+                  
                   if not line or line.startswith('#') or 'example-node' in line.lower() or 'expired' in line.lower():
                       continue
+                      
                   if not PROTOCOL_REGEX.search(line):
                       continue
+                      
                   if line not in seen:
                       seen.add(line)
                       valid_lines.append(line)
