@@ -83,54 +83,6 @@ jobs:
               sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
               
               echo "=== ⚙️ 升级：启动 V5.9 正式版 Quality Engine 工业级参数化并行探测引擎 ==="
-- name: 3. 多源灾备抓取、Asyncio 动态权重排序、IPv6 与 VMess 完美解构
-        id: fetch_data
-        run: |
-          set -euo pipefail
-          
-          touch .gitignore
-          for item in "temp_*" "decoded_*" "*.bak" "tcp_alive_nodes.txt" "clean_nodes.txt" "verified_temp.txt" "subconverter*"; do
-            grep -qxF "$item" .gitignore || echo "$item" >> .gitignore
-          done
-          
-          TODAY=$(date -u -d '+8 hours' +%Y%m%d)
-          YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
-          
-          urls=(
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
-            "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}2"
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}1"
-            "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}1"
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}2"
-            "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${YESTERDAY}2"
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v4"
-          )
-          success=false
-          PROTOCOL_REGEX="^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://"
-          
-          for url in "${urls[@]}"; do
-            echo "--------------------------------------------------"
-            echo "生产引擎正在突击上游数据源 -> $url"
-            rm -f temp_nodes.txt decoded_nodes.txt
-            
-            temp_code=$(curl -A "Mozilla/5.0" -sL --connect-timeout 10 --max-time 20 -o temp_nodes.txt -w "%{http_code}" "$url" || true)
-            
-            if [ "$temp_code" = "200" ] && [ "$(wc -c < temp_nodes.txt || echo 0)" -gt 200 ]; then
-              sed -i '1s/^\xEF\xBB\xBF//' temp_nodes.txt
-              if grep -qi "<html" temp_nodes.txt 2>/dev/null; then continue; fi
-              
-              if ! grep -E -q "${PROTOCOL_REGEX}" temp_nodes.txt 2>/dev/null; then
-                if tr -d '\r\n\t ' < temp_nodes.txt | base64 -d > decoded_nodes.txt 2>/dev/null; then
-                  mv decoded_nodes.txt temp_nodes.txt
-                  sed -i '1s/^\xEF\xBB\xBF//' temp_nodes.txt
-                else
-                  continue
-                fi
-              fi
-              
-              sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
-              
-              echo "=== ⚙️ 升级：启动 V5.9 正式版 Quality Engine 工业级参数化并行探测引擎 ==="
               python3 - <<'EOF'
 import sys
 import asyncio
@@ -287,29 +239,6 @@ EOF
             done
             echo "【自愈成功】已用上一轮健康资产铺底，本次静默绿灯退出。"
             exit 0
-          fi
-              
-              # 统计经核心质量过滤引擎洗涤后真正输出的精锐节点数
-              NODE_COUNT=$(wc -l < tcp_alive_nodes.txt || echo "0")
-              echo "本轮清洗过滤出的精锐鲜活节点数: ${NODE_COUNT}"
-              
-              if [ "${NODE_COUNT}" -ge 20 ]; then
-                cp tcp_alive_nodes.txt nodes.txt
-                rm -f temp_nodes.txt tcp_alive_nodes.txt clean_nodes.txt
-                success=true
-                break
-              else
-                echo "【质量引擎警报】本批次可用精锐节点仅有 ${NODE_COUNT} 个，低于安全水位 ${MIN_GOOD_NODES}。启动断路重试..."
-              fi
-            fi
-          done
-          
-          if [ "$success" = true ]; then
-            echo "has_updated=true" >> "$GITHUB_OUTPUT"
-            echo "【高可用重排】V5.9 质量排序清洗彻底落盘。"
-          else
-            echo "【⚠️ 全线安全熔断】所有可用上游均无法洗出达标资产！正在交由自愈回滚器接管..."
-            echo "has_updated=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: 4. 事务级自愈回滚器 (Git 安全防干涉清理)
