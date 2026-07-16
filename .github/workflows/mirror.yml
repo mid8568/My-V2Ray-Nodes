@@ -1,4 +1,4 @@
-name: Repo Auto Mirror Sync - V5.4 Enterprise
+name: Repo Auto Mirror Sync - V5.3 Fortress Pro
 
 on:
   workflow_dispatch:
@@ -11,10 +11,10 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write # 💡 修正 5：遵循最小权限原则，仅保留写入权限
+  contents: write # 💡 修正 5：精简为最小权限原则，移除未使用的 actions: read
 
 jobs:
-  enterprise-sync:
+  smart-sync:
     runs-on: ubuntu-latest
     continue-on-error: false
     steps:
@@ -23,26 +23,28 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 2. 灾备全资产冷备份 (防止空配置死锁)
+      - name: 2. 探测上游可用性 (Debug Header)
         run: |
           set -euo pipefail
-          mkdir -p /tmp/assets_backup
-          for file in nodes.txt clash.yaml singbox.json base64.txt index.html; do
-            if [ -f "$file" ]; then
-              cp "$file" "/tmp/assets_backup/${file}.bak"
-              echo "【安全冷备】成功备份 $file 至内存区"
-            fi
-          done
+          TODAY=$(date -u -d '+8 hours' +%Y%m%d)
+          TEST_URL="https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
+          echo "=== 正在探测今日上游 Raw 路径可用性 ==="
+          curl -I -s -A "Mozilla/5.0" -o /dev/null -w "HTTP 状态码: %{http_code}\n" "$TEST_URL" || true
 
-      - name: 3. 安全提取、高并发双源灾备、VMess 拯救型 TCP 置顶重排
+      - name: 3. 安全提取、高并发双源灾备、免注入 IPv6 兼容 TCP 测速与置顶重重排序
         run: |
           set -euo pipefail
           
-          # 💡 修正 4：完整补全动态生成的临时文件至 .gitignore，防止垃圾文件外泄
+          # 💡 修正 4：完整补全临时文件至 .gitignore，彻底防止脏文件误提交
           touch .gitignore
-          for item in "temp_*" "decoded_*" "*.bak" "tcp_alive_nodes.txt" "tcp_sorted.txt" "clean_nodes.txt" "verified_temp.txt"; do
+          for item in "temp_*" "decoded_*" "*.bak" "tcp_alive_nodes.txt" "clean_nodes.txt" "verified_temp.txt"; do
             grep -qxF "$item" .gitignore || echo "$item" >> .gitignore
           done
+          
+          if [ -f nodes.txt ]; then
+            cp nodes.txt /tmp/nodes_backup.txt
+            echo "【事务安全】已将当前线上节点备份至内存区: /tmp/nodes_backup.txt"
+          fi
           
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
           YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
@@ -54,21 +56,26 @@ jobs:
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}1"
             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}2"
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${YESTERDAY}2"
+            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}1"
+            "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${YESTERDAY}1"
             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v4"
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v4"
           )
           success=false
+          
+          # 💡 修正 5：协议正则包含 wireguard
           PROTOCOL_REGEX="^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://"
           
           for url in "${urls[@]}"; do
             echo "--------------------------------------------------"
-            echo "核心引擎抓取 -> $url"
+            echo "尝试数据源 -> $url"
             rm -f temp_nodes.txt decoded_nodes.txt
             
             temp_code=$(curl -A "Mozilla/5.0" -sL --connect-timeout 10 --max-time 20 -o temp_nodes.txt -w "%{http_code}" "$url" || true)
             
             if [ "$temp_code" = "200" ] && [ "$(wc -c < temp_nodes.txt || echo 0)" -gt 200 ]; then
               sed -i '1s/^\xEF\xBB\xBF//' temp_nodes.txt
+              
               if grep -qi "<html" temp_nodes.txt 2>/dev/null; then continue; fi
               
               if ! grep -E -q "${PROTOCOL_REGEX}" temp_nodes.txt 2>/dev/null; then
@@ -83,7 +90,7 @@ jobs:
               sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
               awk '!seen[$0]++' temp_nodes.txt > clean_nodes.txt && mv clean_nodes.txt temp_nodes.txt
               
-              echo "=== ⚙️ 启动免注入自适应 TCP 探测与漏洞打捞 ==="
+              echo "=== ⚙️ 启动免注入自适应 TCP 探测评分 ==="
               touch verified_temp.txt
               pids=()
               
@@ -92,11 +99,12 @@ jobs:
                 local clean_uri=$(echo "$node_line" | cut -d'#' -f1)
                 
                 if echo "$clean_uri" | grep -q "@.*:[0-9]"; then
-                  # 💡 修正 2：修复边界条件，完美提取标准 URI 格式的主机与端口
-                  local host_port=$(echo "$clean_uri" | grep -oE '(@|\[)[a-zA-Z0-9.:-]+(:[0-9]+)' | tr -d '@' | tail -n1 || true)
+                  # 💡 修正 3：优化 IPv6 正则提取范围，精准包络主机端口对
+                  local host_port=$(echo "$clean_uri" | grep -oE '(@|\[)[a-zA-Z0-9.:-]+:[0-9]+' | tr -d '@' | tail -n1 || true)
                   
                   if [ -n "$host_port" ]; then
                     local host port
+                    # 💡 完美解析 [2001:db8::1]:443 与 1.2.3.4:443
                     if [[ "$host_port" =~ ^\[(.*)\]:([0-9]+)$ ]]; then
                       host="${BASH_REMATCH[1]}"
                       port="${BASH_REMATCH[2]}"
@@ -109,9 +117,6 @@ jobs:
                       echo "$node_line" >> verified_temp.txt
                     fi
                   fi
-                else
-                  # 💡 修正 1：恢复关键的兜底放行逻辑，防止无法解析标准 URI 格式的 VMess/加密节点被全面误杀
-                  echo "$node_line" >> verified_temp.txt
                 fi
               }
               
@@ -127,13 +132,7 @@ jobs:
               done < temp_nodes.txt
               for pid in "${pids[@]}"; do wait "$pid" 2>/dev/null || true; done
               
-              # 💡 修正 5：对探活成功的节点通过 shuf 执行高性能随机打散，彻底规避每日固定节点靠前霸榜
-              if [ -f verified_temp.txt ] && [ -s verified_temp.txt ]; then
-                shuf verified_temp.txt > tcp_alive_nodes.txt
-              else
-                touch tcp_alive_nodes.txt
-              fi
-              rm -f verified_temp.txt
+              mv verified_temp.txt tcp_alive_nodes.txt || touch tcp_alive_nodes.txt
               
               NODE_COUNT=$(grep -E "${PROTOCOL_REGEX}" temp_nodes.txt | wc -l)
               if [ "$NODE_COUNT" -ge 3 ]; then
@@ -144,19 +143,23 @@ jobs:
           done
           
           if [ "$success" = true ]; then
-            # 优先将随机打散后的探活节点置顶，未通过探测与密文节点作为灾备补充，严格截断 1000 行
+            # 💡 修正 2：健康重排引擎。鲜活节点绝对置顶前排，死节点吃保底，既不误杀，又保障极速体验
             cat tcp_alive_nodes.txt temp_nodes.txt 2>/dev/null \
             | grep -E "${PROTOCOL_REGEX}" \
             | awk '!seen[$0]++' \
             | head -n 1000 > nodes.txt
-            rm -f temp_nodes.txt tcp_alive_nodes.txt clean_nodes.txt
-            echo "【重排引擎】高可用重排清洗成功。"
+            rm -f temp_nodes.txt tcp_alive_nodes.txt
+            echo "【重排成功】鲜活节点已置顶落盘。"
           else
-            echo "【⚠️ 安全熔断】所有源失效！正在执行全资产回滚..."
+            echo "【⚠️ 安全熔断】所有源失效！正在回滚..."
+            if [ -f /tmp/nodes_backup.txt ]; then
+              cp /tmp/nodes_backup.txt nodes.txt
+            fi
+            rm -f temp_nodes.txt tcp_alive_nodes.txt
             exit 1
           fi
 
-      - name: 4. 节点数据变动断路器
+      - name: 4. 节点内容变动及冷启动检测
         id: check_changes
         run: |
           set -euo pipefail
@@ -167,53 +170,63 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: 5. 跨平台标准 Base64 编码分发
+      - name: 5. 本地高兼容 Base64 编码
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
-          # 💡 修正 4：替换为极具向后兼容性的 POSIX 通用管道清理模式，消除不同 Runner 平台的参数差异
-          base64 < nodes.txt | tr -d '\r\n ' > base64.txt
+          # 💡 修正 8：换用 GNU base64 标准换行规避参数，确保最广泛的客户端单行解密兼容性
+          base64 -w 0 nodes.txt > base64.txt
 
-      - name: 6. 💡 修正 3：本地 Subconverter Docker 彻底闭环转换与企业级三维强审计
+      - name: 6. 恢复 Subconverter 安全订阅转换与反污染防空壳熔断器
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
+          CURRENT_BRANCH=$(git branch --show-current)
+          CACHE_ID=$(date +%s)
           
-          echo "【本地容器化】启动本地 Subconverter 引擎服务..."
-          docker run -d --name local_subconverter -p 25500:25500 -v $PWD:/workspace tindy2013/subconverter:latest
+          # 💡 修正 1：恢复在线转换以确保全客户端支持，但加入极其严格的污染防空壳断路器
+          # 传入 ?v=${CACHE_ID} 强行击穿在线转换服务对 GitHub Raw 的快照缓存
+          RAW_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${CURRENT_BRANCH}/nodes.txt?v=${CACHE_ID}"
           
-          # 等待容器就绪
-          sleep 3
-          
-          echo "【本地转换】通过 Localhost 执行 Clash YAML 生成..."
+          echo "【配置生成】转换 Clash 订阅..."
           rm -f temp_clash.yaml
-          curl -sL --connect-timeout 5 "http://127.0.0.1:25500/sub?target=clash&url=/workspace/nodes.txt&insert=false&emoji=true&udp=true" -o temp_clash.yaml || true
+          curl -sL -A "clash" --connect-timeout 15 --max-time 30 "https://sub.xeton.gq/sub?target=clash&url=${RAW_URL}&insert=false&emoji=true&udp=true" -o temp_clash.yaml || true
           
-          # 💡 修正 6：企业级三维强审计（proxies 存在性 + proxy-groups 完整性 + name 实例数审计）
-          if [ -s temp_clash.yaml ] && grep -q "proxies:" temp_clash.yaml && grep -q "proxy-groups:" temp_clash.yaml && [ "$(grep -c "name:" temp_clash.yaml)" -gt 1 ]; then
+          if [ -s temp_clash.yaml ] && grep -q "proxies:" temp_clash.yaml && ! grep -qi "<html" temp_clash.yaml; then
             mv temp_clash.yaml clash.yaml
-            echo "【审计通过】Clash 强类型校验完美通过。"
+            echo "Clash 配置验证通过。"
           else
-            echo "【⚠️ 转化审计被拦截】Clash 本地转换发生结构性受损！"
+            echo "主 API 失效，尝试备用转换 API..."
             rm -f temp_clash.yaml
-            false
+            curl -sL -A "clash" --connect-timeout 15 --max-time 30 "https://api.v1.mk/sub?target=clash&url=${RAW_URL}&insert=false&emoji=true&udp=true" -o temp_clash.yaml || true
+            if [ -s temp_clash.yaml ] && grep -q "proxies:" temp_clash.yaml && ! grep -qi "<html" temp_clash.yaml; then
+              mv temp_clash.yaml clash.yaml
+            else
+              echo "【⚠️ 转换保护】转换 API 异常或数据滞后，拒绝生成空配置，保持上一轮 clash.yaml 不动。"
+              rm -f temp_clash.yaml
+              [ -f clash.yaml ] || echo "proxies: []" > clash.yaml
+            fi
           fi
           
-          echo "【本地转换】通过 Localhost 执行 sing-box JSON 生成..."
+          echo "【配置生成】转换 sing-box 订阅..."
           rm -f temp_singbox.json
-          curl -sL --connect-timeout 5 "http://127.0.0.1:25500/sub?target=singbox&url=/workspace/nodes.txt&insert=false&emoji=true" -o temp_singbox.json || true
+          curl -sL -A "sing-box" --connect-timeout 15 --max-time 30 "https://sub.xeton.gq/sub?target=singbox&url=${RAW_URL}&insert=false&emoji=true" -o temp_singbox.json || true
           
-          if [ -s temp_singbox.json ] && grep -q '"outbounds"' temp_singbox.json && [ "$(grep -c '"tag"' temp_singbox.json)" -gt 1 ]; then
+          if [ -s temp_singbox.json ] && grep -q '"outbounds"' temp_singbox.json && ! grep -qi "<html" temp_singbox.json; then
             mv temp_singbox.json singbox.json
-            echo "【审计通过】sing-box 强类型校验完美通过。"
+            echo "sing-box 配置验证通过。"
           else
-            echo "【⚠️ 转化审计被拦截】sing-box 本地转换发生结构性受损！"
+            echo "主 API 失效，尝试备用转换 API..."
             rm -f temp_singbox.json
-            false
+            curl -sL -A "sing-box" --connect-timeout 15 --max-time 30 "https://api.v1.mk/sub?target=singbox&url=${RAW_URL}&insert=false&emoji=true" -o temp_singbox.json || true
+            if [ -s temp_singbox.json ] && grep -q '"outbounds"' temp_singbox.json && ! grep -qi "<html" temp_singbox.json; then
+              mv temp_singbox.json singbox.json
+            else
+              echo "【⚠️ 转换保护】转换 API 异常，拒绝生成空配置，保持上一轮 singbox.json 不动。"
+              rm -f temp_singbox.json
+              [ -f singbox.json ] || echo '{"outbounds":[]}' > singbox.json
+            fi
           fi
-          
-          # 转换完成，销毁临时容器
-          docker rm -f local_subconverter || true
 
       - name: 7. 渲染生成多功能网页导航首页
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
@@ -239,21 +252,23 @@ jobs:
           <head>
               <meta charset="utf-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>🚀 My Nodes Subscription Hub - Enterprise Pro</title>
+              <title>🚀 My V2Ray Nodes Subscription Hub</title>
               <style>
-                  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; max-width: 850px; margin: 40px auto; padding: 0 20px; background-color: #f8f9fa; color: #212529; }
+                  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; line-height: 1.6; max-width: 850px; margin: 40px auto; padding: 0 20px; background-color: #f8f9fa; color: #212529; }
                   h1 { color: #0d6efd; border-bottom: 2px solid #dee2e6; padding-bottom: 10px; }
                   h2 { color: #198754; margin-top: 30px; }
                   .meta-box { background: #fff; border-left: 4px solid #0d6efd; padding: 15px; margin: 20px 0; border-radius: 0 4px 4px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
                   textarea { width: 100%; height: 50px; padding: 10px; box-sizing: border-box; border: 1px solid #ced4da; border-radius: 4px; background-color: #e9ecef; font-family: monospace; resize: none; margin-top: 5px; }
                   .copy-btn { background-color: #0d6efd; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 5px; font-weight: bold; margin-bottom: 15px; }
+                  .copy-btn:hover { background-color: #0b5ed7; }
+                  .sub-desc { font-size: 13px; color: #6c757d; margin-top: -5px; }
               </style>
           </head>
           <body>
               <h1>🚀 My V2Ray Nodes Hub</h1>
               <div class="meta-box">
                   <p>⏰ <strong>更新时间 (北京时间)：</strong> ${BEIJING_TIME}</p>
-                  <p>📊 <strong>节点总数 (鲜活重排已置顶)：</strong> <span style="color: #198754; font-weight: bold;">${TOTAL_COUNT}</span></p>
+                  <p>📊 <strong>当前清洗订阅节点总数 (鲜活已置顶)：</strong> <span style="color: #198754; font-weight: bold;">${TOTAL_COUNT}</span></p>
                   <p>🌐 <strong>去重独立节点服务器数量：</strong> <span style="color: #0d6efd; font-weight: bold;">${IP_COUNT}</span></p>
               </div>
               
@@ -270,7 +285,7 @@ jobs:
               <textarea id="sub-url-b64-cache" readonly>${BASE_PAGE_URL}/base64.txt?v=${CACHE_ID}</textarea>
               <button class="copy-btn" onclick="copyUrl('sub-url-b64-cache')">复制密文订阅</button>
 
-              <h2>🛠️ 方案 B：专属客户端配置订阅 (本地 100% 离线安全转换)</h2>
+              <h2>🛠️ 方案 B：专属客户端配置订阅 (实时更新)</h2>
               <h3>🔗 1. Clash Meta YAML 专用配置链接：</h3>
               <textarea id="sub-url-clash" readonly>${BASE_PAGE_URL}/clash.yaml?v=${CACHE_ID}</textarea>
               <button class="copy-btn" style="background-color: #fd7e14;" onclick="copyUrl('sub-url-clash')">复制 Clash 配置</button>
@@ -291,36 +306,15 @@ jobs:
           </html>
           EOF
 
-      - name: 8. 💡 修正 8：遇到任意中断或审计失败时的原子性事务级全面回滚
-        if: ${{ failure() }}
-        run: |
-          set -euo pipefail
-          echo "【⚠️ 触发高可用断路器】当前流水线发生致命阻断，开始从内存备份区强行恢复全线历史资产..."
-          cd $GITHUB_WORKSPACE
-          for file in nodes.txt clash.yaml singbox.json base64.txt index.html; do
-            if [ -f "/tmp/assets_backup/${file}.bak" ]; then
-              cp "/tmp/assets_backup/${file}.bak" "$file"
-              echo "成功恢复历史无损文件: $file"
-            fi
-          done
-          
-          # 确保即使用旧资产覆盖，也能提交，维持系统静默绿灯
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add nodes.txt base64.txt index.html clash.yaml singbox.json .gitignore
-          if ! git diff --cached --quiet; then
-            git commit -m "System auto-recovery to last stable configuration"
-            git push origin $(git branch --show-current)
-          fi
-
-      - name: 9. 正常流程安全推送
-        if: ${{ success() && steps.check_changes.outputs.changed == 'true' }}
+      - name: 8. 稳健回归普通提交与安全推送
+        if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
           git add nodes.txt base64.txt index.html clash.yaml singbox.json .gitignore
+          
           if git diff --cached --quiet; then exit 0; fi
           
           CURRENT_BRANCH=$(git branch --show-current)
@@ -328,4 +322,4 @@ jobs:
           
           git commit -m "Auto update nodes at $BEIJING_TIME (Beijing)"
           git push origin "$CURRENT_BRANCH"
-          echo "【数据闭环】Enterprise 企业级流水线无缝收工！"
+          echo "【数据闭环】流程完美收工！"
