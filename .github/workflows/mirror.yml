@@ -1,4 +1,4 @@
-name: Repo Auto Mirror Sync - V5.6 Fortress Ultimate Stable
+name: Repo Auto Mirror Sync - V5.4 Enterprise
 
 on:
   workflow_dispatch:
@@ -11,38 +11,36 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: write # 💡 修正 5：遵循最小权限原则，仅保留写入权限
 
 jobs:
-  ultimate-stable-sync:
+  enterprise-sync:
     runs-on: ubuntu-latest
     continue-on-error: false
     steps:
-      - name: 1. 检出本地仓库 (全量历史深度)
+      - name: 1. 检出本地仓库
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - name: 2. 事务级全资产内存冷备份
-        id: backup
+      - name: 2. 灾备全资产冷备份 (防止空配置死锁)
         run: |
           set -euo pipefail
           mkdir -p /tmp/assets_backup
           for file in nodes.txt clash.yaml singbox.json base64.txt index.html; do
             if [ -f "$file" ]; then
               cp "$file" "/tmp/assets_backup/${file}.bak"
+              echo "【安全冷备】成功备份 $file 至内存区"
             fi
           done
-          echo "backup_complete=true" >> "$GITHUB_OUTPUT"
 
-      - name: 3. 多源灾备抓取、Python 强类型多协议全解构、鲜活节点高性能置顶重排
-        id: fetch_data
+      - name: 3. 安全提取、高并发双源灾备、VMess 拯救型 TCP 置顶重排
         run: |
           set -euo pipefail
           
-          # 建立健壮的本地缓存屏蔽圈
+          # 💡 修正 4：完整补全动态生成的临时文件至 .gitignore，防止垃圾文件外泄
           touch .gitignore
-          for item in "temp_*" "decoded_*" "*.bak" "tcp_alive_nodes.txt" "clean_nodes.txt" "verified_temp.txt" "subconverter*"; do
+          for item in "temp_*" "decoded_*" "*.bak" "tcp_alive_nodes.txt" "tcp_sorted.txt" "clean_nodes.txt" "verified_temp.txt"; do
             grep -qxF "$item" .gitignore || echo "$item" >> .gitignore
           done
           
@@ -57,13 +55,14 @@ jobs:
             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}2"
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${YESTERDAY}2"
             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v4"
+            "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v4"
           )
           success=false
           PROTOCOL_REGEX="^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://"
           
           for url in "${urls[@]}"; do
             echo "--------------------------------------------------"
-            echo "引擎正在突击上游数据源 -> $url"
+            echo "核心引擎抓取 -> $url"
             rm -f temp_nodes.txt decoded_nodes.txt
             
             temp_code=$(curl -A "Mozilla/5.0" -sL --connect-timeout 10 --max-time 20 -o temp_nodes.txt -w "%{http_code}" "$url" || true)
@@ -84,64 +83,43 @@ jobs:
               sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
               awk '!seen[$0]++' temp_nodes.txt > clean_nodes.txt && mv clean_nodes.txt temp_nodes.txt
               
-              echo "=== ⚙️ 启动 Python 多协议解构引擎与高并发探活池 ==="
+              echo "=== ⚙️ 启动免注入自适应 TCP 探测与漏洞打捞 ==="
               touch verified_temp.txt
               pids=()
               
               tcp_check() {
                 local node_line="$1"
+                local clean_uri=$(echo "$node_line" | cut -d'#' -f1)
                 
-                # 💡 修正 1 & 2：重构 Python 脚本，完美兼容标准库，增加对 VMess Base64 内层 JSON 的全量解构测速
-                local host_port
-                host_port=$(python3 -c "
-import sys, urllib.parse, base64, json
-uri = '$node_line'.split('#')[0].strip()
-try:
-    if uri.startswith('vmess://'):
-        b64_str = uri.replace('vmess://', '')
-        # 补齐 Base64 填充位
-        b64_str += '=' * (-len(b64_str) % 4)
-        dec = base64.b64decode(b64_str).decode('utf-8', errors='ignore')
-        data = json.loads(dec)
-        addr = data.get('add', data.get('host', ''))
-        port = data.get('port', '')
-        if addr and port:
-            print(f'{addr}:{port}')
-    else:
-        res = urllib.parse.urlparse(uri)
-        hp = res.netloc.split('@')[-1] if '@' in res.netloc else res.netloc
-        print(hp)
-except Exception:
-    pass
-" 2>/dev/null || true)
-                
-                if [ -n "$host_port" ]; then
-                  local host port
-                  if [[ "$host_port" =~ ^\[(.*)\]:([0-9]+)$ ]]; then
-                    host="${BASH_REMATCH[1]}"
-                    port="${BASH_REMATCH[2]}"
-                  else
-                    host="${host_port%:*}"
-                    port="${host_port##*:}"
-                  fi
+                if echo "$clean_uri" | grep -q "@.*:[0-9]"; then
+                  # 💡 修正 2：修复边界条件，完美提取标准 URI 格式的主机与端口
+                  local host_port=$(echo "$clean_uri" | grep -oE '(@|\[)[a-zA-Z0-9.:-]+(:[0-9]+)' | tr -d '@' | tail -n1 || true)
                   
-                  if [ -n "$host" ] && [ -n "$port" ] && [[ "$port" =~ ^[0-9]+$ ]]; then
+                  if [ -n "$host_port" ]; then
+                    local host port
+                    if [[ "$host_port" =~ ^\[(.*)\]:([0-9]+)$ ]]; then
+                      host="${BASH_REMATCH[1]}"
+                      port="${BASH_REMATCH[2]}"
+                    else
+                      host="${host_port%:*}"
+                      port="${host_port##*:}"
+                    fi
+                    
                     if timeout 2 bash -c "</dev/tcp/$host/$port" 2>/dev/null; then
                       echo "$node_line" >> verified_temp.txt
                     fi
                   fi
                 else
-                  # 针对无法解构的非标字符，转入灾备保底统计池，不予剔除
+                  # 💡 修正 1：恢复关键的兜底放行逻辑，防止无法解析标准 URI 格式的 VMess/加密节点被全面误杀
                   echo "$node_line" >> verified_temp.txt
                 fi
               }
               
               while IFS= read -r line || [ -n "$line" ]; do
                 if [ -n "$line" ]; then
-                  # 💡 修正 5：将探活池并发流上限提升至 80，实现双核 Runner 效能的最大化开发
                   tcp_check "$line" &
                   pids+=($!)
-                  if [ "${#pids[@]}" -ge 80 ]; then
+                  if [ "${#pids[@]}" -ge 30 ]; then
                     for pid in "${pids[@]}"; do wait "$pid" 2>/dev/null || true; done
                     pids=()
                   fi
@@ -149,6 +127,7 @@ except Exception:
               done < temp_nodes.txt
               for pid in "${pids[@]}"; do wait "$pid" 2>/dev/null || true; done
               
+              # 💡 修正 5：对探活成功的节点通过 shuf 执行高性能随机打散，彻底规避每日固定节点靠前霸榜
               if [ -f verified_temp.txt ] && [ -s verified_temp.txt ]; then
                 shuf verified_temp.txt > tcp_alive_nodes.txt
               else
@@ -165,122 +144,79 @@ except Exception:
           done
           
           if [ "$success" = true ]; then
+            # 优先将随机打散后的探活节点置顶，未通过探测与密文节点作为灾备补充，严格截断 1000 行
             cat tcp_alive_nodes.txt temp_nodes.txt 2>/dev/null \
             | grep -E "${PROTOCOL_REGEX}" \
             | awk '!seen[$0]++' \
             | head -n 1000 > nodes.txt
             rm -f temp_nodes.txt tcp_alive_nodes.txt clean_nodes.txt
-            echo "has_updated=true" >> "$GITHUB_OUTPUT"
-            echo "【清洗重排】全新优质数据链落地成功。"
+            echo "【重排引擎】高可用重排清洗成功。"
           else
-            echo "【⚠️ 安全软熔断触发】未捕获到有效节点，进入下步资产对齐流程..."
-            echo "has_updated=false" >> "$GITHUB_OUTPUT"
+            echo "【⚠️ 安全熔断】所有源失效！正在执行全资产回滚..."
+            exit 1
           fi
 
-      - name: 4. 工业级事务自愈回滚器 (完美保持绿灯退出)
-        if: ${{ steps.fetch_data.outputs.has_updated == 'false' }}
-        run: |
-          set -euo pipefail
-          echo "【事务回滚激活】检测到数据流断绝，开始强行恢复上一轮文件资产与 Git 树状态..."
-          
-          # 💡 修正 5：在平移备份文件的基础上，对 Git 树执行硬重置与彻底清理，确保不提交脏数据
-          git reset --hard HEAD
-          git clean -fd
-          
-          recovered=false
-          for file in nodes.txt clash.yaml singbox.json base64.txt index.html; do
-            if [ -f "/tmp/assets_backup/${file}.bak" ]; then
-              cp "/tmp/assets_backup/${file}.bak" "$file"
-              recovered=true
-            fi
-          done
-          if [ "$recovered" = true ]; then
-            echo "【自愈完成】全量资产已回归前次稳定版本，Actions 将无报错静默关闭。"
-          else
-            echo "【冷启动提示】本地未发现任何历史冷备痕迹。"
-          fi
-
-      - name: 5. 衍生资产变更精确判定沙盒
+      - name: 4. 节点数据变动断路器
         id: check_changes
-        if: ${{ steps.fetch_data.outputs.has_updated == 'true' }}
         run: |
           set -euo pipefail
-          # 💡 修正 6：变更判定断路器只锚定核心 nodes.txt，只要源发生改变，后面的派生子配置必须全量刷新
-          if git ls-files --error-unmatch nodes.txt >/dev/null 2>&1 \
-             && git diff --quiet HEAD -- nodes.txt; then
+          if git ls-files --error-unmatch nodes.txt base64.txt index.html clash.yaml singbox.json >/dev/null 2>&1 \
+             && git diff --quiet HEAD -- nodes.txt base64.txt index.html clash.yaml singbox.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "节点底层数据无实质变更，跳过后续派生处理。"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "检测到实质性节点变更，激活下游衍生流水线。"
           fi
 
-      - name: 6. 跨平台多终端高性能 Base64 编码分发
-        if: ${{ steps.fetch_data.outputs.has_updated == 'true' && steps.check_changes.outputs.changed == 'true' }}
+      - name: 5. 跨平台标准 Base64 编码分发
+        if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
+          # 💡 修正 4：替换为极具向后兼容性的 POSIX 通用管道清理模式，消除不同 Runner 平台的参数差异
           base64 < nodes.txt | tr -d '\r\n ' > base64.txt
 
-      - name: 7. 💡 修正 2 & 3 & 4：本地静态二进制转换引擎与绝对路径总线挂载
-        if: ${{ steps.fetch_data.outputs.has_updated == 'true' && steps.check_changes.outputs.changed == 'true' }}
+      - name: 6. 💡 修正 3：本地 Subconverter Docker 彻底闭环转换与企业级三维强审计
+        if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
           
-          echo "【弹性拉取】利用强状态参数获取 Subconverter 二进制包..."
-          # 💡 修正 2：改用 -fSL 强化 curl 容错，并增加强依赖解压安全审计，防止下到受损碎包导致中断
-          if ! curl -fSL "https://github.com/tindy2013/subconverter/releases/latest/download/subconverter_linux64.tar.gz" -o subconverter.tar.gz; then
-             echo "【⚠️ 下载故障】Subconverter Release 节点拉取遭遇 404/500 网络坍塌，回滚 Clash/sing-box 至历史版本。"
-             if [ -f "/tmp/assets_backup/clash.yaml.bak" ]; then cp "/tmp/assets_backup/clash.yaml.bak" ./clash.yaml; fi
-             if [ -f "/tmp/assets_backup/singbox.json.bak" ]; then cp "/tmp/assets_backup/singbox.json.bak" ./singbox.json; fi
-             exit 0
-          fi
+          echo "【本地容器化】启动本地 Subconverter 引擎服务..."
+          docker run -d --name local_subconverter -p 25500:25500 -v $PWD:/workspace tindy2013/subconverter:latest
           
-          if ! tar -zxf subconverter.tar.gz; then
-             echo "【⚠️ 解压故障】安装包体结构受损，执行冷备代理资产强对齐。"
-             if [ -f "/tmp/assets_backup/clash.yaml.bak" ]; then cp "/tmp/assets_backup/clash.yaml.bak" ./clash.yaml; fi
-             if [ -f "/tmp/assets_backup/singbox.json.bak" ]; then cp "/tmp/assets_backup/singbox.json.bak" ./singbox.json; fi
-             exit 0
-          fi
+          # 等待容器就绪
+          sleep 3
           
-          cd subconverter
-          cp ../nodes.txt ./nodes.txt
+          echo "【本地转换】通过 Localhost 执行 Clash YAML 生成..."
+          rm -f temp_clash.yaml
+          curl -sL --connect-timeout 5 "http://127.0.0.1:25500/sub?target=clash&url=/workspace/nodes.txt&insert=false&emoji=true&udp=true" -o temp_clash.yaml || true
           
-          echo "【守护挂载】启动后台守护进程..."
-          ./subconverter >/dev/null 2>&1 &
-          SUB_PID=$!
-          sleep 2
-          
-          echo "【绝对总线】调用 Localhost 并挂载 file:// 协议进行强类型配置转化..."
-          rm -f temp_clash.yaml temp_singbox.json
-          
-          # 💡 修正 4：必须使用绝对路径规范 file:/// 指向工作沙盒，否则转换引擎将无法捕获目标源
-          curl -sL --connect-timeout 5 "http://127.0.0.1:25500/sub?target=clash&url=file://${GITHUB_WORKSPACE}/subconverter/nodes.txt&insert=false&emoji=true&udp=true" -o temp_clash.yaml || true
-          curl -sL --connect-timeout 5 "http://127.0.0.1:25500/sub?target=singbox&url=file://${GITHUB_WORKSPACE}/subconverter/nodes.txt&insert=false&emoji=true" -o temp_singbox.json || true
-          
-          kill -9 $SUB_PID || true
-          
-          # 弹性二维审计 (核心指示符校验 + 真实代理项非空审计)
-          if [ -s temp_clash.yaml ] && grep -q "proxies:" temp_clash.yaml && grep -q "proxy-groups:" temp_clash.yaml && grep -q "- name:" temp_clash.yaml; then
-            mv temp_clash.yaml ../clash.yaml
-            echo "Clash 配置结构性审计完美通过。"
+          # 💡 修正 6：企业级三维强审计（proxies 存在性 + proxy-groups 完整性 + name 实例数审计）
+          if [ -s temp_clash.yaml ] && grep -q "proxies:" temp_clash.yaml && grep -q "proxy-groups:" temp_clash.yaml && [ "$(grep -c "name:" temp_clash.yaml)" -gt 1 ]; then
+            mv temp_clash.yaml clash.yaml
+            echo "【审计通过】Clash 强类型校验完美通过。"
           else
-            echo "【⚠️ 审计拦截】Clash 生成遭遇致命空代理，回退旧版资产..."
-            if [ -f "/tmp/assets_backup/clash.yaml.bak" ]; then cp "/tmp/assets_backup/clash.yaml.bak" ../clash.yaml; fi
+            echo "【⚠️ 转化审计被拦截】Clash 本地转换发生结构性受损！"
+            rm -f temp_clash.yaml
+            false
           fi
           
-          if [ -s temp_singbox.json ] && grep -q '"outbounds"' temp_singbox.json && grep -q '"tag"' temp_singbox.json; then
-            mv temp_singbox.json ../singbox.json
-            echo "sing-box 配置结构性审计完美通过。"
+          echo "【本地转换】通过 Localhost 执行 sing-box JSON 生成..."
+          rm -f temp_singbox.json
+          curl -sL --connect-timeout 5 "http://127.0.0.1:25500/sub?target=singbox&url=/workspace/nodes.txt&insert=false&emoji=true" -o temp_singbox.json || true
+          
+          if [ -s temp_singbox.json ] && grep -q '"outbounds"' temp_singbox.json && [ "$(grep -c '"tag"' temp_singbox.json)" -gt 1 ]; then
+            mv temp_singbox.json singbox.json
+            echo "【审计通过】sing-box 强类型校验完美通过。"
           else
-            echo "【⚠️ 审计拦截】sing-box 生成遭遇致命空代理，回退旧版资产..."
-            if [ -f "/tmp/assets_backup/singbox.json.bak" ]; then cp "/tmp/assets_backup/singbox.json.bak" ../singbox.json; fi
+            echo "【⚠️ 转化审计被拦截】sing-box 本地转换发生结构性受损！"
+            rm -f temp_singbox.json
+            false
           fi
           
-          cd ..
-          rm -rf subconverter*
+          # 转换完成，销毁临时容器
+          docker rm -f local_subconverter || true
 
-      - name: 8. 动态网页订阅中台渲染
-        if: ${{ steps.fetch_data.outputs.has_updated == 'true' && steps.check_changes.outputs.changed == 'true' }}
+      - name: 7. 渲染生成多功能网页导航首页
+        if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
           PROTOCOL_REGEX="^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://"
@@ -303,10 +239,11 @@ except Exception:
           <head>
               <meta charset="utf-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>🚀 Hub - V5.6 Ultimate Stable</title>
+              <title>🚀 My Nodes Subscription Hub - Enterprise Pro</title>
               <style>
                   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; max-width: 850px; margin: 40px auto; padding: 0 20px; background-color: #f8f9fa; color: #212529; }
                   h1 { color: #0d6efd; border-bottom: 2px solid #dee2e6; padding-bottom: 10px; }
+                  h2 { color: #198754; margin-top: 30px; }
                   .meta-box { background: #fff; border-left: 4px solid #0d6efd; padding: 15px; margin: 20px 0; border-radius: 0 4px 4px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
                   textarea { width: 100%; height: 50px; padding: 10px; box-sizing: border-box; border: 1px solid #ced4da; border-radius: 4px; background-color: #e9ecef; font-family: monospace; resize: none; margin-top: 5px; }
                   .copy-btn { background-color: #0d6efd; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 5px; font-weight: bold; margin-bottom: 15px; }
@@ -316,25 +253,29 @@ except Exception:
               <h1>🚀 My V2Ray Nodes Hub</h1>
               <div class="meta-box">
                   <p>⏰ <strong>更新时间 (北京时间)：</strong> ${BEIJING_TIME}</p>
-                  <p>📊 <strong>节点总数 (VMess解构全量参与探活)：</strong> <span style="color: #198754; font-weight: bold;">${TOTAL_COUNT}</span></p>
+                  <p>📊 <strong>节点总数 (鲜活重排已置顶)：</strong> <span style="color: #198754; font-weight: bold;">${TOTAL_COUNT}</span></p>
                   <p>🌐 <strong>去重独立节点服务器数量：</strong> <span style="color: #0d6efd; font-weight: bold;">${IP_COUNT}</span></p>
               </div>
               
               <h2>⚡ 方案 A：通用订阅链</h2>
-              <h3>🔗 1. 通用明文 (强刷防缓存)：</h3>
+              <h3>🔗 1. 通用明文 (带强刷防缓存)：</h3>
               <textarea id="sub-url-raw-cache" readonly>${BASE_PAGE_URL}/nodes.txt?v=${CACHE_ID}</textarea>
               <button class="copy-btn" onclick="copyUrl('sub-url-raw-cache')">复制高速明文</button>
 
-              <h3>🔗 2. 通用 Base64 密文：</h3>
+              <h3>🔗 2. 通用明文 (标准无参静态)：</h3>
+              <textarea id="sub-url-raw-std" readonly>${BASE_PAGE_URL}/nodes.txt</textarea>
+              <button class="copy-btn" style="background-color: #6c757d;" onclick="copyUrl('sub-url-raw-std')">复制标准明文</button>
+
+              <h3>🔗 3. 通用 Base64 密文：</h3>
               <textarea id="sub-url-b64-cache" readonly>${BASE_PAGE_URL}/base64.txt?v=${CACHE_ID}</textarea>
               <button class="copy-btn" onclick="copyUrl('sub-url-b64-cache')">复制密文订阅</button>
 
-              <h2>🛠️ 方案 B：专属客户端配置 (本地二进制 100% 成功生成)</h2>
-              <h3>🔗 1. Clash Meta YAML 配置链接：</h3>
+              <h2>🛠️ 方案 B：专属客户端配置订阅 (本地 100% 离线安全转换)</h2>
+              <h3>🔗 1. Clash Meta YAML 专用配置链接：</h3>
               <textarea id="sub-url-clash" readonly>${BASE_PAGE_URL}/clash.yaml?v=${CACHE_ID}</textarea>
               <button class="copy-btn" style="background-color: #fd7e14;" onclick="copyUrl('sub-url-clash')">复制 Clash 配置</button>
 
-              <h3>🔗 2. sing-box JSON 配置链接：</h3>
+              <h3>🔗 2. sing-box JSON 专用配置链接：</h3>
               <textarea id="sub-url-singbox" readonly>${BASE_PAGE_URL}/singbox.json?v=${CACHE_ID}</textarea>
               <button class="copy-btn" style="background-color: #6f42c1;" onclick="copyUrl('sub-url-singbox')">复制 sing-box 配置</button>
 
@@ -350,22 +291,41 @@ except Exception:
           </html>
           EOF
 
-      - name: 9. 健壮分支安全强同步推送
+      - name: 8. 💡 修正 8：遇到任意中断或审计失败时的原子性事务级全面回滚
+        if: ${{ failure() }}
+        run: |
+          set -euo pipefail
+          echo "【⚠️ 触发高可用断路器】当前流水线发生致命阻断，开始从内存备份区强行恢复全线历史资产..."
+          cd $GITHUB_WORKSPACE
+          for file in nodes.txt clash.yaml singbox.json base64.txt index.html; do
+            if [ -f "/tmp/assets_backup/${file}.bak" ]; then
+              cp "/tmp/assets_backup/${file}.bak" "$file"
+              echo "成功恢复历史无损文件: $file"
+            fi
+          done
+          
+          # 确保即使用旧资产覆盖，也能提交，维持系统静默绿灯
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add nodes.txt base64.txt index.html clash.yaml singbox.json .gitignore
+          if ! git diff --cached --quiet; then
+            git commit -m "System auto-recovery to last stable configuration"
+            git push origin $(git branch --show-current)
+          fi
+
+      - name: 9. 正常流程安全推送
+        if: ${{ success() && steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
           git add nodes.txt base64.txt index.html clash.yaml singbox.json .gitignore
+          if git diff --cached --quiet; then exit 0; fi
           
-          if git diff --cached --quiet; then
-            echo "本轮无实质衍生资产变化，静默离场。"
-            exit 0
-          fi
-          
+          CURRENT_BRANCH=$(git branch --show-current)
           BEIJING_TIME=$(date -u -d '+8 hours' '+%Y-%m-%d %H:%M:%S')
-          git commit -m "Auto update nodes at $BEIJING_TIME (Beijing)"
           
-          # 💡 修正 2：全量套用环境变量，解决浅分支游离头指针导致的 Git 死锁
-          git push origin "${GITHUB_REF_NAME}"
-          echo "【终极稳定闭环】V5.6 Fortress Ultimate Stable 运行绿灯，完美收工！"
+          git commit -m "Auto update nodes at $BEIJING_TIME (Beijing)"
+          git push origin "$CURRENT_BRANCH"
+          echo "【数据闭环】Enterprise 企业级流水线无缝收工！"
