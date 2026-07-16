@@ -1,4 +1,5 @@
 name: Repo Auto Mirror Sync
+
 on:
   workflow_dispatch:
   schedule:
@@ -33,7 +34,7 @@ jobs:
           
           # 临时文件防脏提交
           touch .gitignore
-          for item in "temp_*" "decoded_*" "*.bak" "speed_test.py"; do
+          for item in "temp_*" "decoded_*" "*.bak" "speed_test.py" "subconverter*"; do
             grep -qxF "$item" .gitignore || echo "$item" >> .gitignore
           done
           
@@ -115,7 +116,7 @@ jobs:
           async def main():
               lines = sys.stdin.read().splitlines()
               tasks = []
-              seen_endpoints = set()  # 用于存储已经遇过的 "host:port"，实现深度去重
+              seen_endpoints = set()
               
               for line in lines:
                   if not PROTOCOL_REGEX.match(line):
@@ -125,20 +126,15 @@ jobs:
                       
                   node_info = parse_node(line)
                   if node_info:
-                      # 💡 核心改动：移出重复的底层节点服务器
                       endpoint = f"{node_info['host']}:{node_info['port']}"
                       if endpoint in seen_endpoints:
-                          continue  # 如果相同的IP/域名和端口已存在，直接丢弃该重复节点
+                          continue
                       seen_endpoints.add(endpoint)
-                      
                       tasks.append(test_node(node_info))
                       
               results = await asyncio.gather(*tasks)
               valid_nodes = [r for r in results if r is not None]
-              
-              # 随机扰动加权排序
               valid_nodes.sort(key=lambda x: x["weight"])
-              
               for vn in valid_nodes:
                   print(vn["line"])
 
@@ -146,18 +142,15 @@ jobs:
               asyncio.run(main())
           EOF
 
-          # 数据流清洗与多源灾备聚合
+          # 💡 优化 1：直连抗环境干扰调整，优先使用全球高可用的 CDN 镜像链源
           urls=(
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}2"
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}1"
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}1"
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}2"
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${YESTERDAY}2"
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}1"
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${YESTERDAY}1"
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v4"
             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v4"
+            "https://raw.gitmirror.com/free-nodes/v2rayfree/main/v${TODAY}2"
+            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
           )
           
           success=false
@@ -166,7 +159,7 @@ jobs:
           for url in "${urls[@]}"; do
             echo "尝试获取数据源 -> $url"
             rm -f temp_src.txt decoded_src.txt
-            temp_code=$(curl -A "Mozilla/5.0" -sL --connect-timeout 10 --max-time 20 -o temp_src.txt -w "%{http_code}" "$url" || true)
+            temp_code=$(curl -A "Mozilla/5.0" -sL --connect-timeout 8 --max-time 15 -o temp_src.txt -w "%{http_code}" "$url" || true)
             
             if [ "$temp_code" = "200" ] && [ "$(wc -c < temp_src.txt || echo 0)" -gt 200 ]; then
               sed -i '1s/^\xEF\xBB\xBF//' temp_src.txt
@@ -186,9 +179,7 @@ jobs:
 
           # 执行全局测速与去重
           if [ -s temp_all_raw.txt ]; then
-            # 第一层文本行去重
             awk '!seen[$0]++' temp_all_raw.txt > temp_clean_raw.txt
-            
             echo "=== ⚙️ 启动 Python Asyncio 高级去重与并发测速引擎 ==="
             python3 speed_test.py < temp_clean_raw.txt > temp_final_nodes.txt || touch temp_final_nodes.txt
             
@@ -196,13 +187,12 @@ jobs:
             if [ "$NODE_COUNT" -ge 3 ]; then
               mv temp_final_nodes.txt nodes.txt
               success=true
-              echo "【深度清洗完成】已移除重复节点和无效节点，剩余 $NODE_COUNT 个独立优质节点。"
+              echo "【深度清洗完成】独立优质节点数量: $NODE_COUNT"
             fi
           fi
           
-          # 熔断安全回滚
           if [ "$success" = false ]; then
-            echo "【⚠️ 安全熔断】有效独立活节点不足！正在回滚保持上一次版本，拒绝生成空订阅..."
+            echo "【⚠️ 安全熔断】未获取到足够的有效活节点，自动回滚历史备份。"
             if [ -f /tmp/nodes_backup.txt ]; then
               cp /tmp/nodes_backup.txt nodes.txt
             else
@@ -228,66 +218,56 @@ jobs:
           set -euo pipefail
           base64 -w 0 nodes.txt > base64.txt
 
-      - name: 6. Subconverter 安全订阅转换与健康检查
+      - name: 6. 💡 部署本地 Subconverter 引擎 (彻底告别外部网页 API)
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
-          CURRENT_BRANCH=$(git branch --show-current)
-          CACHE_ID=$(date +%s)
-          RAW_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${CURRENT_BRANCH}/nodes.txt?v=${CACHE_ID}"
+          echo "=== ⏬ 正在下载并初始化本地化 Subconverter 二进制程序 ==="
+          # 下载官方专为 Linux 优化的全协议静态二进制包
+          curl -sL "https://github.com/tindy2013/subconverter/releases/download/v0.9.0/subconverter_linux64.tar.gz" -o subconverter.tar.gz
+          tar -zxf subconverter.tar.gz
           
-          API_MAIN="https://sub.xeton.gq"
-          API_BACKUP="https://api.v1.mk"
-          SELECTED_API=""
-
-          check_api_health() {
-            local base_url="$1"
-            local status
-            status=$(curl -sL -o /dev/null -w "%{http_code}" --connect-timeout 5 --max-time 8 "${base_url}" || echo "500")
-            if [ "$status" -ge 200 ] && [ "$status" -lt 450 ]; then
-              return 0
-            else
-              return 1
+          echo "=== 🚀 正在后台启动本地转换网关 ==="
+          cd subconverter
+          ./subconverter > /dev/null 2>&1 &
+          
+          # 等待本地进程就绪并进行健康检查
+          for i in {1..10}; do
+            if curl -s -o /dev/null http://127.0.0.1:25500/version; then
+              echo "✅ 本地 Subconverter 服务已成功冷启动！"
+              break
             fi
-          }
-
-          echo "正在对转换节点执行健康探测..."
-          if check_api_health "$API_MAIN"; then
-            SELECTED_API="$API_MAIN"
-            echo "主 API 检查通过。"
-          elif check_api_health "$API_BACKUP"; then
-            SELECTED_API="$API_BACKUP"
-            echo "⚠️ 主 API 异常，已成功切至备用 API 节点。"
+            sleep 1
+          done
+          
+          # 拷贝当前轮清洗完的本地物理节点文本到工作目录，避开对网络 raw URL 缓存的依赖
+          cp ../nodes.txt ./local_nodes.txt
+          
+          echo "=== 🛠️ 正在通过环回网关执行本地安全转换 ==="
+          # 直接读取本地 local_nodes.txt，不依赖远程 GitHub 链接，断网也能转换
+          curl -sL -A "clash" "http://127.0.0.1:25500/sub?target=clash&url=./local_nodes.txt&insert=false&emoji=true&udp=true" -o ../temp_clash.yaml || true
+          curl -sL -A "sing-box" "http://127.0.0.1:25500/sub?target=singbox&url=./local_nodes.txt&insert=false&emoji=true" -o ../temp_singbox.json || true
+          
+          # 优雅关闭本地后台引擎
+          pkill subconverter || true
+          cd ..
+          
+          # 拦截与重写配置
+          if [ -s temp_clash.yaml ] && grep -q "proxies:" temp_clash.yaml; then
+            mv temp_clash.yaml clash.yaml
+            echo "Clash 本地转换大成功。"
           else
-            echo "❌ 所有在线 Subconverter API 均健康检查失败！触发防空壳熔断机制。"
+            [ -f clash.yaml ] || echo "proxies: []" > clash.yaml
           fi
-
-          if [ -n "$SELECTED_API" ]; then
-            rm -f temp_clash.yaml
-            curl -sL -A "clash" --connect-timeout 15 --max-time 30 "${SELECTED_API}/sub?target=clash&url=${RAW_URL}&insert=false&emoji=true&udp=true" -o temp_clash.yaml || true
-            if [ -s temp_clash.yaml ] && grep -q "proxies:" temp_clash.yaml && ! grep -qi "<html" temp_clash.yaml; then
-              mv temp_clash.yaml clash.yaml
-              echo "Clash 配置重写落盘。"
-            else
-              echo "【⚠️ 转换保护】下发数据格式错误，Clash 保持上一轮结构不变。"
-              rm -f temp_clash.yaml
-            fi
+          
+          if [ -s temp_singbox.json ] && grep -q '"outbounds"' temp_singbox.json; then
+            mv temp_singbox.json singbox.json
+            echo "sing-box 本地转换大成功。"
+          else
+            [ -f singbox.json ] || echo '{"outbounds":[]}' > singbox.json
           fi
-
-          if [ -n "$SELECTED_API" ]; then
-            rm -f temp_singbox.json
-            curl -sL -A "sing-box" --connect-timeout 15 --max-time 30 "${SELECTED_API}/sub?target=singbox&url=${RAW_URL}&insert=false&emoji=true" -o temp_singbox.json || true
-            if [ -s temp_singbox.json ] && grep -q '"outbounds"' temp_singbox.json && ! grep -qi "<html" temp_singbox.json; then
-              mv temp_singbox.json singbox.json
-              echo "sing-box 配置重写落盘。"
-            else
-              echo "【⚠️ 转换保护】下发数据格式错误，sing-box 保持上一轮结构不变。"
-              rm -f temp_singbox.json
-            fi
-          fi
-
-          [ -f clash.yaml ] || echo "proxies: []" > clash.yaml
-          [ -f singbox.json ] || echo '{"outbounds":[]}' > singbox.json
+          
+          rm -rf subconverter subconverter.tar.gz temp_*
 
       - name: 7. 渲染生成多功能网页导航首页
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
@@ -328,7 +308,7 @@ jobs:
               <h1>🚀 My V2Ray Nodes Hub</h1>
               <div class="meta-box">
                   <p>⏰ <strong>更新时间 (北京时间)：</strong> ${BEIJING_TIME}</p>
-                  <p>📊 <strong>独立有效节点总数（已去重、剔除无效）：</strong> <span style="color: #198754; font-weight: bold;">${TOTAL_COUNT}</span></p>
+                  <p>📊 <strong>独立有效节点总数（去重测速直连优化）：</strong> <span style="color: #198754; font-weight: bold;">${TOTAL_COUNT}</span></p>
                   <p>🌐 <strong>去重独立服务器数量：</strong> <span style="color: #0d6efd; font-weight: bold;">${IP_COUNT}</span></p>
               </div>
               
@@ -341,7 +321,7 @@ jobs:
               <textarea id="sub-url-b64-cache" readonly>${BASE_PAGE_URL}/base64.txt?v=${CACHE_ID}</textarea>
               <button class="copy-btn" onclick="copyUrl('sub-url-b64-cache')">复制密文订阅</button>
 
-              <h2>🛠️ 方案 B：专属客户端配置订阅 (健康转换)</h2>
+              <h2>🛠️ 方案 B：专属客户端配置订阅 (本地闭环转换)</h2>
               <h3>🔗 1. Clash Meta YAML 专用配置链接：</h3>
               <textarea id="sub-url-clash" readonly>${BASE_PAGE_URL}/clash.yaml?v=${CACHE_ID}</textarea>
               <button class="copy-btn" style="background-color: #fd7e14;" onclick="copyUrl('sub-url-clash')">复制 Clash 配置</button>
