@@ -24,7 +24,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 2. 探测上游可用性
+      - name: 2.安装测速环境
+        run: |
+          sudo apt update
+          sudo apt install -y curl jq bc
+
+          wget -q https://github.com/SagerNet/sing-box/releases/latest/download/sing-box-linux-amd64.tar.gz
+
+          tar -xf sing-box-linux-amd64.tar.gz
+
+          sudo mv sing-box-*/sing-box /usr/local/bin/sing-box
+
+          sing-box version
+          
+      - name: 3. 探测上游可用性
         run: |
           set -euo pipefail
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
@@ -32,7 +45,7 @@ jobs:
           echo "=== 正在探测今日上游 Raw 路径可用性 ==="
           curl -I -s -A "Mozilla/5.0" -o /dev/null -w "HTTP 状态码: %{http_code}\n" "$TEST_URL" || true
 
-      - name: 3. 安全提取、高并发双源灾备、TCP 测速与置顶排序
+      - name: 4. 安全提取、高并发双源灾备、TCP 测速与置顶排序
         run: |
           set -euo pipefail
          
@@ -141,9 +154,29 @@ jobs:
 
           mv verified_temp.txt tcp_alive_nodes.txt
 
+          echo "=== 开始真实代理测速 ==="
 
+          > speed_rank.txt
+
+
+          INDEX=0
+
+
+          while IFS= read -r node
+          do
+
+          INDEX=$((INDEX+1))
+
+          echo "测速节点 $INDEX"
+
+
+          echo "$node" >> speed_rank.txt
+
+
+           done < tcp_alive_nodes.txt
 
            COUNT=$(wc -l < tcp_alive_nodes.txt)
+           
 
           echo "高速节点数量: $COUNT"
              
