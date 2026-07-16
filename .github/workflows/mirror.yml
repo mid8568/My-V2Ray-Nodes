@@ -1,4 +1,4 @@
-name: Repo Auto Mirror Sync - V7.5 Hardcore Clean Engine
+name: Repo Auto Mirror Sync 
 
 on:
   workflow_dispatch:
@@ -18,12 +18,12 @@ jobs:
     continue-on-error: false
     steps:
       - name: 1. 检出本地仓库
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: 2. 初始化 Python 环境
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.10'
 
