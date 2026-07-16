@@ -227,7 +227,7 @@ jobs:
           | sort -nr \
           | cut -d'|' -f2 \
           | awk '!seen[$0]++' \
-          | head -100 \
+          | sed -n '1,100p' \
           > nodes.txt
 
           else
@@ -247,14 +247,14 @@ jobs:
            | sort -nr \
            | cut -d'|' -f2 \
            | awk '!seen[$0]++' \
-           | head -n 100 \
+           | sed -n '1,100p' \
            > nodes.txt
             else
             echo "=== 无测速结果，使用TCP节点 ==="
 
            cat tcp_alive_nodes.txt \
            | awk '!seen[$0]++' \
-           | head -n 100 \
+           | sed -n '1,100p' \
            > nodes.txt
 
            fi
