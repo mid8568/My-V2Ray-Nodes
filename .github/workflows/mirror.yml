@@ -65,7 +65,7 @@ jobs:
          
             success=false
             > all_nodes.txt
-            PROTOCOL_REGEX="^[[:space:]]*(vmess|vless|ss|ssr|trojan|socks)://"
+            PROTOCOL_REGEX="^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://"
 
             > verified_temp.txt
             > speed_nodes.txt
@@ -178,15 +178,13 @@ jobs:
 
                      fi
 
-              ) >> "speed_${BASHPID}.txt" &
+              ) >> "speed_${RANDOM}_${BASHPID}.txt" &
 
                 done < temp_nodes.txt
 
             wait
+            
             cat speed_*.txt 2>/dev/null >> speed_nodes.txt
-            if tr -d '\r\n\t ' < temp_nodes.txt \
-            | sed 's/-/+/g;s/_/\//g' \
-            | base64 -d > decoded_nodes.txt 2>/dev/null
             
           echo "=== 延迟排序 ==="
 
@@ -369,6 +367,8 @@ jobs:
 
            git add nodes.txt base64.txt clash.yaml singbox.json .gitignore
 
+           BEIJING_TIME=$(date -u -d '+8 hours' '+%Y-%m-%d %H:%M:%S')
+
            git commit -m "Auto Sync at $BEIJING_TIME"
 
-           git push origin "$CURRENT_BRANCH"
+           
