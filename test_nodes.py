@@ -126,6 +126,10 @@ def parse_vless(uri):
 
         q=parse_qs(u.query)
 
+        if ":" in u.hostname:
+            server = "[" + u.hostname + "]"
+        else:
+            server = u.hostname
 
         out={
 
@@ -269,9 +273,12 @@ def parse_trojan(uri):
             u.query
         )
 
+        if ":" in u.hostname:
+            server = "[" + u.hostname + "]"
+        else:
+            server = u.hostname
 
         return {
-
 
             "type":"trojan",
 
