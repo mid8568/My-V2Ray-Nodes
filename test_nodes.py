@@ -7,6 +7,8 @@ import random
 import tempfile
 import subprocess
 import concurrent.futures
+import os
+import threading
 
 from urllib.parse import urlparse, parse_qs
 
@@ -14,9 +16,13 @@ from urllib.parse import urlparse, parse_qs
 INPUT = "nodes_all.txt"
 OUTPUT = "result.txt"
 
-TEST_URL = "https://www.gstatic.com/generate_204"
+# 更适合免费节点
+TEST_URL = "https://cp.cloudflare.com/generate_204"
 
 PROXY_PORT = 10808
+
+
+write_lock = threading.Lock()
 
 
 open(OUTPUT, "w").close()
@@ -29,7 +35,7 @@ def b64decode(data):
 
         return base64.urlsafe_b64decode(
             data + "==="
-        ).decode()
+        ).decode(errors="ignore")
 
     except:
 
@@ -37,7 +43,8 @@ def b64decode(data):
 
 
 
-# ---------------- VMESS ----------------
+# ================= VMESS =================
+
 
 def parse_vmess(uri):
 
@@ -53,15 +60,22 @@ def parse_vmess(uri):
         )
 
 
+        server=obj.get(
+            "add"
+        )
+
+
         out={
 
             "type":"vmess",
 
             "tag":"node",
 
-            "server":obj["add"],
+            "server":server,
 
-            "server_port":int(obj["port"]),
+            "server_port":int(
+                obj["port"]
+            ),
 
             "uuid":obj["id"],
 
@@ -87,6 +101,7 @@ def parse_vmess(uri):
             }
 
 
+
         if obj.get("tls")=="tls":
 
             out["tls"]={
@@ -98,7 +113,7 @@ def parse_vmess(uri):
                     "sni",
                     obj.get(
                         "host",
-                        obj["add"]
+                        server
                     )
                 )
 
@@ -108,14 +123,14 @@ def parse_vmess(uri):
         return out
 
 
-    except Exception:
+    except:
 
         return None
 
 
 
 
-# ---------------- VLESS ----------------
+# ================= VLESS =================
 
 
 def parse_vless(uri):
@@ -124,12 +139,23 @@ def parse_vless(uri):
 
         u=urlparse(uri)
 
-        q=parse_qs(u.query)
+        q=parse_qs(
+            u.query
+        )
 
-        if ":" in u.hostname:
-            server = "[" + u.hostname + "]"
+
+        host=u.hostname
+
+
+        if ":" in host:
+
+            server="["+host+"]"
+
         else:
-            server = u.hostname
+
+            server=host
+
+
 
         out={
 
@@ -137,7 +163,7 @@ def parse_vless(uri):
 
             "tag":"node",
 
-            "server":u.hostname,
+            "server":server,
 
             "server_port":u.port,
 
@@ -178,7 +204,7 @@ def parse_vless(uri):
                 "server_name":
                 q.get(
                     "sni",
-                    [u.hostname]
+                    [host]
                 )[0]
 
             }
@@ -208,6 +234,7 @@ def parse_vless(uri):
 
 
 
+
         network=q.get(
             "type",
             [""]
@@ -216,7 +243,6 @@ def parse_vless(uri):
 
 
         if network=="ws":
-
 
             out["transport"]={
 
@@ -231,9 +257,7 @@ def parse_vless(uri):
             }
 
 
-
         elif network=="grpc":
-
 
             out["transport"]={
 
@@ -248,19 +272,18 @@ def parse_vless(uri):
             }
 
 
-
         return out
 
 
-
-    except Exception:
+    except:
 
         return None
 
 
 
 
-# ---------------- Trojan ----------------
+
+# ================= TROJAN =================
 
 
 def parse_trojan(uri):
@@ -273,18 +296,28 @@ def parse_trojan(uri):
             u.query
         )
 
-        if ":" in u.hostname:
-            server = "[" + u.hostname + "]"
+
+        host=u.hostname
+
+
+        if ":" in host:
+
+            server="["+host+"]"
+
         else:
-            server = u.hostname
+
+            server=host
+
+
 
         return {
+
 
             "type":"trojan",
 
             "tag":"node",
 
-            "server":u.hostname,
+            "server":server,
 
             "server_port":u.port,
 
@@ -298,10 +331,11 @@ def parse_trojan(uri):
                 "server_name":
                 q.get(
                     "sni",
-                    [u.hostname]
+                    [host]
                 )[0]
 
             }
+
 
         }
 
@@ -313,7 +347,8 @@ def parse_trojan(uri):
 
 
 
-# ---------------- SS ----------------
+
+# ================= SS =================
 
 
 def parse_ss(uri):
@@ -346,10 +381,10 @@ def parse_ss(uri):
         )
 
 
-        server,port=host.split(
-            ":"
+        server,port=host.rsplit(
+            ":",
+            1
         )
-
 
 
         return {
@@ -377,7 +412,8 @@ def parse_ss(uri):
 
 
 
-# ---------------- HY2 ----------------
+
+# ================= HY2 =================
 
 
 def parse_hy2(uri):
@@ -429,32 +465,44 @@ def parse_hy2(uri):
 
 
 
+
 def parse(uri):
 
 
-    if uri.startswith("vmess://"):
+    if uri.startswith(
+        "vmess://"
+    ):
 
         return parse_vmess(uri)
 
 
-    if uri.startswith("vless://"):
+    if uri.startswith(
+        "vless://"
+    ):
 
         return parse_vless(uri)
 
 
-    if uri.startswith("trojan://"):
+    if uri.startswith(
+        "trojan://"
+    ):
 
         return parse_trojan(uri)
 
 
-    if uri.startswith("ss://"):
+    if uri.startswith(
+        "ss://"
+    ):
 
         return parse_ss(uri)
 
 
-    if uri.startswith("hysteria2://"):
+    if uri.startswith(
+        "hysteria2://"
+    ):
 
         return parse_hy2(uri)
+
 
 
     return None
@@ -462,10 +510,15 @@ def parse(uri):
 
 
 
-# ---------------- sing-box config ----------------
+
+# ================= CONFIG =================
 
 
 def make_config(out):
+
+
+    out["tag"]="proxy"
+
 
 
     return {
@@ -499,7 +552,9 @@ def make_config(out):
 
             {
 
-                "type":"direct"
+                "type":"direct",
+
+                "tag":"direct"
 
             }
 
@@ -510,7 +565,8 @@ def make_config(out):
 
 
 
-# ---------------- TEST ----------------
+
+# ================= TEST =================
 
 
 def test_node(uri):
@@ -525,17 +581,22 @@ def test_node(uri):
 
 
 
-    path=tempfile.mktemp(
+    cfg=tempfile.mktemp(
         suffix=".json"
     )
 
 
-    with open(path,"w") as f:
+
+    with open(
+        cfg,
+        "w"
+    ) as f:
 
         json.dump(
             make_config(outbound),
             f
         )
+
 
 
     p=None
@@ -554,22 +615,24 @@ def test_node(uri):
 
                 "-c",
 
-                path
+                cfg
 
             ],
 
             stdout=subprocess.DEVNULL,
 
-            stderr=subprocess.DEVNULL
+            stderr=subprocess.PIPE
 
         )
 
 
-        time.sleep(1.5)
+
+        time.sleep(3)
 
 
 
         start=time.time()
+
 
 
         r=subprocess.run(
@@ -577,6 +640,8 @@ def test_node(uri):
             [
 
                 "curl",
+
+                "-4",
 
                 "-A",
 
@@ -600,11 +665,12 @@ def test_node(uri):
 
             ],
 
-            timeout=8,
+            timeout=10,
 
             capture_output=True
 
         )
+
 
 
         delay=int(
@@ -618,24 +684,29 @@ def test_node(uri):
 
             print(
                 "OK",
-                delay,
-                uri[:40]
+                delay
             )
 
 
-            with open(
-                OUTPUT,
-                "a"
-            ) as f:
-
-                f.write(
-                    f"{delay}ms {uri}\n"
-                )
+            with write_lock:
 
 
-    except Exception:
+                with open(
+                    OUTPUT,
+                    "a"
+                ) as f:
+
+
+                    f.write(
+                        f"{delay}ms {uri}\n"
+                    )
+
+
+
+    except Exception as e:
 
         pass
+
 
 
     finally:
@@ -647,8 +718,20 @@ def test_node(uri):
 
 
 
+        try:
 
-# ---------------- MAIN ----------------
+            os.remove(cfg)
+
+        except:
+
+            pass
+
+
+
+
+
+# ================= MAIN =================
+
 
 
 with open(
@@ -676,12 +759,14 @@ with open(
 random.shuffle(nodes)
 
 
-nodes=nodes[:300]
 
+# 测试更多节点
+
+nodes=nodes[:1000]
 
 
 print(
-    "测试节点:",
+    "开始测试:",
     len(nodes)
 )
 
@@ -689,7 +774,7 @@ print(
 
 with concurrent.futures.ThreadPoolExecutor(
 
-    max_workers=10
+    max_workers=5
 
 ) as pool:
 
@@ -704,5 +789,5 @@ with concurrent.futures.ThreadPoolExecutor(
 
 
 print(
-    "测速完成"
+    "完成"
 )
