@@ -112,34 +112,26 @@ jobs:
              (
            host_port=""
 
-            if echo "$line" | grep -qE "^[[:space:]]*vmess://"; then
+            # ...（前文省略）
+          if echo "$line" | grep -qE "^[[:space:]]*vmess://"; then
             
-              decoded=$(echo "$line" \
-             
-              | sed -E 's/^[[:space:]]*vmess://' \
-              | tr '_-' '/+' \
-              | tr -d '\r\n ' \
-              | awk '{
-               l=length($0)%4
-               if(l==2){$0=$0"=="}
-               else if(l==3){$0=$0"="}
-               else if(l==1){exit}
-               print
-                }'
-              | base64 -d -i 2>/dev/null || true)
-              
-              addr=$(echo "$decoded" \
-              | grep -o '"add":"[^"]*"' \
-              | cut -d'"' -f4)
+            # 使用更简洁的管道连接方式，确保没有语法歧义
+            decoded=$(echo "$line" | sed -E 's/^[[:space:]]*vmess://' | tr '_-' '/+' | tr -d '\r\n ' | awk '{
+                l=length($0)%4;
+                if(l==2){$0=$0"=="}
+                else if(l==3){$0=$0"="}
+                else if(l==1){exit}
+                print
+            }' | base64 -d -i 2>/dev/null || true)
+            
+            addr=$(echo "$decoded" | grep -o '"add":"[^"]*"' | cut -d'"' -f4)
+            port=$(echo "$decoded" | grep -o '"port":"[^"]*"' | cut -d'"' -f4)
 
-              port=$(echo "$decoded" \
-              | grep -o '"port":"[^"]*"' \
-              | cut -d'"' -f4)
-
-              if [ -n "$addr" ] && [ -n "$port" ]; then
-               host_port="${addr}:${port}"
-                    fi
-                 fi
+            if [ -n "$addr" ] && [ -n "$port" ]; then
+              host_port="${addr}:${port}"
+            fi
+          fi
+          # ...（后文省略）
 
 
                if [ -z "$host_port" ]; then
