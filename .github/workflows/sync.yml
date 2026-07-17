@@ -72,7 +72,7 @@ jobs:
             curl -L \
                 --connect-timeout 10 \
                 --max-time 60 \
-                --retry 2 \
+                --retry 3 \
                "$url" >> raw.txt || true
           done
 
@@ -95,11 +95,6 @@ jobs:
 
               r'trojan://[^\s#]+',
 
-              r'hysteria2://[^\s#]+',
-
-              r'hy2://[^\s#]+',
-
-              r'ss://[^\s#]+'
           ]
 
 
