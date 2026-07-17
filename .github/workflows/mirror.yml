@@ -88,7 +88,7 @@ jobs:
              
               sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
               awk '!seen[$0]++' temp_nodes.txt > clean_nodes.txt && mv clean_nodes.txt temp_nodes.txt
-              head -n 200 temp_nodes.txt > temp_limit.txt
+              head -n 1000 temp_nodes.txt > temp_limit.txt
               mv temp_limit.txt temp_nodes.txt
               
            echo "=== 开始节点检测 ==="
@@ -98,14 +98,14 @@ jobs:
 
                export PROTOCOL_REGEX
 
-             cat temp_nodes.txt | xargs -P 50 -I {} bash -c '
+             cat temp_nodes.txt | xargs -P 20 -I {} bash -c '
 
              line="$1"
 
              clean_uri=$(echo "$line" | cut -d"#" -f1)
 
              host_port=$(echo "$clean_uri" \
-              | grep -oE "(@|\\])[a-zA-Z0-9.-]+:[0-9]+" \
+              | grep -oE '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}:[0-9]+' \
               | tr -d "@]" \
               | tail -n1)
 
@@ -121,7 +121,7 @@ jobs:
                end=$(date +%s%3N)
                delay=$((end-start))
 
-               if [ "$delay" -le 500 ]
+               if [ "$delay" -le 3000 ]
                then
                echo "${delay}|${line}"
                fi
@@ -142,7 +142,7 @@ jobs:
 
           echo "高速节点数量: $NODE_COUNT"
           cat verified_temp.txt >> all_nodes.txt
-          sort -u all_nodes.txt > tcp_alive_nodes.txt
+          awk '!seen[$0]++' all_nodes.txt > tcp_alive_nodes.txt
           if [ "$NODE_COUNT" -ge 3 ]; then
               success=true
               fi
@@ -154,7 +154,7 @@ jobs:
             cat tcp_alive_nodes.txt \
              | grep -E "${PROTOCOL_REGEX}" \
              | awk '!seen[$0]++' \
-             | head -n 500 > nodes.txt
+             | head -n 300 > nodes.txt
             echo "【成功】鲜活节点已置顶"
           else
             echo "【熔断】所有源失效，回滚备份"
