@@ -28,11 +28,10 @@ jobs:
             mv sing-box-*/sing-box sing-box
             chmod +x sing-box
             
-      - name: Install converter
+      - name: Give test script permission
         run: |
-            sudo apt install -y python3-pip
-            pip install node2singbox
-            
+             chmod +x test_node.sh
+             
       - name: Download Sources
         run: |
           > raw.txt
