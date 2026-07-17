@@ -27,7 +27,12 @@ jobs:
             tar xf sing.tar.gz
             mv sing-box-*/sing-box sing-box
             chmod +x sing-box
-
+            
+      - name: Install converter
+        run: |
+            sudo apt install -y python3-pip
+            pip install node2singbox
+            
       - name: Download Sources
         run: |
           > raw.txt
