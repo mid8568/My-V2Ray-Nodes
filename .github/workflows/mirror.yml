@@ -32,10 +32,6 @@ jobs:
         run: |
              sudo apt install -y python3 curl jq
              
-      - name: Give test script permission
-        run: |
-             chmod +x test_node.sh
-             
       - name: Download Sources
         run: |
           > raw.txt
@@ -59,18 +55,13 @@ jobs:
           sed 's/\r//' | sort -u > nodes_all.txt
           echo "抓取节点: $(wc -l < nodes_all.txt)"
 
-      - name: Sing-box Real Test
-        run: |
-              chmod +x test_nodes.py
-              python3 test_nodes.py
- 
       - name: Generate
         run: |
-          if [ ! -s result.txt ]; then
+          if [ ! -s nodes_all.txt ]; then
             echo "没有可用节点"
             exit 1
           fi
-          sort -100 result.txt > nodes.txt
+          sort -u nodes_all.txt | head -100 > nodes.txt
           base64 -w0 nodes.txt > base64.txt
           echo "最终节点数量: $(wc -l < nodes.txt)"
 
