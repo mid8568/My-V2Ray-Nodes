@@ -28,6 +28,10 @@ jobs:
             mv sing-box-*/sing-box sing-box
             chmod +x sing-box
             
+      - name: Install Python
+        run: |
+             sudo apt install -y python3 curl jq
+             
       - name: Give test script permission
         run: |
              chmod +x test_node.sh
@@ -55,37 +59,18 @@ jobs:
           sed 's/\r//' | sort -u > nodes_all.txt
           echo "抓取节点: $(wc -l < nodes_all.txt)"
 
-      - name: Real Test
+      - name: Sing-box Real Test
         run: |
-          > result.txt
-          head -300 nodes_all.txt > test_nodes.txt
-
-          echo "开始测试节点:"
-          wc -l test_nodes.txt
-
-           while read -r node; do
-            (
-              timeout -k 2 5 bash test_node.sh "$node" >> result.txt 2>/dev/null || true
-            ) &
-
-           if [ "$(jobs -r | wc -l)" -ge 30 ]; then
-            wait -n || true
-              fi
-
-               done < test_nodes.txt
-
-             wait || true
-
-             echo "测试完成:"
-              wc -l result.txt
-
+              chmod +x test_nodes.py
+              python3 test_nodes.py
+ 
       - name: Generate
         run: |
           if [ ! -s result.txt ]; then
             echo "没有可用节点"
             exit 1
           fi
-          sort -n result.txt | cut -d "|" -f2 | head -100 > nodes.txt
+          sort -100 result.txt > nodes.txt
           base64 -w0 nodes.txt > base64.txt
           echo "最终节点数量: $(wc -l < nodes.txt)"
 
