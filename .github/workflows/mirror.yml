@@ -138,10 +138,11 @@ jobs:
            | awk '!seen[$0]++'\
            > verified_temp.txt
           
-          COUNT=$(wc -l < verified_temp.txt)
+          NODE_COUNT=$(wc -l < verified_temp.txt)
 
           echo "高速节点数量: $NODE_COUNT"
           cat verified_temp.txt >> all_nodes.txt
+          sort -u all_nodes.txt > tcp_alive_nodes.txt
           if [ "$NODE_COUNT" -ge 3 ]; then
               success=true
               fi
@@ -178,7 +179,7 @@ jobs:
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           base64 -w 0 nodes.txt > base64.txt
-
+          [ -f nodes.txt ] || exit 0
       - name: 6. 生成 Clash & sing-box 配置
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
