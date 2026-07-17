@@ -54,21 +54,26 @@ jobs:
       - name: Real Test
         run: |
           > result.txt
-          mkdir -p work
-          head -500 nodes_all.txt > test_nodes.txt
-          # 注意：请确保你仓库中存在 test_node.sh 脚本
-          while read -r node; do
-           (
-           timeout 8 bash test_node.sh "$node" >> result.txt 2>/dev/null || true
-           ) &
+          head -300 nodes_all.txt > test_nodes.txt
 
-           if [ "$(jobs -r | wc -l)" -ge 50 ]; then
+          echo "开始测试节点:"
+          wc -l test_nodes.txt
+
+           while read -r node; do
+            (
+              timeout -k 2 5 bash test_node.sh "$node" >> result.txt 2>/dev/null || true
+            ) &
+
+           if [ "$(jobs -r | wc -l)" -ge 30 ]; then
             wait -n || true
-           fi
+              fi
 
-           done < nodes_all.txt
+               done < test_nodes.txt
 
-           wait || true
+             wait || true
+
+             echo "测试完成:"
+              wc -l result.txt
 
       - name: Generate
         run: |
