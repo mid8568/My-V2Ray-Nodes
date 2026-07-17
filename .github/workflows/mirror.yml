@@ -96,7 +96,7 @@ jobs:
               mv temp_limit.txt temp_nodes.txt
 
               fi
-            
+            done
            echo "=== 开始节点检测 ==="
          
             export PROTOCOL_REGEX
@@ -215,6 +215,8 @@ jobs:
           
               if [ -s nodes_new.txt ]; then
                mv nodes_new.txt nodes.txt
+               sed -i '/^$/d' nodes.txt
+               sort -u nodes.txt -o nodes.txt
                   echo "【成功】鲜活节点已更新"
              else
                 echo "nodes_new.txt为空，不更新"
@@ -228,8 +230,8 @@ jobs:
                     speed_* \
                     clean_nodes.txt \
                      verified_temp.txt \
-                     speed_nodes.txt \         
-
+                     speed_nodes.txt         
+       
           echo "=== 清理完成 ==="
           
       - name: 4. 检测文件变更
@@ -276,13 +278,13 @@ jobs:
           fi
           
       - name: 5. 生成 Base64 编码
-        if: ${{ steps.check_changes.outputs.changed == 'true' }}
+        if: always()
         run: |
           [ -f nodes.txt ] || exit 0
           base64 -w 0 nodes.txt > base64.txt
           
       - name: 6. 生成 Clash & sing-box 配置
-        if: ${{ steps.check_changes.outputs.changed == 'true' }}
+        if: always()
         run: |
           set -euo pipefail
           CURRENT_BRANCH="${GITHUB_REF_NAME}"
@@ -295,7 +297,7 @@ jobs:
           curl -sL -A "sing-box" "https://sub.xeton.gq/sub?target=singbox&url=${RAW_URL}&insert=false&emoji=true" -o singbox.json || echo '{"outbounds":[]}' > singbox.json
 
       - name: 7. 提交更新
-        if: ${{ steps.check_changes.outputs.changed == 'true' }}
+        if: always()
         run: |
           set -euo pipefail
           git config --global user.name "github-actions[bot]"
@@ -313,7 +315,7 @@ jobs:
          
           CURRENT_BRANCH=$(git branch --show-current)
 
-           git pull --rebase --autostash origin "$CURRENT_BRANCH"
+           git fetch origin "$CURRENT_BRANCH"
 
            git add nodes.txt base64.txt clash.yaml singbox.json .gitignore
 
