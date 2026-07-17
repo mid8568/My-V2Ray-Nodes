@@ -10,23 +10,29 @@ import concurrent.futures
 import os
 import threading
 
+
 from urllib.parse import urlparse, parse_qs
 
 
-INPUT = "nodes_all.txt"
-OUTPUT = "result.txt"
+INPUT="nodes_all.txt"
+OUTPUT="result.txt"
 
-# 更适合免费节点
-TEST_URL = "https://www.gstatic.com/generate_204"
-
-PROXY_PORT = 10808
+TEST_URL="https://www.gstatic.com/generate_204"
 
 
-write_lock = threading.Lock()
+write_lock=threading.Lock()
 
 
-open(OUTPUT, "w").close()
+open(
+    OUTPUT,
+    "w"
+).close()
 
+
+
+# =========================
+# base64
+# =========================
 
 
 def b64decode(data):
@@ -34,8 +40,10 @@ def b64decode(data):
     try:
 
         return base64.urlsafe_b64decode(
-            data + "==="
-        ).decode(errors="ignore")
+            data+"==="
+        ).decode(
+            errors="ignore"
+        )
 
     except:
 
@@ -43,25 +51,23 @@ def b64decode(data):
 
 
 
-# ================= VMESS =================
+# =========================
+# VMESS
+# =========================
 
 
 def parse_vmess(uri):
 
     try:
 
-        raw = uri.replace(
+        raw=uri.replace(
             "vmess://",
             ""
         )
 
+
         obj=json.loads(
             b64decode(raw)
-        )
-
-
-        server=obj.get(
-            "add"
         )
 
 
@@ -69,20 +75,22 @@ def parse_vmess(uri):
 
             "type":"vmess",
 
-            "tag":"node",
+            "tag":"proxy",
 
-            "server":server,
+            "server":
+                obj["add"],
 
-            "server_port":int(
-                obj["port"]
-            ),
+            "server_port":
+                int(obj["port"]),
 
-            "uuid":obj["id"],
+            "uuid":
+                obj["id"],
 
-            "security":obj.get(
-                "scy",
-                "auto"
-            )
+            "security":
+                obj.get(
+                    "scy",
+                    "auto"
+                )
 
         }
 
@@ -93,13 +101,13 @@ def parse_vmess(uri):
 
                 "type":"ws",
 
-                "path":obj.get(
+                "path":
+                obj.get(
                     "path",
                     "/"
                 )
 
             }
-
 
 
         if obj.get("tls")=="tls":
@@ -113,7 +121,7 @@ def parse_vmess(uri):
                     "sni",
                     obj.get(
                         "host",
-                        server
+                        obj["add"]
                     )
                 )
 
@@ -129,8 +137,9 @@ def parse_vmess(uri):
 
 
 
-
-# ================= VLESS =================
+# =========================
+# VLESS
+# =========================
 
 
 def parse_vless(uri):
@@ -139,34 +148,41 @@ def parse_vless(uri):
 
         u=urlparse(uri)
 
-        q=parse_qs(u.query)
+        q=parse_qs(
+            u.query
+        )
+
 
         host=u.hostname
 
-        server=host
+
+        if not host:
+
+            return None
+
+
 
         out={
-            ...
-        }
 
-        host=u.hostname
-
-        server=host
-
-        out={
 
             "type":"vless",
 
-            "tag":"node",
+            "tag":"proxy",
 
-            "server":server,
+            "server":host,
 
             "server_port":u.port,
 
             "uuid":u.username,
 
+            "encryption":"none",
+
             "packet_encoding":"xudp"
+
+
         }
+
+
 
         flow=q.get(
             "flow",
@@ -178,17 +194,22 @@ def parse_vless(uri):
 
             out["flow"]=flow
 
+
+
         security=q.get(
             "security",
             [""]
         )[0]
+
+
 
         if security in (
             "tls",
             "reality"
         ):
 
-          out["tls"]={
+
+            out["tls"]={
 
                 "enabled":True,
 
@@ -200,11 +221,16 @@ def parse_vless(uri):
 
             }
 
+
+
         if security=="reality":
+
 
             out["tls"]["reality"]={
 
+
                 "enabled":True,
+
 
                 "public_key":
                 q.get(
@@ -212,24 +238,32 @@ def parse_vless(uri):
                     [""]
                 )[0],
 
+
                 "short_id":
                 q.get(
                     "sid",
                     [""]
                 )[0]
 
+
             }
+
 
         network=q.get(
             "type",
             [""]
         )[0]
 
+
+
         if network=="ws":
+
 
             out["transport"]={
 
+
                 "type":"ws",
+
 
                 "path":
                 q.get(
@@ -237,13 +271,18 @@ def parse_vless(uri):
                     ["/"]
                 )[0]
 
+
             }
+
 
         elif network=="grpc":
 
+
             out["transport"]={
 
+
                 "type":"grpc",
+
 
                 "service_name":
                 q.get(
@@ -253,13 +292,25 @@ def parse_vless(uri):
 
             }
 
+
         return out
 
-    except:
+
+    except Exception as e:
+
+        print(
+            "VLESS error:",
+            e
+        )
 
         return None
 
-# ================= TROJAN =================
+
+
+# =========================
+# TROJAN
+# =========================
+
 
 def parse_trojan(uri):
 
@@ -271,25 +322,30 @@ def parse_trojan(uri):
             u.query
         )
 
+
         host=u.hostname
 
-        server=host
 
         return {
 
+
             "type":"trojan",
 
-            "tag":"node",
+            "tag":"proxy",
 
-            "server":server,
+            "server":host,
 
             "server_port":u.port,
 
-            "password":u.username,
+            "password":
+            u.username,
+
 
             "tls":{
 
+
                 "enabled":True,
+
 
                 "server_name":
                 q.get(
@@ -297,8 +353,8 @@ def parse_trojan(uri):
                     [host]
                 )[0]
 
-            }
 
+            }
 
         }
 
@@ -306,10 +362,6 @@ def parse_trojan(uri):
     except:
 
         return None
-
-
-
-
 
 # ================= SS =================
 
@@ -318,39 +370,56 @@ def parse_ss(uri):
 
     try:
 
-        data=uri[5:].split("#")[0]
+        data = uri[5:]
+
+        data = data.split("#")[0]
 
 
-        if "@" in data:
-
-            user,host=data.rsplit("@",1)
-
-            if ":" not in user:
-
-                user=b64decode(user)
-
-        else:
+        if "@" not in data:
 
             return None
 
 
-        if ":" not in user:
-            return None
+        user, host = data.rsplit("@",1)
+
+
+        try:
+
+            user = base64.urlsafe_b64decode(
+                user + "==="
+            ).decode()
+
+        except:
+
+            pass
 
 
         method,password=user.split(":",1)
 
 
-        server,port=host.rsplit(":",1)
+        if host.count(":") > 1:
+
+            server = host.rsplit(":",1)[0]
+
+            port = host.rsplit(":",1)[1]
+
+        else:
+
+            server,port=host.split(":",1)
 
 
         return {
 
             "type":"shadowsocks",
-            "tag":"node",
+
+            "tag":"proxy",
+
             "server":server,
+
             "server_port":int(port),
+
             "method":method,
+
             "password":password
 
         }
@@ -359,6 +428,10 @@ def parse_ss(uri):
     except:
 
         return None
+
+
+
+
 
 # ================= HY2 =================
 
@@ -374,31 +447,39 @@ def parse_hy2(uri):
         )
 
 
+        host=u.hostname
+
+
         return {
 
 
             "type":"hysteria2",
 
-            "tag":"node",
+            "tag":"proxy",
 
-            "server":u.hostname,
+            "server":host,
 
-            "server_port":u.port,
+            "server_port":u.port or 443,
 
             "password":u.username,
 
 
             "tls":{
 
+
                 "enabled":True,
+
 
                 "insecure":True,
 
+
                 "server_name":
+
                 q.get(
                     "sni",
-                    [u.hostname]
+                    [host]
                 )[0]
+
 
             }
 
@@ -413,43 +494,50 @@ def parse_hy2(uri):
 
 
 
+# ================= PARSER =================
+
+
 def parse(uri):
 
 
-    if uri.startswith(
-        "vmess://"
-    ):
+    if uri.startswith("vmess://"):
 
         return parse_vmess(uri)
 
 
-    if uri.startswith(
-        "vless://"
-    ):
+
+    elif uri.startswith("vless://"):
 
         return parse_vless(uri)
 
 
-    if uri.startswith(
-        "trojan://"
-    ):
+
+    elif uri.startswith("trojan://"):
 
         return parse_trojan(uri)
 
 
-    if uri.startswith(
-        "ss://"
-    ):
+
+    elif uri.startswith("ss://"):
 
         return parse_ss(uri)
 
 
-    if uri.startswith(
-        "hysteria2://"
-    ):
+
+    elif uri.startswith("hysteria2://"):
 
         return parse_hy2(uri)
 
+
+
+    elif uri.startswith("hy2://"):
+
+        return parse_hy2(
+            uri.replace(
+                "hy2://",
+                "hysteria2://"
+            )
+        )
 
 
     return None
@@ -458,20 +546,18 @@ def parse(uri):
 
 
 
-# ================= CONFIG =================
+
+# ================= SING BOX CONFIG =================
 
 
 def make_config(out):
-
-
-    out["tag"]="proxy"
-
 
 
     return {
 
 
         "log":{
+
 
             "level":"error"
 
@@ -480,7 +566,9 @@ def make_config(out):
 
         "inbounds":[
 
+
             {
+
 
                 "type":"mixed",
 
@@ -490,14 +578,19 @@ def make_config(out):
 
             }
 
+
         ],
+
 
 
         "outbounds":[
 
+
             out,
 
+
             {
+
 
                 "type":"direct",
 
@@ -505,15 +598,46 @@ def make_config(out):
 
             }
 
+
         ]
 
     }
 
-
-
-
-
 # ================= TEST =================
+
+
+def wait_port():
+
+    import socket
+
+
+    for i in range(20):
+
+        try:
+
+            s=socket.socket()
+
+            s.connect(
+                (
+                    "127.0.0.1",
+                    PROXY_PORT
+                )
+            )
+
+            s.close()
+
+            return True
+
+
+        except:
+
+            time.sleep(0.3)
+
+
+    return False
+
+
+
 
 
 def test_node(uri):
@@ -534,22 +658,20 @@ def test_node(uri):
 
 
 
-    with open(
-        cfg,
-        "w"
-    ) as f:
-
-        json.dump(
-            make_config(outbound),
-            f
-        )
-
-
-
-    p=None
-
-
     try:
+
+
+        with open(
+            cfg,
+            "w"
+        ) as f:
+
+
+            json.dump(
+                make_config(outbound),
+                f
+            )
+
 
 
         p=subprocess.Popen(
@@ -566,7 +688,9 @@ def test_node(uri):
 
             ],
 
+
             stdout=subprocess.DEVNULL,
+
 
             stderr=subprocess.PIPE
 
@@ -574,7 +698,15 @@ def test_node(uri):
 
 
 
-        time.sleep(3)
+        # 等 sing-box 启动
+
+        if not wait_port():
+
+
+            p.kill()
+
+            return
+
 
 
 
@@ -584,35 +716,51 @@ def test_node(uri):
 
         r=subprocess.run(
 
+
             [
 
                 "curl",
 
+
                 "-4",
+
+
+                "--connect-timeout",
+
+                "5",
+
 
                 "-A",
 
                 "Mozilla/5.0",
 
+
                 "-x",
 
                 f"socks5h://127.0.0.1:{PROXY_PORT}",
 
+
                 "-s",
+
 
                 "-o",
 
                 "/dev/null",
 
+
                 "-w",
 
                 "%{http_code}",
 
+
                 TEST_URL
+
 
             ],
 
-            timeout=10,
+
+            timeout=12,
+
 
             capture_output=True
 
@@ -621,17 +769,31 @@ def test_node(uri):
 
 
         delay=int(
-            (time.time()-start)*1000
+
+            (time.time()-start)
+
+            *1000
+
         )
 
 
 
-        if r.stdout.decode()=="204" and delay < 3000:
+
+        code=r.stdout.decode().strip()
+
+
+
+        if code=="204":
 
 
             print(
+
                 "OK",
-                delay
+
+                delay,
+
+                uri[:60]
+
             )
 
 
@@ -639,18 +801,25 @@ def test_node(uri):
 
 
                 with open(
+
                     OUTPUT,
+
                     "a"
+
                 ) as f:
 
 
                     f.write(
+
                         f"{delay}ms {uri}\n"
+
                     )
 
 
 
+
     except Exception as e:
+
 
         pass
 
@@ -659,9 +828,17 @@ def test_node(uri):
     finally:
 
 
-        if p:
+        try:
 
-            p.kill()
+
+            if p:
+
+                p.kill()
+
+
+        except:
+
+            pass
 
 
 
@@ -677,13 +854,29 @@ def test_node(uri):
 
 
 
+
+
 # ================= MAIN =================
+
+
+if not os.path.exists(INPUT):
+
+    print(
+        "没有找到节点文件:",
+        INPUT
+    )
+
+    exit(1)
+
 
 
 
 with open(
+
     INPUT,
+
     errors="ignore"
+
 ) as f:
 
 
@@ -703,38 +896,88 @@ with open(
 
 
 
+
+
 random.shuffle(nodes)
 
 
 
-# 测试更多节点
+# 测试数量
 
-nodes=nodes[:800]
+# GitHub Actions 建议 500-1000
+
+nodes=nodes[:1000]
+
 
 
 print(
+
     "开始测试:",
+
     len(nodes)
+
 )
+
 
 
 
 with concurrent.futures.ThreadPoolExecutor(
 
-    max_workers=25
+    max_workers=10
 
 ) as pool:
 
 
     list(
+
         pool.map(
+
             test_node,
+
             nodes
+
         )
+
     )
 
 
 
+
+print()
+
 print(
-    "完成"
+
+    "测速完成"
+
 )
+
+
+
+if os.path.exists(OUTPUT):
+
+
+    with open(OUTPUT) as f:
+
+        count=len(
+
+            f.readlines()
+
+        )
+
+
+    print(
+
+        "可用节点:",
+
+        count
+
+    )
+
+else:
+
+
+    print(
+
+        "可用节点:0"
+
+    )
