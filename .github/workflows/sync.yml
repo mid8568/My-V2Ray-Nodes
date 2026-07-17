@@ -28,6 +28,10 @@ jobs:
             mv sing-box-*/sing-box sing-box
             chmod +x sing-box
             
+      - name: sing-box version
+        run: |
+             ./sing-box version
+             
       - name: Install Python
         run: |
              sudo apt install -y python3 curl jq
