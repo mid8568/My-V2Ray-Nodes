@@ -128,28 +128,28 @@ def parse_vless(uri):
         q=parse_qs(u.query)
 
 
-        out={
+       out={
 
-            "type":"vless",
+           "type":"vless",
 
-            "tag":"node",
+           "tag":"node",
 
-            "server":u.hostname,
+           "server":u.hostname,
 
-            "server_port":u.port,
+           "server_port":u.port,
 
-            "uuid":u.username,
+           "uuid":u.username,
 
            "flow":
-            q.get(
-            "flow",
-            [""]
-            )[0]
+           q.get(
+               "flow",
+               [""]
+          )[0],
 
-            "packet_encoding":
-            "xudp"
+          "packet_encoding":
+          "xudp"
 
-        }
+}
 
 
         if out["flow"] is None:
@@ -532,12 +532,11 @@ def test(uri):
             stdout=subprocess.DEVNULL,
 
             stderr=subprocess.PIPE
-            time.sleep(2)
 
         )
 
 
-        time.sleep(1.2)
+        time.sleep(2)
 
 
         start=time.time()
@@ -598,15 +597,16 @@ def test(uri):
                 )
 
 
-except Exception as e:
-    print("FAIL",uri[:50],e)
+  except Exception as e:
+
+      print("FAIL",uri[:50],e)
 
 
-    finally:
+      finally:
 
-        if p:
+          if p:
 
-            p.kill()
+              p.kill()
 
 
 
