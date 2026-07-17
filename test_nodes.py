@@ -762,7 +762,7 @@ random.shuffle(nodes)
 
 # 测试更多节点
 
-nodes=nodes[:1000]
+nodes=nodes[:2000]
 
 
 print(
@@ -774,7 +774,7 @@ print(
 
 with concurrent.futures.ThreadPoolExecutor(
 
-    max_workers=5
+    max_workers=15
 
 ) as pool:
 
