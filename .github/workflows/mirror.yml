@@ -94,7 +94,9 @@ jobs:
               cat temp_nodes.txt >> all_nodes.txt
               head -n 500 temp_nodes.txt > temp_limit.txt
               mv temp_limit.txt temp_nodes.txt
-              
+
+              fi
+               done
            echo "=== 开始节点检测 ==="
          
             export PROTOCOL_REGEX
@@ -198,8 +200,7 @@ jobs:
           head -5 speed_nodes.txt
           
           cp verified_temp.txt tcp_alive_nodes.txt
-          cp verified_temp.txt nodes_new.txt
-          
+           
           if [ "$NODE_COUNT" -ge 1 ]; then
                success=true
           fi
@@ -210,50 +211,30 @@ jobs:
           
           # ...（前文）
           if [ "$success" = true ]; then
-            # ... (处理逻辑)
-            if [ "$(wc -l < nodes_new.txt)" -ge 1 ]; then
-              mv nodes_new.txt nodes.txt
-              echo "【成功】鲜活节点已更新"
-            else
-              echo "新节点为空"
-              if [ -f /tmp/nodes_backup.txt ]; then
-                cp /tmp/nodes_backup.txt nodes.txt
-              else
-                echo "无旧节点备份"
+
+           if [ -s nodes_new.txt ]; then
+           mv nodes_new.txt nodes.txt
+           echo "【成功】nodes.txt 已更新"
+           else
+             echo "nodes_new.txt为空，保持旧节点"
+          fi
+
+           else
+              echo "【失败】保持旧节点"
               fi
-              rm -f nodes_new.txt
-            fi # 对应 if [ "$(wc -l < nodes_new.txt)" -ge 1 ]
-            
-            echo "=== nodes.txt 检查 ==="
-            if [ -s nodes.txt ]; then
-              echo "nodes.txt 生成成功"
-            else
-              echo "nodes.txt 为空，恢复备份"
-              if [ -f /tmp/nodes_backup.txt ]; then
-                cp /tmp/nodes_backup.txt nodes.txt
-              fi
-            fi # 对应 if [ -s nodes.txt ]
-          else
-            echo "【熔断】所有源失效，回滚备份"
-            if [ -f /tmp/nodes_backup.txt ]; then
-              cp /tmp/nodes_backup.txt nodes.txt
-            fi
-          fi # 对应 if [ "$success" = true ]
-          
-          # ... (后续清理工作)
-          
-          echo "=== 开始清理临时文件 ==="
-          rm -f temp_* \
-                decoded_* \
-                speed_* \
-                clean_nodes.txt \
-                verified_temp.txt \
-                speed_nodes.txt \
-                nodes_new.txt
-                
+
+
+               echo "=== 开始清理临时文件 ==="
+              rm -f temp_* \
+                    decoded_* \
+                    speed_* \
+                    clean_nodes.txt \
+                     verified_temp.txt \
+                     speed_nodes.txt \
+                     nodes_new.txt
+
           echo "=== 清理完成 ==="
-            fi
-          done
+          
       - name: 4. 检测文件变更
         id: check_changes
         run: |
