@@ -679,7 +679,7 @@ def test_node(uri):
 
 
 
-        if r.stdout.decode()=="204":
+        if r.stdout.decode()=="204" and delay < 3000:
 
 
             print(
