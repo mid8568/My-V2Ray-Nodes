@@ -212,18 +212,15 @@ jobs:
           
           # ...（前文）
           if [ "$success" = true ]; then
+          
+              if [ -s nodes_new.txt ]; then
+               mv nodes_new.txt nodes.txt
+                  echo "【成功】鲜活节点已更新"
+             else
+                echo "nodes_new.txt为空，不更新"
+                    fi
 
-           if [ -s nodes_new.txt ]; then
-           mv nodes_new.txt nodes.txt
-           echo "【成功】nodes.txt 已更新"
-           else
-             echo "nodes_new.txt为空，保持旧节点"
-          fi
-
-           else
-              echo "【失败】保持旧节点"
-              fi
-
+               fi
 
                echo "=== 开始清理临时文件 ==="
               rm -f temp_* \
@@ -231,8 +228,7 @@ jobs:
                     speed_* \
                     clean_nodes.txt \
                      verified_temp.txt \
-                     speed_nodes.txt \
-                     nodes_new.txt
+                     speed_nodes.txt \         
 
           echo "=== 清理完成 ==="
           
