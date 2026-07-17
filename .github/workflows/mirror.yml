@@ -55,14 +55,23 @@ jobs:
           sed 's/\r//' | sort -u > nodes_all.txt
           echo "抓取节点: $(wc -l < nodes_all.txt)"
 
+      - name: Sing-box Real Test
+        run: |
+          chmod +x test_nodes.py
+          python3 test_nodes.py
+
+
       - name: Generate
         run: |
-          if [ ! -s nodes_all.txt ]; then
-            echo "没有可用节点"
+          if [ ! -s result.txt ]; then
+            echo "没有测速成功节点"
             exit 1
           fi
-          sort -u nodes_all.txt | head -100 > nodes.txt
+
+          sort -u result.txt | head -100 > nodes.txt
+
           base64 -w0 nodes.txt > base64.txt
+
           echo "最终节点数量: $(wc -l < nodes.txt)"
 
       - name: Generate Config
