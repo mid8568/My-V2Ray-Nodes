@@ -20,7 +20,7 @@ INPUT="nodes_all.txt"
 OUTPUT="result.txt"
 
 
-TEST_URL="https://cp.cloudflare.com/generate_204"
+TEST_URL="https://www.gstatic.com/generate_204"
 
 
 write_lock=threading.Lock()
@@ -1157,7 +1157,7 @@ random.shuffle(nodes)
 
 # 测试数量
 
-nodes=nodes[:1000]
+nodes=nodes[:3000]
 
 
 
@@ -1174,7 +1174,7 @@ print(
 
 with concurrent.futures.ThreadPoolExecutor(
 
-    max_workers=8
+    max_workers=20
 
 ) as pool:
 
