@@ -140,11 +140,11 @@ def parse_vless(uri):
 
             "uuid":u.username,
 
-            "flow":
+           "flow":
             q.get(
-                "flow",
-                [None]
-            )[0],
+            "flow",
+            [""]
+            )[0]
 
             "packet_encoding":
             "xudp"
@@ -369,26 +369,34 @@ def parse_hy2(uri):
     try:
 
         u=urlparse(uri)
+        q=parse_qs(u.query)
 
         return {
 
             "type":"hysteria2",
-
             "tag":"node",
 
             "server":u.hostname,
-
             "server_port":u.port,
 
             "password":u.username,
 
             "tls":{
 
-                "enabled":True
+                "enabled":True,
+
+                "insecure":True,
+
+                "server_name":
+                q.get(
+                    "sni",
+                    [u.hostname]
+                )[0]
 
             }
 
         }
+
 
     except:
 
@@ -523,7 +531,8 @@ def test(uri):
 
             stdout=subprocess.DEVNULL,
 
-            stderr=subprocess.DEVNULL
+            stderr=subprocess.PIPE
+            time.sleep(2)
 
         )
 
@@ -589,8 +598,8 @@ def test(uri):
                 )
 
 
-    except Exception:
-        pass
+except Exception as e:
+    print("FAIL",uri[:50],e)
 
 
     finally:
@@ -619,14 +628,20 @@ with open(
 random.shuffle(nodes)
 
 
-nodes=nodes[:800]
+nodes=nodes[:50]
 
+from collections import Counter
 
+print(
+Counter(
+x.split("://")[0]
+for x in nodes
+)
+)
 print(
     "测试节点:",
     len(nodes)
 )
-
 
 
 with concurrent.futures.ThreadPoolExecutor(
