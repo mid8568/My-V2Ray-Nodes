@@ -72,7 +72,7 @@ jobs:
             exit 1
           fi
 
-          sort -n result.txt | head -100 | sed 's/^[0-9]*ms //' > nodes.txt
+          sort -n -k1 result.txt | head -100 | sed 's/^[0-9]*ms //' > nodes.txt
 
           base64 -w0 nodes.txt > base64.txt
 
@@ -91,7 +91,14 @@ jobs:
                 -o singbox.json || echo "singbox转换失败"
 
                  ls -lh clash.yaml singbox.json || true
+      - name: Show Result
+        run: |
+              echo "测速成功数量:"
+              wc -l result.txt
 
+              echo "前10:"
+              head -10 result.txt
+              
       - name: Commit
         run: |
           git config user.name github-actions
