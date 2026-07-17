@@ -56,10 +56,10 @@ jobs:
           echo "抓取节点: $(wc -l < nodes_all.txt)"
 
       - name: Sing-box Real Test
+        timeout-minutes: 15
         run: |
-          chmod +x test_nodes.py
-          python3 test_nodes.py
-
+              chmod +x test_nodes.py
+              python3 -u test_nodes.py
 
       - name: Generate
         run: |
@@ -68,7 +68,7 @@ jobs:
             exit 1
           fi
 
-          sort -u result.txt | head -100 > nodes.txt
+          sort -n result.txt | head -100 | sed 's/^[0-9]*ms //' > nodes.txt
 
           base64 -w0 nodes.txt > base64.txt
 
