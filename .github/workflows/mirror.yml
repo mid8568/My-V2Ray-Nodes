@@ -159,13 +159,21 @@ jobs:
             cat tcp_alive_nodes.txt \
              | grep -E "${PROTOCOL_REGEX}" \
              | awk '!seen[$0]++' \
-             | head -n 300 > nodes.txt
+             | head -n 300 > nodes_new.txt
+             
             if [ $(wc -l < nodes_new.txt) -ge 1 ]; then
               mv nodes_new.txt nodes.txt
+              echo "【成功】鲜活节点已更新"
+              
              else
-              echo "新节点为空，保留旧节点"
-             fi
              
+              echo "新节点为空，保留旧节点"
+          if [ -f /tmp/nodes_backup.txt ]; then
+             cp /tmp/nodes_backup.txt nodes.txt
+                 fi
+
+             fi
+    
             echo "【成功】鲜活节点已置顶"
              echo "=== nodes.txt 检查 ==="
 
@@ -200,7 +208,9 @@ jobs:
         run: |
           set -euo pipefail
           if git ls-files --error-unmatch nodes.txt base64.txt clash.yaml singbox.json >/dev/null 2>&1 \
-             && git diff --quiet -- nodes.txt base64.txt clash.yaml singbox.json; then
+             && git add -N nodes.txt base64.txt clash.yaml singbox.json
+            if git diff --quiet -- nodes.txt base64.txt clash.yaml singbox.json; then
+            
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -233,7 +243,10 @@ jobs:
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
          
           git add nodes.txt base64.txt clash.yaml singbox.json .gitignore
-         
+          echo "====== 提交检查 ======"
+           git status
+           git diff --cached --stat
+           
           if git diff --cached --quiet; then
             echo "无实质变更"
             exit 0
