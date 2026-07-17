@@ -137,17 +137,13 @@ jobs:
            | cut -d'|' -f2 \
            | awk '!seen[$0]++'\
            > verified_temp.txt
+          
+          COUNT=$(wc -l < verified_temp.txt)
 
+          echo "高速节点数量: $NODE_COUNT"
           cat verified_temp.txt >> all_nodes.txt
-
-           COUNT=$(wc -l < tcp_alive_nodes.txt)
-
-          echo "高速节点数量: $COUNT"
-             
-              NODE_COUNT=$(wc -l < tcp_alive_nodes.txt)
-
-             if [ "$NODE_COUNT" -ge 3 ]; then
-                success=true
+          if [ "$NODE_COUNT" -ge 3 ]; then
+              success=true
               fi
             fi
           done
