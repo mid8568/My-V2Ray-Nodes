@@ -50,16 +50,22 @@ jobs:
           YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
          
           urls=(
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
-            "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}2"
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}1"
-            "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}1"
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}2"
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}1"
-          )
+            # free-nodes
+             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
+             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}2"
+             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}1"
+             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}1"
+             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}2"
+             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}1"
+
+            # EbraSha
+              "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/V2Ray-Config-By-EbraSha-All-Type.txt"
+              "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
+             )
          
-          success=false
-          PROTOCOL_REGEX="^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://"
+            success=false
+            > all_nodes.txt
+            PROTOCOL_REGEX="^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://"
          
           for url in "${urls[@]}"; do
             echo "尝试数据源 -> $url"
@@ -98,12 +104,6 @@ jobs:
 
              clean_uri=$(echo "$line" | cut -d"#" -f1)
 
-              case "$clean_uri" in
-              vmess://*)
-                exit 0
-                      ;;
-                    esac
-
              host_port=$(echo "$clean_uri" \
               | grep -oE "(@|\\])[a-zA-Z0-9.-]+:[0-9]+" \
               | tr -d "@]" \
@@ -138,7 +138,7 @@ jobs:
            | awk '!seen[$0]++'\
            > verified_temp.txt
 
-          mv verified_temp.txt tcp_alive_nodes.txt
+          cat verified_temp.txt >> all_nodes.txt
 
            COUNT=$(wc -l < tcp_alive_nodes.txt)
 
@@ -148,16 +148,16 @@ jobs:
 
              if [ "$NODE_COUNT" -ge 3 ]; then
                 success=true
-                break
               fi
             fi
           done
-         
+          
+          sort -u all_nodes.txt > tcp_alive_nodes.txt
           if [ "$success" = true ]; then
             cat tcp_alive_nodes.txt \
              | grep -E "${PROTOCOL_REGEX}" \
              | awk '!seen[$0]++' \
-             | head -n 300 > nodes.txt
+             | head -n 500 > nodes.txt
             echo "【成功】鲜活节点已置顶"
           else
             echo "【熔断】所有源失效，回滚备份"
@@ -165,7 +165,7 @@ jobs:
               cp /tmp/nodes_backup.txt nodes.txt
             fi
           fi
-          rm -f temp_* decoded_* clean_nodes.txt verified_temp.txt speed_nodes.txt tcp_alive_nodes.txt
+          rm -f temp_* decoded_* clean_nodes.txt verified_temp.txt speed_nodes.txt tcp_alive_nodes.txt all_nodes.txt
 
       - name: 4. 检测文件变更
         id: check_changes
