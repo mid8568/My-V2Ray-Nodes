@@ -37,7 +37,7 @@ jobs:
           set -euo pipefail
          
           touch .gitignore
-          for item in "temp_*" "decoded_*" "*.bak" "tcp_alive_nodes.txt" "clean_nodes.txt" "verified_temp.txt"; do
+          for item in "temp_*" "decoded_*" "*.bak" "tcp_alive_nodes.txt" "clean_nodes.txt" "verified_temp.txt" "all_nodes.txt"; do
           grep -qxF "$item" .gitignore || echo "$item" >> .gitignore
           done
          
@@ -91,7 +91,7 @@ jobs:
              
               sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
               awk '!seen[$0]++' temp_nodes.txt > clean_nodes.txt && mv clean_nodes.txt temp_nodes.txt
-              cat temp_nodes.txt >> all_nodes.txt
+              cat temp_nodes.txt >> verified_pool.txt
               head -n 500 temp_nodes.txt > temp_limit.txt
               mv temp_limit.txt temp_nodes.txt
 
@@ -300,23 +300,21 @@ jobs:
       
         if: always()
         run: |
-            set -euo pipefail
+                 set -euo pipefail
 
-            git config --global user.name "github-actions[bot]"
-            git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                   git config --global user.name "github-actions[bot]"
+                   git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-            echo "===== 提交前检查 ====="
-            git status
-            md5sum nodes.txt
+                     rm -f all_nodes.txt
 
-            git add -A
+                    git add nodes.txt base64.txt clash.yaml singbox.json .gitignore
 
-            if git diff --cached --quiet; then
-             echo "没有变化"
-               exit 0
-              fi
+                   if git diff --cached --quiet; then
+                   echo "没有变化"
+                         exit 0
+                    fi
 
-             git commit -m "Auto Sync $(date '+%Y-%m-%d %H:%M:%S')"
+                   git commit -m "Auto Sync $(date '+%Y-%m-%d %H:%M:%S')"
 
-             git push origin HEAD:${GITHUB_REF_NAME}
+                      git push origin HEAD:${GITHUB_REF_NAME}
            
