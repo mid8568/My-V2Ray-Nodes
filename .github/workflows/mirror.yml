@@ -96,7 +96,7 @@ jobs:
               mv temp_limit.txt temp_nodes.txt
 
               fi
-               done
+            
            echo "=== 开始节点检测 ==="
          
             export PROTOCOL_REGEX
