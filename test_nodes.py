@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
-import subprocess
 import json
 import os
-import tempfile
 import time
+import base64
+import tempfile
+import subprocess
 import concurrent.futures
+from urllib.parse import urlparse, parse_qs, unquote
 
 
 INPUT = "nodes_all.txt"
@@ -14,24 +16,155 @@ OUTPUT = "result.txt"
 TEST_URL = "https://www.gstatic.com/generate_204"
 
 
-open(OUTPUT, "w").close()
+open(OUTPUT,"w").close()
 
 
-def build_config(node):
+def parse_node(uri):
 
-    # 这里让 sing-box 直接读取 URI
-    outbound = {
-        "type": "urltest",
-        "tag": "proxy",
-        "outbounds": [
-            "node"
-        ]
-    }
+    try:
+
+        if uri.startswith("vless://"):
+
+            u=urlparse(uri)
+
+            q=parse_qs(u.query)
 
 
-    config = {
-        "log": {
-            "level": "error"
+            return {
+                "type":"vless",
+                "tag":"node",
+
+                "server":u.hostname,
+                "server_port":u.port,
+
+                "uuid":u.username,
+
+                "tls":{
+                    "enabled": q.get("security",[""]) [0]=="tls"
+                }
+            }
+
+
+        elif uri.startswith("trojan://"):
+
+            u=urlparse(uri)
+
+            return {
+
+                "type":"trojan",
+                "tag":"node",
+
+                "server":u.hostname,
+                "server_port":u.port,
+
+                "password":u.username,
+
+                "tls":{
+                    "enabled":True
+                }
+            }
+
+
+        elif uri.startswith("ss://"):
+
+            return parse_ss(uri)
+
+
+        elif uri.startswith("vmess://"):
+
+            return parse_vmess(uri)
+
+
+    except Exception:
+
+        return None
+
+
+
+def parse_ss(uri):
+
+    try:
+
+        data=uri[5:]
+
+        data=data.split("#")[0]
+
+        raw=base64.urlsafe_b64decode(
+            data+"=="
+        ).decode()
+
+
+        method,password,server=raw.split("@")
+
+        host,port=server.split(":")
+
+
+        return {
+
+            "type":"shadowsocks",
+
+            "tag":"node",
+
+            "server":host,
+
+            "server_port":int(port),
+
+            "method":method,
+
+            "password":password
+
+        }
+
+    except:
+
+        return None
+
+
+
+def parse_vmess(uri):
+
+    try:
+
+        data=uri.replace(
+            "vmess://",
+            ""
+        )
+
+        info=json.loads(
+            base64.b64decode(data+"==")
+        )
+
+
+        return {
+
+            "type":"vmess",
+
+            "tag":"node",
+
+            "server":info["add"],
+
+            "server_port":int(info["port"]),
+
+            "uuid":info["id"],
+
+            "security":"auto"
+
+        }
+
+
+    except:
+
+        return None
+
+
+
+def make_config(outbound):
+
+
+    return {
+
+        "log":{
+            "level":"error"
         },
 
         "inbounds":[
@@ -42,97 +175,126 @@ def build_config(node):
             }
         ],
 
+
         "outbounds":[
+
+            outbound,
+
             {
                 "type":"direct",
                 "tag":"direct"
             }
+
         ]
+
     }
 
 
-    return config
+
+def test_node(uri):
 
 
+    outbound=parse_node(uri)
 
-def test_node(node):
 
-    node=node.strip()
+    if not outbound:
 
-    if not node:
         return
+
 
 
     work=tempfile.mkdtemp()
 
-    config_file=os.path.join(
+
+    cfg=make_config(outbound)
+
+
+    path=os.path.join(
         work,
         "config.json"
     )
 
 
-    cfg=build_config(node)
+    with open(path,"w") as f:
 
-
-    with open(config_file,"w") as f:
         json.dump(cfg,f)
+
 
 
     try:
 
+
         p=subprocess.Popen(
+
             [
                 "./sing-box",
                 "run",
                 "-c",
-                config_file
+                path
             ],
+
             stdout=subprocess.DEVNULL,
+
             stderr=subprocess.DEVNULL
+
         )
 
 
-        time.sleep(1)
+        time.sleep(0.8)
+
 
 
         start=time.time()
 
 
         r=subprocess.run(
+
             [
                 "curl",
+
                 "-x",
                 "socks5h://127.0.0.1:10808",
+
+                "-s",
+
                 "-o",
                 "/dev/null",
-                "-s",
+
                 "-w",
                 "%{http_code}",
+
                 TEST_URL
             ],
+
             timeout=5,
+
             capture_output=True
+
         )
 
 
-        cost=int((time.time()-start)*1000)
+        delay=int(
+            (time.time()-start)*1000
+        )
 
 
         if r.stdout.decode()=="204":
 
+
             print(
                 "OK",
-                cost,
-                node[:40]
+                delay
             )
 
+
             with open(OUTPUT,"a") as f:
+
                 f.write(
-                    f"{cost}ms {node}\n"
+                    f"{delay}ms {uri}\n"
                 )
 
 
-    except Exception:
+    except:
 
         pass
 
@@ -146,36 +308,45 @@ def test_node(node):
 
 
 
+
 with open(INPUT,errors="ignore") as f:
 
     nodes=list(
         set(
-            f.readlines()
+            x.strip()
+            for x in f.readlines()
         )
     )
 
 
-# 限制数量
-nodes=nodes[:300]
+# 控制 GitHub Actions 时间
+
+nodes=nodes[:500]
 
 
 print(
-    "测试节点:",
+    "开始测速:",
     len(nodes)
 )
 
 
 
 with concurrent.futures.ThreadPoolExecutor(
-    max_workers=20
+
+    max_workers=30
+
 ) as pool:
 
-    pool.map(
-        test_node,
-        nodes
+
+    list(
+        pool.map(
+            test_node,
+            nodes
+        )
     )
 
 
+
 print(
-    "测速完成"
+    "完成"
 )
