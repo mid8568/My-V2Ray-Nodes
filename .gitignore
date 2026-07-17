@@ -13,3 +13,4 @@ singbox_test
 *.json
 score.py
 local_convert.py
+all_nodes.txt
