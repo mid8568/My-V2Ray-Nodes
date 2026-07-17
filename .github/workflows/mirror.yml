@@ -82,55 +82,52 @@ jobs:
              
               sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
               awk '!seen[$0]++' temp_nodes.txt > clean_nodes.txt && mv clean_nodes.txt temp_nodes.txt
-             
+              head -n 200 temp_nodes.txt > temp_limit.txt
+              mv temp_limit.txt temp_nodes.txt
+              
            echo "=== 开始节点检测 ==="
 
            > verified_temp.txt
            > speed_nodes.txt
 
-               while IFS= read -r line || [ -n "$line" ]; do
+               export PROTOCOL_REGEX
 
-               [ -z "$line" ] && continue
+             cat temp_nodes.txt | xargs -P 50 -I {} bash -c '
 
-               clean_uri=$(echo "$line" | cut -d'#' -f1)
-                case "$clean_uri" in
-                vmess://*)
-                continue
-                ;;
-                esac
-                  
-             # 提取 host:port
-              host_port=$(echo "$clean_uri" \
-              | grep -oE '(@|\])[a-zA-Z0-9.-]+:[0-9]+' \
-              | tr -d '@]' \
-              | tail -n1 || true)
+             line="$1"
 
-             [ -z "$host_port" ] && continue
+             clean_uri=$(echo "$line" | cut -d"#" -f1)
+
+              case "$clean_uri" in
+              vmess://*)
+                exit 0
+                      ;;
+                    esac
+
+             host_port=$(echo "$clean_uri" \
+              | grep -oE "(@|\\])[a-zA-Z0-9.-]+:[0-9]+" \
+              | tr -d "@]" \
+              | tail -n1)
+
+              [ -z "$host_port" ] && exit 0
 
               host="${host_port%:*}"
               port="${host_port##*:}"
-  
-            # TCP测试 + 计算延迟
-           start=$(date +%s%3N)
 
-          if timeout 2 bash -c "</dev/tcp/$host/$port" 2>/dev/null
-          then
+              start=$(date +%s%3N)
 
-          end=$(date +%s%3N)
+              if timeout 2 bash -c "</dev/tcp/$host/$port" 2>/dev/null
+               then
+               end=$(date +%s%3N)
+               delay=$((end-start))
 
-          delay=$((end-start))
+               if [ "$delay" -le 500 ]
+               then
+               echo "${delay}|${line}"
+               fi
+              fi
 
-
-          # 只保留300ms以内节点
-          if [ "$delay" -le 500 ]
-          then
-          echo "${delay}|${line}" >> speed_nodes.txt
-          fi
-
-           fi
-
-           done < temp_nodes.txt
-
+              ' _ {} >> speed_nodes.txt
 
           echo "=== 延迟排序 ==="
 
@@ -138,14 +135,10 @@ jobs:
 
            sort -t'|' -k1,1n speed_nodes.txt \
            | cut -d'|' -f2 \
-           | awk '!seen[$0]++'
+           | awk '!seen[$0]++'\
            > verified_temp.txt
 
-
-
           mv verified_temp.txt tcp_alive_nodes.txt
-
-
 
            COUNT=$(wc -l < tcp_alive_nodes.txt)
 
