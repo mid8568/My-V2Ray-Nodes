@@ -139,13 +139,19 @@ def parse_vless(uri):
 
         u=urlparse(uri)
 
-        q=parse_qs(
-            u.query
-        )
+        q=parse_qs(u.query)
 
         host=u.hostname
 
-            server=host
+        server=host
+
+        out={
+            ...
+        }
+
+        host=u.hostname
+
+        server=host
 
         out={
 
@@ -157,7 +163,7 @@ def parse_vless(uri):
 
             "server_port":u.port,
 
-            "uuid":u.username
+            "uuid":u.username,
 
             "packet_encoding":"xudp"
         }
@@ -267,7 +273,7 @@ def parse_trojan(uri):
 
         host=u.hostname
 
-            server=host
+        server=host
 
         return {
 
