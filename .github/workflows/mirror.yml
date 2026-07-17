@@ -1,90 +1,273 @@
-name: Real Node Sync V3
+name: V2Ray Public Node Sync V5.4 Lite
 
 on:
   workflow_dispatch:
+
   schedule:
     - cron: "0 */6 * * *"
+
 
 permissions:
   contents: write
 
+
 jobs:
+
   sync:
+
     runs-on: ubuntu-latest
+
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install Tools
-        run: |
-          sudo apt update -qq && sudo apt install -y curl jq unzip
-          # 下载 Mihomo 内核
-          wget -q https://github.com/MetaCubeX/mihomo/releases/latest/download/mihomo-linux-amd64-v1.19.19.gz
-          gunzip mihomo-linux-amd64-v1.19.19.gz && mv mihomo-linux-amd64-v1.19.19 mihomo && chmod +x mihomo
-          # 下载并启动 Subconverter
-          wget -q https://github.com/tindy2013/subconverter/releases/latest/download/subconverter_linux64.tar.gz
-          tar xf subconverter_linux64.tar.gz
-          ./subconverter/subconverter &
-          sleep 5
-
-      - name: Fetch and Convert
-        run: |
-          # 1. 抓取订阅内容
-          TODAY=$(date -u -d '+8 hours' +%Y%m%d)
-          curl -Ls "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2" > sub.txt || true
-          curl -Ls "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}1" >> sub.txt || true
-          
-          # 2. 上传到 Gist 或临时公共地址 (Subconverter 需要 URL)
-          # 或者直接调用本地 API 转换（这里演示简单的本地请求）
-          # 注意：请确保 sub.txt 格式正确，建议先 Base64 编码
-          cat sub.txt | base64 -w0 > sub_encoded.txt
-          
-          # 3. 请求转换
-          curl -s "http://127.0.0.1:25500/sub?target=clash&url=https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/sub_encoded.txt&insert=false" > clash.yaml
-
-      - name: Test Nodes
-        run: |
-          [ -f clash.yaml ] || { echo "转换失败"; exit 1; }
-          
-          # 注入测试配置
-          cat >> clash.yaml <<EOF
-          mixed-port: 7890
-          allow-lan: false
-          mode: rule
-          rules:
-            - MATCH,DIRECT
-          EOF
-
-          ./mihomo -f clash.yaml >/tmp/mihomo.log 2>&1 &
-          PID=$!
-          sleep 10
-          
-          # 测试连通性
-          HTTP_CODE=$(curl --socks5 127.0.0.1:7890 --connect-timeout 10 -m 15 -o /dev/null -w "%{http_code}" https://www.gstatic.com/generate_204 || echo "000")
-          echo "测试结果: $HTTP_CODE"
-          
-          kill $PID && sleep 2
-
-      - name: Save Nodes
-        run: |
-          # 提取节点信息
-          grep -E "vmess://|vless://|trojan://|ss://" clash.yaml | sort -u > nodes.txt
-          echo "节点数量: $(wc -l < nodes.txt)"
-
-      - name: Commit
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add nodes.txt
-          if git diff --cached --quiet; then
-            echo "无变化"
-          else
-            git commit -m "Auto update nodes at $(date '+%Y-%m-%d %H:%M:%S')"
-            git push
-          fi
 
 
-          git commit -m "Auto update nodes"
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
 
-          git push
+
+    - name: Install Tools
+      run: |
+
+        sudo apt update -qq
+
+        sudo apt install -y curl wget jq
+
+
+
+    - name: Download Public Sources
+
+      run: |
+
+        set -e
+
+
+        > raw.txt
+
+
+        TODAY=$(date -u -d '+8 hours' +%Y%m%d)
+
+        YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
+
+
+
+        urls=(
+
+
+        # free-nodes
+
+        "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
+
+        "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}1"
+
+        "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}2"
+
+        "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}1"
+
+
+
+        # EbraSha
+
+        "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/V2Ray-Config-By-EbraSha-All-Type.txt"
+
+        "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
+
+
+
+        # mfuu
+
+        "https://raw.githubusercontent.com/mfuu/v2ray/master/v2"
+
+
+
+        # Barabama
+
+        "https://raw.githubusercontent.com/barabama/FreeNodes/main/nodes.txt"
+
+
+
+        # nodefree
+
+        "https://raw.githubusercontent.com/nodefree/nodefree/main/nodefree"
+
+
+
+        # Eternity
+
+        "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/Eternity.txt"
+
+
+
+        # NoMoreWalls
+
+        "https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.txt"
+
+
+
+        # V2Hub
+
+        "https://raw.githubusercontent.com/youfoundamin/V2Hub/main/merged.txt"
+
+
+
+        )
+
+
+        for url in "${urls[@]}"
+        do
+
+          echo "抓取:"
+          echo "$url"
+
+
+          curl \
+          -L \
+          -s \
+          --connect-timeout 10 \
+          --max-time 30 \
+          "$url" \
+          >> raw.txt || true
+
+
+        done
+
+
+
+        echo "原始数据大小"
+
+        wc -c raw.txt
+
+
+
+
+
+    - name: Extract Nodes
+
+      run: |
+
+        set -e
+
+
+
+        echo "开始提取"
+
+
+
+        grep -Eo \
+        '(vmess|vless|trojan|ss|ssr|hysteria2|hy2)://[^ <"]+' \
+        raw.txt \
+        | sed 's/\r//' \
+        | sed 's/^ *//' \
+        | sort -u \
+        > nodes.txt || true
+
+
+
+        echo "节点数量"
+
+        wc -l nodes.txt
+
+
+
+
+        if [ ! -s nodes.txt ]
+
+        then
+
+          echo "没有提取到节点"
+
+          exit 1
+
+        fi
+
+
+
+
+    - name: Clean
+
+      run: |
+
+        sed -i '/example-node/d' nodes.txt
+
+        sed -i '/expired/d' nodes.txt
+
+
+        sort -u nodes.txt -o nodes.txt
+
+
+
+        echo "最终节点"
+
+        wc -l nodes.txt
+
+
+
+
+
+    - name: Generate Base64
+
+      run: |
+
+        base64 -w0 nodes.txt > base64.txt
+
+
+
+    - name: Generate Subscription Config
+
+      run: |
+
+        RAW_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/nodes.txt"
+
+
+        curl -sL \
+        "https://sub.xeton.gq/sub?target=clash&url=${RAW_URL}&insert=false&emoji=true&udp=true" \
+        -o clash.yaml || true
+
+
+
+        curl -sL \
+        "https://sub.xeton.gq/sub?target=singbox&url=${RAW_URL}&insert=false&emoji=true" \
+        -o singbox.json || true
+
+
+
+
+    - name: Commit Update
+
+      run: |
+
+
+        git config user.name "github-actions"
+
+        git config user.email "github-actions@github.com"
+
+
+
+        git add \
+        nodes.txt \
+        base64.txt \
+        clash.yaml \
+        singbox.json
+
+
+
+        if git diff --cached --quiet
+
+        then
+
+          echo "没有变化"
+
+          exit 0
+
+        fi
+
+
+
+        git commit \
+        -m "Auto Sync Nodes $(date '+%Y-%m-%d %H:%M:%S')"
+
+
+
+        git push origin HEAD:${GITHUB_REF_NAME}
