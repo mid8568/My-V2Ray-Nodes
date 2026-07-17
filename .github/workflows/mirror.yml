@@ -160,14 +160,40 @@ jobs:
              | grep -E "${PROTOCOL_REGEX}" \
              | awk '!seen[$0]++' \
              | head -n 300 > nodes.txt
+            if [ $(wc -l < nodes_new.txt) -ge 1 ]; then
+              mv nodes_new.txt nodes.txt
+             else
+              echo "新节点为空，保留旧节点"
+             fi
+             
             echo "【成功】鲜活节点已置顶"
+             echo "=== nodes.txt 检查 ==="
+
+          if [ -s nodes.txt ]; then
+            echo "nodes.txt 生成成功"
+            wc -l nodes.txt
+            head -3 nodes.txt
+          else
+           echo "nodes.txt 为空，恢复备份"
+          if [ -f /tmp/nodes_backup.txt ]; then
+             cp /tmp/nodes_backup.txt nodes.txt
+             fi
+          fi
           else
             echo "【熔断】所有源失效，回滚备份"
             if [ -f /tmp/nodes_backup.txt ]; then
               cp /tmp/nodes_backup.txt nodes.txt
             fi
           fi
-          rm -f temp_* decoded_* clean_nodes.txt verified_temp.txt speed_nodes.txt tcp_alive_nodes.txt all_nodes.txt
+          echo "=== 开始清理临时文件 ==="
+            rm -f temp_* \
+            decoded_* \
+            clean_nodes.txt \
+            verified_temp.txt \
+            speed_nodes.txt \
+             tcp_alive_nodes.txt \
+             all_nodes.txt
+          echo "=== 清理完成 ==="
 
       - name: 4. 检测文件变更
         id: check_changes
@@ -183,8 +209,9 @@ jobs:
       - name: 5. 生成 Base64 编码
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
-          base64 -w 0 nodes.txt > base64.txt
           [ -f nodes.txt ] || exit 0
+          base64 -w 0 nodes.txt > base64.txt
+          
       - name: 6. 生成 Clash & sing-box 配置
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
@@ -214,7 +241,8 @@ jobs:
          
           BEIJING_TIME=$(date -u -d '+8 hours' '+%Y-%m-%d %H:%M:%S')
           git commit -m "Auto Sync at $BEIJING_TIME"
-         
+          git status
+          git log -1 --stat
           CURRENT_BRANCH=$(git branch --show-current)
           git pull --rebase --autostash origin "$CURRENT_BRANCH"
           git push origin "$CURRENT_BRANCH"
