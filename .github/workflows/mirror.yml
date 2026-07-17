@@ -19,10 +19,14 @@ jobs:
         run: |
           sudo apt update -qq
           sudo apt install -y jq curl wget unzip
-          wget -q https://github.com/SagerNet/sing-box/releases/latest/download/sing-box_linux_amd64.tar.gz -O sing.tar.gz
-          tar xf sing.tar.gz
-          mv sing-box*/sing-box sing-box
-          chmod +x sing-box
+          
+          wget -q $(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest \
+          | jq -r '.assets[] | select(.name | contains("linux-amd64.tar.gz")) | .browser_download_url') \
+           -O sing.tar.gz
+
+            tar xf sing.tar.gz
+            mv sing-box-*/sing-box sing-box
+            chmod +x sing-box
 
       - name: Download Sources
         run: |
