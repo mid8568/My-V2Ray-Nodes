@@ -40,17 +40,40 @@ jobs:
         run: |
           > raw.txt
           sources=(
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(date -u -d '+8 hours' +%Y%m%d)2"
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(date -u -d '+8 hours' +%Y%m%d)1"
-            "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/V2Ray-Config-By-EbraSha-All-Type.txt"
-            "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
-            "https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.txt"
-            "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/Eternity.txt"
-            "https://raw.githubusercontent.com/mfuu/v2ray/master/v2"
-            "https://raw.githubusercontent.com/barabama/FreeNodes/main/nodes.txt"
-          )
+
+                 "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(date -u -d '+8 hours' +%Y%m%d)2"
+
+                  "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(date -u -d '+8 hours' +%Y%m%d)1"
+
+                   "https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2"
+
+                   "https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/v2ray.txt"
+
+                   "https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.txt"
+
+                     "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity.txt"
+
+                      "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/Eternity.txt"
+
+                       "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/V2Ray-Config-By-EbraSha-All-Type.txt"
+
+                       "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
+
+                       "https://raw.githubusercontent.com/barabama/FreeNodes/main/nodes.txt"
+
+                       "https://raw.githubusercontent.com/mfuu/v2ray/master/v2"
+
+                      "https://raw.githubusercontent.com/awesome-vpn/awesome-vpn/main/all.txt"
+
+                     "https://raw.githubusercontent.com/vpei/Free-Node-Merge/main/o.txt"
+
+                       )
           for url in "${sources[@]}"; do
-            curl -Ls --max-time 30 "$url" >> raw.txt || true
+            curl -L \
+                --connect-timeout 10 \
+                --max-time 60 \
+                --retry 2 \
+               "$url" >> raw.txt || true
           done
 
       - name: Extract
