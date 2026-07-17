@@ -88,6 +88,7 @@ jobs:
              
               sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
               awk '!seen[$0]++' temp_nodes.txt > clean_nodes.txt && mv clean_nodes.txt temp_nodes.txt
+              cat temp_nodes.txt >> all_nodes.txt
               head -n 1000 temp_nodes.txt > temp_limit.txt
               mv temp_limit.txt temp_nodes.txt
               
@@ -142,7 +143,7 @@ jobs:
 
           echo "高速节点数量: $NODE_COUNT"
           cat verified_temp.txt > tcp_alive_nodes.txt
-          awk '!seen[$0]++' all_nodes.txt > tcp_alive_nodes.txt
+          cp verified_temp.txt tcp_alive_nodes.txt
           if [ "$NODE_COUNT" -ge 1 ]; then
               success=true
               fi
@@ -222,9 +223,9 @@ jobs:
                 
           echo "=== 清理完成 ==="
 
-           - name: 4. 检测文件变更
-          id: check_changes
-          run: |
+      - name: 4. 检测文件变更
+        id: check_changes
+        run: |
           set -euo pipefail
 
           echo "=== 文件状态检查 ==="
