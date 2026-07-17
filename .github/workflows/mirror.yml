@@ -200,7 +200,8 @@ jobs:
           head -5 speed_nodes.txt
           
           cp verified_temp.txt tcp_alive_nodes.txt
-           
+          cp verified_temp.txt nodes_new.txt
+          
           if [ "$NODE_COUNT" -ge 1 ]; then
                success=true
           fi
