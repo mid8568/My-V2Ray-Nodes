@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: 1. 检出本地仓库
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -38,7 +38,7 @@ jobs:
          
           touch .gitignore
           for item in "temp_*" "decoded_*" "*.bak" "tcp_alive_nodes.txt" "clean_nodes.txt" "verified_temp.txt"; do
-            grep -qxF "$item" .gitignore || echo "$item" >> .gitignore
+          grep -qxF "$item" .gitignore || echo "$item" >> .gitignore
           done
          
           if [ -f nodes.txt ]; then
@@ -65,15 +65,18 @@ jobs:
          
             success=false
             > all_nodes.txt
-            PROTOCOL_REGEX="^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://"
-         
-          for url in "${urls[@]}"; do
+            PROTOCOL_REGEX="^[[:space:]]*(vmess|vless|ss|ssr|trojan|socks)://"
+
+            > verified_temp.txt
+            > speed_nodes.txt
+            rm -f speed_*.txt
+            for url in "${urls[@]}"; do
             echo "尝试数据源 -> $url"
             rm -f temp_nodes.txt decoded_nodes.txt
            
             temp_code=$(curl -A "Mozilla/5.0" -sL --connect-timeout 10 --max-time 20 -o temp_nodes.txt -w "%{http_code}" "$url" || true)
            
-            if [ "$temp_code" = "200" ] && [ "$(wc -c < temp_nodes.txt || echo 0)" -gt 200 ]; then
+            if [ "$temp_code" = "200" ] && [ "$(wc -c < temp_nodes.txt || echo 0)" -gt 500 ]; then
               sed -i '1s/^\xEF\xBB\xBF//' temp_nodes.txt
              
               if grep -qi "<html" temp_nodes.txt 2>/dev/null; then continue; fi
@@ -89,47 +92,102 @@ jobs:
               sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
               awk '!seen[$0]++' temp_nodes.txt > clean_nodes.txt && mv clean_nodes.txt temp_nodes.txt
               cat temp_nodes.txt >> all_nodes.txt
-              head -n 1000 temp_nodes.txt > temp_limit.txt
+              head -n 500 temp_nodes.txt > temp_limit.txt
               mv temp_limit.txt temp_nodes.txt
               
            echo "=== 开始节点检测 ==="
+         
+            export PROTOCOL_REGEX
 
-           > verified_temp.txt
-           > speed_nodes.txt
+          MAX_JOBS=30
 
-               export PROTOCOL_REGEX
+          while IFS= read -r line
+          do
 
-             cat temp_nodes.txt | xargs -P 20 -I {} bash -c '
+           while [ "$(jobs -rp | wc -l)" -ge "$MAX_JOBS" ]
+           do
+             sleep 0.2
+            done
 
-             line="$1"
+             (
+           host_port=""
 
-             clean_uri=$(echo "$line" | cut -d"#" -f1)
+            if echo "$line" | grep -qE "^[[:space:]]*vmess://"; then
+            
+              decoded=$(echo "$line" \
+             
+              | sed -E 's/^[[:space:]]*vmess://' \
+              | tr '_-' '/+' \
+              | tr -d '\r\n ' \
+              | awk '{
+               l=length($0)%4
+               if(l==2){$0=$0"=="}
+               else if(l==3){$0=$0"="}
+               else if(l==1){exit}
+               print
+                }'
+              | base64 -d -i 2>/dev/null || true)
+              
+              addr=$(echo "$decoded" \
+              | grep -o '"add":"[^"]*"' \
+              | cut -d'"' -f4)
 
-             host_port=$(echo "$clean_uri" \
-              | grep -oE '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}:[0-9]+' \
-              | tail -n1\
-              | sed 's/^[@]]//')
+              port=$(echo "$decoded" \
+              | grep -o '"port":"[^"]*"' \
+              | cut -d'"' -f4)
 
-              [ -z "$host_port" ] && exit 0
+              if [ -n "$addr" ] && [ -n "$port" ]; then
+               host_port="${addr}:${port}"
+                    fi
+                 fi
 
-              host="${host_port%:*}"
-              port="${host_port##*:}"
 
-              start=$(date +%s%3N)
+               if [ -z "$host_port" ]; then
 
-              if timeout 2 bash -c "</dev/tcp/$host/$port" 2>/dev/null
-               then
-               end=$(date +%s%3N)
-               delay=$((end-start))
+                   clean_uri=$(echo "$line" | cut -d"#" -f1)
 
-               if [ "$delay" -le 800 ]
-               then
-               echo "${delay}|${line}"
+                    host_port=$(echo "$clean_uri" \
+                   | grep -oE '(\[[0-9a-fA-F:]+\]|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{1,3}(\.[0-9]{1,3}){3}):[0-9]+' \
+                   | tail -n1 \
+                   | sed 's/^[@]//')
+
                fi
-              fi
 
-              ' _ {} >> speed_nodes.txt
 
+                 [ -z "$host_port" ] && exit 0
+
+
+                 host="${host_port%:*}"
+                 port="${host_port##*:}"
+
+                   start=$(date +%s%3N)
+
+                   if timeout 4 bash -c "</dev/tcp/$host/$port" 2>/dev/null
+                    then
+
+                     end=$(date +%s%3N)
+
+                      delay=$((end-start))
+
+                    if [ "$delay" -le 1500 ]
+                      then
+
+                    echo "${delay}|${line}"
+
+                         fi
+
+                     fi
+
+              ) >> "speed_${BASHPID}.txt" &
+
+                done < temp_nodes.txt
+
+            wait
+            cat speed_*.txt 2>/dev/null >> speed_nodes.txt
+            if tr -d '\r\n\t ' < temp_nodes.txt \
+            | sed 's/-/+/g;s/_/\//g' \
+            | base64 -d > decoded_nodes.txt 2>/dev/null
+            
           echo "=== 延迟排序 ==="
 
             # 延迟从低到高排序
@@ -139,18 +197,20 @@ jobs:
            | awk '!seen[$0]++'\
            > verified_temp.txt
           
-          NODE_COUNT=$(wc -l < verified_temp.txt)
+          NODE_COUNT=$(grep -cE "${PROTOCOL_REGEX}" verified_temp.txt || true)
 
           echo "高速节点数量: $NODE_COUNT"
-          cat verified_temp.txt > tcp_alive_nodes.txt
+
+          echo "测速文件大小:"
+          wc -c speed_nodes.txt
+
+          echo "测速前5:"
+          head -5 speed_nodes.txt
+          
           cp verified_temp.txt tcp_alive_nodes.txt
           if [ "$NODE_COUNT" -ge 1 ]; then
-              success=true
-              fi
-            fi
-          done
-          
-          awk '!seen[$0]++' all_nodes.txt > tcp_alive_nodes.txt
+               success=true
+          fi
           echo "=== 最终节点统计 ==="
           wc -l all_nodes.txt
           wc -l tcp_alive_nodes.txt
@@ -158,11 +218,13 @@ jobs:
           
           if [ "$success" = true ]; then
           
-            cat tcp_alive_nodes.txt \
-             | grep -E "${PROTOCOL_REGEX}" \
-             | awk '!seen[$0]++' \
-             | head -n 300 > nodes_new.txt
-             
+            sed -i 's/\r//g' tcp_alive_nodes.txt
+
+              sed 's/^[[:space:]]*//' tcp_alive_nodes.txt \
+              | grep -E "${PROTOCOL_REGEX}" \
+              | awk '!seen[$0]++' \
+              | head -n 300 > nodes_new.txt
+              
             if [ "$(wc -l < nodes_new.txt)" -ge 1 ]; then
             
               mv nodes_new.txt nodes.txt
@@ -214,11 +276,10 @@ jobs:
           echo "=== 开始清理临时文件 ==="
           rm -f temp_* \
                 decoded_* \
+                speed_* \
                 clean_nodes.txt \
                 verified_temp.txt \
                 speed_nodes.txt \
-                tcp_alive_nodes.txt \
-                all_nodes.txt \
                 nodes_new.txt
                 
           echo "=== 清理完成 ==="
@@ -252,7 +313,7 @@ jobs:
           git status --short
 
 
-          if git diff --quiet -- nodes.txt; then
+          if git diff HEAD --quiet -- nodes.txt; then
 
             echo "nodes.txt 无变化"
 
@@ -302,10 +363,12 @@ jobs:
             exit 0
           fi
          
-          BEIJING_TIME=$(date -u -d '+8 hours' '+%Y-%m-%d %H:%M:%S')
-          git commit -m "Auto Sync at $BEIJING_TIME"
-          git status
-          git log -1 --stat
           CURRENT_BRANCH=$(git branch --show-current)
-          git pull --rebase --autostash origin "$CURRENT_BRANCH"
-          git push origin "$CURRENT_BRANCH"
+
+           git pull --rebase --autostash origin "$CURRENT_BRANCH"
+
+           git add nodes.txt base64.txt clash.yaml singbox.json .gitignore
+
+           git commit -m "Auto Sync at $BEIJING_TIME"
+
+           git push origin "$CURRENT_BRANCH"
