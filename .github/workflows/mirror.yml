@@ -57,14 +57,17 @@ jobs:
           mkdir -p work
           # 注意：请确保你仓库中存在 test_node.sh 脚本
           while read -r node; do
-            (
-              timeout 15 bash test_node.sh "$node"
-            ) &
-            if [ "$(jobs -r | wc -l)" -ge 20 ]; then
-              wait -n
-            fi
-          done < <(head -500 nodes_all.txt)
-          wait
+           (
+           timeout 15 bash test_node.sh "$node" >> result.txt 2>/dev/null || true
+           ) &
+
+           if [ "$(jobs -r | wc -l)" -ge 20 ]; then
+            wait -n || true
+           fi
+
+           done < nodes_all.txt
+
+           wait || true
 
       - name: Generate
         run: |
