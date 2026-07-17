@@ -55,12 +55,75 @@ jobs:
 
       - name: Extract
         run: |
-             grep -aoE '(vmess|vless|trojan|ss|ssr|hysteria2)://[^[:space:]]+' raw.txt \
-             | sed 's/\r//' \
-             | sed 's/&amp;/\&/g' \
-             | sort -u > nodes_all.txt
-          
-          echo "抓取节点: $(wc -l < nodes_all.txt)"
+          python3 <<'PY'
+
+          import re
+
+          data=open(
+              "raw.txt",
+              errors="ignore"
+          ).read()
+
+
+          patterns=[
+              r'vmess://[^\s]+',
+              r'vless://[^\s]+',
+              r'trojan://[^\s]+',
+              r'hysteria2://[^\s]+',
+              r'hy2://[^\s]+',
+              r'ss://[^\s]+'
+          ]
+
+
+          nodes=[]
+
+
+          for p in patterns:
+
+              nodes += re.findall(
+                  p,
+                  data
+              )
+
+
+          clean=[]
+
+
+          for n in nodes:
+
+              n=n.replace(
+                  "\r",
+                  ""
+              )
+
+              n=n.replace(
+                  "&amp;",
+                  "&"
+              )
+
+              clean.append(n)
+
+
+          clean=list(
+              set(clean)
+          )
+
+
+          open(
+              "nodes_all.txt",
+              "w"
+          ).write(
+              "\n".join(clean)
+          )
+
+
+          print(
+              "节点数量:",
+              len(clean)
+          )
+
+
+          PY
 
       - name: Sing-box Real Test
         timeout-minutes: 15
