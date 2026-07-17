@@ -85,6 +85,7 @@ jobs:
                   continue
                 fi
               fi
+             done
              
               sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
               awk '!seen[$0]++' temp_nodes.txt > clean_nodes.txt && mv clean_nodes.txt temp_nodes.txt
@@ -156,51 +157,63 @@ jobs:
           head -5 tcp_alive_nodes.txt
           
           if [ "$success" = true ]; then
+          
             cat tcp_alive_nodes.txt \
              | grep -E "${PROTOCOL_REGEX}" \
              | awk '!seen[$0]++' \
              | head -n 300 > nodes_new.txt
              
-            if [ $(wc -l < nodes_new.txt) -ge 1 ]; then
+            if [ "$(wc -l < nodes_new.txt)" -ge 1 ]; then
+            
               mv nodes_new.txt nodes.txt
+              
               echo "【成功】鲜活节点已更新"
               
              else
              
               echo "新节点为空，保留旧节点"
+              
           if [ -f /tmp/nodes_backup.txt ]; then
              cp /tmp/nodes_backup.txt nodes.txt
+             
                  fi
 
              fi
     
-            echo "【成功】鲜活节点已置顶"
              echo "=== nodes.txt 检查 ==="
 
           if [ -s nodes.txt ]; then
             echo "nodes.txt 生成成功"
             wc -l nodes.txt
             head -3 nodes.txt
+            
           else
+          
            echo "nodes.txt 为空，恢复备份"
           if [ -f /tmp/nodes_backup.txt ]; then
              cp /tmp/nodes_backup.txt nodes.txt
              fi
           fi
+          
           else
+          
             echo "【熔断】所有源失效，回滚备份"
             if [ -f /tmp/nodes_backup.txt ]; then
               cp /tmp/nodes_backup.txt nodes.txt
+              
             fi
+            
           fi
+          
           echo "=== 开始清理临时文件 ==="
-            rm -f temp_* \
-            decoded_* \
-            clean_nodes.txt \
-            verified_temp.txt \
-            speed_nodes.txt \
-             tcp_alive_nodes.txt \
-             all_nodes.txt
+          rm -f temp_* \
+                decoded_* \
+                clean_nodes.txt \
+                verified_temp.txt \
+                speed_nodes.txt \
+                tcp_alive_nodes.txt \
+                all_nodes.txt
+                
           echo "=== 清理完成 ==="
 
       - name: 4. 检测文件变更
