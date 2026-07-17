@@ -51,7 +51,7 @@ jobs:
 
       - name: Extract
         run: |
-          grep -Eo '(vmess|vless|trojan|ss|ssr|hy2|hysteria2)://[^ <"]+' raw.txt | \
+          grep -Eo '(vmess|vless|trojan|ss|ssr|hysteria2)://[^" <>\r\n]+' raw.txt | \
           sed 's/\r//' | sort -u > nodes_all.txt
           echo "抓取节点: $(wc -l < nodes_all.txt)"
 
