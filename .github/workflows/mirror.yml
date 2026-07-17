@@ -206,62 +206,39 @@ jobs:
           wc -l tcp_alive_nodes.txt
           head -5 tcp_alive_nodes.txt
           
+          # ...（前文）
           if [ "$success" = true ]; then
-          
-            sed -i 's/\r//g' tcp_alive_nodes.txt
-
-              sed 's/^[[:space:]]*//' tcp_alive_nodes.txt \
-              | grep -E "${PROTOCOL_REGEX}" \
-              | awk '!seen[$0]++' \
-              | head -n 300 > nodes_new.txt
-              
+            # ... (处理逻辑)
             if [ "$(wc -l < nodes_new.txt)" -ge 1 ]; then
-            
               mv nodes_new.txt nodes.txt
-              
               echo "【成功】鲜活节点已更新"
-              
-             else
-             
-              echo "新节点为空"
-              
-          if [ -f /tmp/nodes_backup.txt ]; then
-             cp /tmp/nodes_backup.txt nodes.txt
-             
             else
-            
-             echo "无旧节点备份"
-             
-             fi
-
+              echo "新节点为空"
+              if [ -f /tmp/nodes_backup.txt ]; then
+                cp /tmp/nodes_backup.txt nodes.txt
+              else
+                echo "无旧节点备份"
+              fi
               rm -f nodes_new.txt
-
-            fi
-    
-             echo "=== nodes.txt 检查 ==="
-
-              if [ -s nodes.txt ]; then
-                   echo "nodes.txt 生成成功"
-                   wc -l nodes.txt
-                  head -3 nodes.txt
+            fi # 对应 if [ "$(wc -l < nodes_new.txt)" -ge 1 ]
             
-             else
-          
-           echo "nodes.txt 为空，恢复备份"
-          if [ -f /tmp/nodes_backup.txt ]; then
-             cp /tmp/nodes_backup.txt nodes.txt
-             fi
-          fi
-          
+            echo "=== nodes.txt 检查 ==="
+            if [ -s nodes.txt ]; then
+              echo "nodes.txt 生成成功"
+            else
+              echo "nodes.txt 为空，恢复备份"
+              if [ -f /tmp/nodes_backup.txt ]; then
+                cp /tmp/nodes_backup.txt nodes.txt
+              fi
+            fi # 对应 if [ -s nodes.txt ]
           else
-          
             echo "【熔断】所有源失效，回滚备份"
             if [ -f /tmp/nodes_backup.txt ]; then
               cp /tmp/nodes_backup.txt nodes.txt
-              
             fi
-            
-          fi
+          fi # 对应 if [ "$success" = true ]
+          
+          # ... (后续清理工作)
           
           echo "=== 开始清理临时文件 ==="
           rm -f temp_* \
