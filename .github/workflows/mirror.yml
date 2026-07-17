@@ -30,9 +30,9 @@ jobs:
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
           TEST_URL="https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
           echo "=== 正在探测今日上游 Raw 路径可用性 ==="
-          curl -I -s -A "Mozilla/5.0" -o /dev/null -w "HTTP 状态码: %{http_code}\n" "$TEST_URL" || true
+          curl -I -L -A "Mozilla/5.0" -o /dev/null -w "HTTP 状态码: %{http_code}\n" "$TEST_URL" || true
 
-      - name: 3. 安全提取、高并发双源灾备、TCP 测速与置顶排序
+      - name: 3. 安全提取、TCP 测速与置顶排序
         run: |
           set -euo pipefail
          
@@ -49,55 +49,36 @@ jobs:
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
           YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
          
-          urls=()
-
-          BASE_URLS=(
-             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v"
-             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v"
+          urls=(
+            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
+            "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}2"
+            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}1"
+            "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}1"
+            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}2"
+            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}1"
           )
-
-          echo "=== 自动检测可用订阅源 ==="
-
-          for DATE in "$TODAY" "$YESTERDAY"
-          do
-
-              for NUM in 2 1
-              do
-
-                  for BASE in "${BASE_URLS[@]}"
-                  do
-
-                      URL="${BASE}${DATE}${NUM}"
-
-                      echo "检测: $URL"
-
-                      STATUS=$(curl \
-                          -L \
-                          -s \
-                          -o /dev/null \
-                          -w "%{http_code}" \
-                          -A "Mozilla/5.0" \
-                          --connect-timeout 5 \
-                          --max-time 10 \
-                          "$URL" || true)
-
-                      if [ "$STATUS" = "200" ]; then
-
-                          echo "✓ 可用: $URL"
-
-                          urls+=("$URL")
-
-                      else
-
-                          echo "× 跳过: $URL ($STATUS)"
-
-                      fi
-
-                  done
-
-              done
-
-          done
+         
+          success=false
+          PROTOCOL_REGEX="^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://"
+         
+          for url in "${urls[@]}"; do
+            echo "尝试数据源 -> $url"
+            rm -f temp_nodes.txt decoded_nodes.txt
+           
+            temp_code=$(curl -A "Mozilla/5.0" -sL --connect-timeout 10 --max-time 20 -o temp_nodes.txt -w "%{http_code}" "$url" || true)
+           
+            if [ "$temp_code" = "200" ] && [ "$(wc -c < temp_nodes.txt || echo 0)" -gt 200 ]; then
+              sed -i '1s/^\xEF\xBB\xBF//' temp_nodes.txt
+             
+              if grep -qi "<html" temp_nodes.txt 2>/dev/null; then continue; fi
+             
+              if ! grep -E -q "${PROTOCOL_REGEX}" temp_nodes.txt 2>/dev/null; then
+                if tr -d '\r\n\t ' < temp_nodes.txt | base64 -d > decoded_nodes.txt 2>/dev/null; then
+                  mv decoded_nodes.txt temp_nodes.txt
+                else
+                  continue
+                fi
+              fi
              
               sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
               awk '!seen[$0]++' temp_nodes.txt > clean_nodes.txt && mv clean_nodes.txt temp_nodes.txt
@@ -112,24 +93,27 @@ jobs:
                [ -z "$line" ] && continue
 
                clean_uri=$(echo "$line" | cut -d'#' -f1)
-
+                case "$clean_uri" in
+                vmess://*)
+                continue
+                ;;
+                esac
+                  
              # 提取 host:port
               host_port=$(echo "$clean_uri" \
               | grep -oE '(@|\])[a-zA-Z0-9.-]+:[0-9]+' \
               | tr -d '@]' \
               | tail -n1 || true)
 
-
              [ -z "$host_port" ] && continue
 
-
-            host="${host_port%:*}"
-            port="${host_port##*:}"
+              host="${host_port%:*}"
+              port="${host_port##*:}"
   
             # TCP测试 + 计算延迟
            start=$(date +%s%3N)
 
-          if timeout 3 bash -c "</dev/tcp/$host/$port" 2>/dev/null
+          if timeout 2 bash -c "</dev/tcp/$host/$port" 2>/dev/null
           then
 
           end=$(date +%s%3N)
@@ -138,7 +122,7 @@ jobs:
 
 
           # 只保留300ms以内节点
-          if [ "$delay" -le 300 ]
+          if [ "$delay" -le 500 ]
           then
           echo "${delay}|${line}" >> speed_nodes.txt
           fi
@@ -152,9 +136,9 @@ jobs:
 
             # 延迟从低到高排序
 
-           sort -n speed_nodes.txt \
+           sort -t'|' -k1,1n speed_nodes.txt \
            | cut -d'|' -f2 \
-           | awk '!seen[$0]++' \
+           | awk '!seen[$0]++'
            > verified_temp.txt
 
 
@@ -169,7 +153,7 @@ jobs:
              
               NODE_COUNT=$(wc -l < tcp_alive_nodes.txt)
 
-             if [ "$NODE_COUNT" -ge 5 ]; then
+             if [ "$NODE_COUNT" -ge 3 ]; then
                 success=true
                 break
               fi
@@ -188,14 +172,14 @@ jobs:
               cp /tmp/nodes_backup.txt nodes.txt
             fi
           fi
-          rm -f temp_* tcp_alive_nodes.txt
+          rm -f temp_* decoded_* clean_nodes.txt verified_temp.txt speed_nodes.txt tcp_alive_nodes.txt
 
       - name: 4. 检测文件变更
         id: check_changes
         run: |
           set -euo pipefail
           if git ls-files --error-unmatch nodes.txt base64.txt clash.yaml singbox.json >/dev/null 2>&1 \
-             && git diff --quiet HEAD -- nodes.txt base64.txt clash.yaml singbox.json; then
+             && git diff --quiet -- nodes.txt base64.txt clash.yaml singbox.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -210,9 +194,8 @@ jobs:
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
           set -euo pipefail
-          CURRENT_BRANCH=$(git branch --show-current)
+          CURRENT_BRANCH="${GITHUB_REF_NAME}"
           RAW_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${CURRENT_BRANCH}/nodes.txt"
-          CACHE_ID=$(date +%s)
          
           # Clash
           curl -sL -A "clash" "https://sub.xeton.gq/sub?target=clash&url=${RAW_URL}&insert=false&emoji=true&udp=true" -o clash.yaml || echo "proxies: []" > clash.yaml
@@ -238,5 +221,5 @@ jobs:
           git commit -m "Auto Sync at $BEIJING_TIME"
          
           CURRENT_BRANCH=$(git branch --show-current)
-          git pull --rebase origin "$CURRENT_BRANCH"
+          git pull --rebase --autostash origin "$CURRENT_BRANCH"
           git push origin "$CURRENT_BRANCH"
