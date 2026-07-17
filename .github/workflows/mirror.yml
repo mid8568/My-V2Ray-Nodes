@@ -143,13 +143,18 @@ jobs:
           echo "高速节点数量: $NODE_COUNT"
           cat verified_temp.txt >> all_nodes.txt
           awk '!seen[$0]++' all_nodes.txt > tcp_alive_nodes.txt
-          if [ "$NODE_COUNT" -ge 3 ]; then
+          if [ "$NODE_COUNT" -ge 1 ]; then
               success=true
               fi
             fi
           done
           
-          sort -u all_nodes.txt > tcp_alive_nodes.txt
+          awk '!seen[$0]++' all_nodes.txt > tcp_alive_nodes.txt
+          echo "=== 最终节点统计 ==="
+          wc -l all_nodes.txt
+          wc -l tcp_alive_nodes.txt
+          head -5 tcp_alive_nodes.txt
+          
           if [ "$success" = true ]; then
             cat tcp_alive_nodes.txt \
              | grep -E "${PROTOCOL_REGEX}" \
