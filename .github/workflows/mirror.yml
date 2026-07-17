@@ -1,320 +1,90 @@
-name: Repo Auto Mirror Sync - V5.3 Fortress Pro
+name: Real Node Sync V3
 
 on:
   workflow_dispatch:
   schedule:
-    # 北京时间每天的 08:00, 12:00, 16:00, 20:00, 00:00, 04:00 运行
-    - cron: '0 */4 * * *'
-
-concurrency:
-  group: nodes-sync
-  cancel-in-progress: false
+    - cron: "0 */6 * * *"
 
 permissions:
   contents: write
 
 jobs:
-  smart-sync:
+  sync:
     runs-on: ubuntu-latest
-    continue-on-error: false
-
     steps:
-      - name: 1. 检出本地仓库
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: 2. 探测上游可用性
+      - name: Install Tools
         run: |
-          set -euo pipefail
+          sudo apt update -qq && sudo apt install -y curl jq unzip
+          # 下载 Mihomo 内核
+          wget -q https://github.com/MetaCubeX/mihomo/releases/latest/download/mihomo-linux-amd64-v1.19.19.gz
+          gunzip mihomo-linux-amd64-v1.19.19.gz && mv mihomo-linux-amd64-v1.19.19 mihomo && chmod +x mihomo
+          # 下载并启动 Subconverter
+          wget -q https://github.com/tindy2013/subconverter/releases/latest/download/subconverter_linux64.tar.gz
+          tar xf subconverter_linux64.tar.gz
+          ./subconverter/subconverter &
+          sleep 5
+
+      - name: Fetch and Convert
+        run: |
+          # 1. 抓取订阅内容
           TODAY=$(date -u -d '+8 hours' +%Y%m%d)
-          TEST_URL="https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
-          echo "=== 正在探测今日上游 Raw 路径可用性 ==="
-          curl -I -L -A "Mozilla/5.0" -o /dev/null -w "HTTP 状态码: %{http_code}\n" "$TEST_URL" || true
+          curl -Ls "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2" > sub.txt || true
+          curl -Ls "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}1" >> sub.txt || true
+          
+          # 2. 上传到 Gist 或临时公共地址 (Subconverter 需要 URL)
+          # 或者直接调用本地 API 转换（这里演示简单的本地请求）
+          # 注意：请确保 sub.txt 格式正确，建议先 Base64 编码
+          cat sub.txt | base64 -w0 > sub_encoded.txt
+          
+          # 3. 请求转换
+          curl -s "http://127.0.0.1:25500/sub?target=clash&url=https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/sub_encoded.txt&insert=false" > clash.yaml
 
-      - name: 3. 安全提取、TCP 测速与置顶排序
+      - name: Test Nodes
         run: |
-          set -euo pipefail
-         
-          touch .gitignore
-          for item in "temp_*" "decoded_*" "*.bak" "tcp_alive_nodes.txt" "clean_nodes.txt" "verified_temp.txt" "all_nodes.txt"; do
-          grep -qxF "$item" .gitignore || echo "$item" >> .gitignore
-          done
-         
-          if [ -f nodes.txt ]; then
-            cp nodes.txt /tmp/nodes_backup.txt
-            echo "【事务安全】已备份当前节点"
-          fi
-         
-          TODAY=$(date -u -d '+8 hours' +%Y%m%d)
-          YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
-         
-          urls=(
-            # free-nodes
-             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
-             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}2"
-             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}1"
-             "https://cdn.jsdelivr.net/gh/free-nodes/v2rayfree@main/v${TODAY}1"
-             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}2"
-             "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}1"
-
-            # EbraSha
-              "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/V2Ray-Config-By-EbraSha-All-Type.txt"
-              "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
-             )
-         
-            success=false
-            > all_nodes.txt
-            PROTOCOL_REGEX="^[[:space:]]*(vmess|vless|ss|ssr|trojan|hy2|hysteria2|socks|tuic|wireguard)://"
-
-            > verified_temp.txt
-            > speed_nodes.txt
-            rm -f speed_*.txt
-            for url in "${urls[@]}"; do
-            echo "尝试数据源 -> $url"
-            rm -f temp_nodes.txt decoded_nodes.txt
-           
-            temp_code=$(curl -A "Mozilla/5.0" -sL --connect-timeout 10 --max-time 20 -o temp_nodes.txt -w "%{http_code}" "$url" || true)
-           
-            if [ "$temp_code" = "200" ] && [ "$(wc -c < temp_nodes.txt || echo 0)" -gt 500 ]; then
-              sed -i '1s/^\xEF\xBB\xBF//' temp_nodes.txt
-             
-              if grep -qi "<html" temp_nodes.txt 2>/dev/null; then continue; fi
-             
-              if ! grep -E -q "${PROTOCOL_REGEX}" temp_nodes.txt 2>/dev/null; then
-                if tr -d '\r\n\t ' < temp_nodes.txt | base64 -d > decoded_nodes.txt 2>/dev/null; then
-                  mv decoded_nodes.txt temp_nodes.txt
-                else
-                  continue
-                fi
-              fi
-             
-              sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
-              awk '!seen[$0]++' temp_nodes.txt > clean_nodes.txt && mv clean_nodes.txt temp_nodes.txt
-              cat temp_nodes.txt >> verified_pool.txt
-              head -n 500 temp_nodes.txt > temp_limit.txt
-              mv temp_limit.txt temp_nodes.txt
-
-              fi
-            done
-           echo "=== 开始节点检测 ==="
-         
-            export PROTOCOL_REGEX
-
-          MAX_JOBS=30
-
-          while IFS= read -r line
-          do
-
-           while [ "$(jobs -rp | wc -l)" -ge "$MAX_JOBS" ]
-           do
-             sleep 0.2
-            done
-
-             (
-           host_port=""
-
-            # ...（前文省略）
-          if echo "$line" | grep -qE "^[[:space:]]*vmess://"; then
-            
-            # 使用更简洁的管道连接方式，确保没有语法歧义
-            decoded=$(echo "$line" | sed -E 's/^[[:space:]]*vmess://' | tr '_-' '/+' | tr -d '\r\n ' | awk '{
-                l=length($0)%4;
-                if(l==2){$0=$0"=="}
-                else if(l==3){$0=$0"="}
-                else if(l==1){exit}
-                print
-            }' | base64 -d -i 2>/dev/null || true)
-            
-            addr=$(echo "$decoded" | grep -o '"add":"[^"]*"' | cut -d'"' -f4)
-            port=$(echo "$decoded" | grep -o '"port":"[^"]*"' | cut -d'"' -f4)
-
-            if [ -n "$addr" ] && [ -n "$port" ]; then
-              host_port="${addr}:${port}"
-            fi
-          fi
-          # ...（后文省略）
-
-
-               if [ -z "$host_port" ]; then
-
-                   clean_uri=$(echo "$line" | cut -d"#" -f1)
-
-                    host_port=$(echo "$clean_uri" \
-                   | grep -oE '(\[[0-9a-fA-F:]+\]|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{1,3}(\.[0-9]{1,3}){3}):[0-9]+' \
-                   | tail -n1 \
-                   | sed 's/^[@]//')
-
-               fi
-
-
-                 [ -z "$host_port" ] && exit 0
-
-
-                 host="${host_port%:*}"
-                 port="${host_port##*:}"
-
-                   start=$(date +%s%3N)
-
-                   if timeout 4 bash -c "</dev/tcp/$host/$port" 2>/dev/null
-                    then
-
-                     end=$(date +%s%3N)
-
-                      delay=$((end-start))
-
-                    if [ "$delay" -le 1500 ]
-                      then
-
-                    echo "${delay}|${line}"
-
-                         fi
-
-                     fi
-
-              ) >> "speed_${RANDOM}_${BASHPID}.txt" &
-
-                done < temp_nodes.txt
-
-            wait
-            
-            cat speed_*.txt 2>/dev/null >> speed_nodes.txt
-            
-          echo "=== 延迟排序 ==="
-
-            # 延迟从低到高排序
-
-           sort -t'|' -k1,1n speed_nodes.txt \
-           | cut -d'|' -f2 \
-           | awk '!seen[$0]++'\
-           > verified_temp.txt
+          [ -f clash.yaml ] || { echo "转换失败"; exit 1; }
           
-          NODE_COUNT=$(grep -cE "${PROTOCOL_REGEX}" verified_temp.txt || true)
+          # 注入测试配置
+          cat >> clash.yaml <<EOF
+          mixed-port: 7890
+          allow-lan: false
+          mode: rule
+          rules:
+            - MATCH,DIRECT
+          EOF
 
-          echo "高速节点数量: $NODE_COUNT"
+          ./mihomo -f clash.yaml >/tmp/mihomo.log 2>&1 &
+          PID=$!
+          sleep 10
+          
+          # 测试连通性
+          HTTP_CODE=$(curl --socks5 127.0.0.1:7890 --connect-timeout 10 -m 15 -o /dev/null -w "%{http_code}" https://www.gstatic.com/generate_204 || echo "000")
+          echo "测试结果: $HTTP_CODE"
+          
+          kill $PID && sleep 2
 
-          echo "测速文件大小:"
-          wc -c speed_nodes.txt
-
-          echo "测速前5:"
-          head -5 speed_nodes.txt
-          
-          cp verified_temp.txt tcp_alive_nodes.txt
-          cp verified_temp.txt nodes_new.txt
-          
-          if [ "$NODE_COUNT" -ge 1 ]; then
-               success=true
-          fi
-          echo "=== 最终节点统计 ==="
-          wc -l all_nodes.txt
-          wc -l tcp_alive_nodes.txt
-          head -5 tcp_alive_nodes.txt
-          
-          # ...（前文）
-          if [ "$success" = true ]; then
-          
-              if [ -s nodes_new.txt ]; then
-               mv nodes_new.txt nodes.txt
-               sed -i '/^$/d' nodes.txt
-               sort -u nodes.txt -o nodes.txt
-                  echo "【成功】鲜活节点已更新"
-             else
-                echo "nodes_new.txt为空，不更新"
-                    fi
-
-               fi
-
-               echo "=== 开始清理临时文件 ==="
-              rm -f temp_* \
-                    decoded_* \
-                    speed_* \
-                    clean_nodes.txt \
-                     verified_temp.txt \
-                     speed_nodes.txt         
-       
-          echo "=== 清理完成 ==="
-          
-      - name: 4. 检测文件变更
-        id: check_changes
+      - name: Save Nodes
         run: |
-          set -euo pipefail
+          # 提取节点信息
+          grep -E "vmess://|vless://|trojan://|ss://" clash.yaml | sort -u > nodes.txt
+          echo "节点数量: $(wc -l < nodes.txt)"
 
-          echo "=== 文件状态检查 ==="
-
-          if [ ! -f nodes.txt ]; then
-            echo "nodes.txt 不存在"
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          NODE_COUNT=$(wc -l < nodes.txt)
-
-          echo "当前节点数量: $NODE_COUNT"
-
-          if [ "$NODE_COUNT" -lt 1 ]; then
-            echo "nodes.txt为空"
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-
-          echo "=== Git差异检测 ==="
-
-          git status --short
-
-
-          if git diff HEAD --quiet -- nodes.txt; then
-
-            echo "nodes.txt 无变化"
-
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-
+      - name: Commit
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add nodes.txt
+          if git diff --cached --quiet; then
+            echo "无变化"
           else
-
-            echo "nodes.txt 有变化"
-
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-
+            git commit -m "Auto update nodes at $(date '+%Y-%m-%d %H:%M:%S')"
+            git push
           fi
-          
-      - name: 5. 生成 Base64 编码
-        if: always()
-        run: |
-          [ -f nodes.txt ] || exit 0
-          base64 -w 0 nodes.txt > base64.txt
-          
-      - name: 6. 生成 Clash & sing-box 配置
-        if: always()
-        run: |
-          set -euo pipefail
-          CURRENT_BRANCH="${GITHUB_REF_NAME}"
-          RAW_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${CURRENT_BRANCH}/nodes.txt"
-         
-          # Clash
-          curl -sL -A "clash" "https://sub.xeton.gq/sub?target=clash&url=${RAW_URL}&insert=false&emoji=true&udp=true" -o clash.yaml || echo "proxies: []" > clash.yaml
-         
-          # sing-box
-          curl -sL -A "sing-box" "https://sub.xeton.gq/sub?target=singbox&url=${RAW_URL}&insert=false&emoji=true" -o singbox.json || echo '{"outbounds":[]}' > singbox.json
 
-      - name: 7. 提交更新
-      
-        if: always()
-        run: |
-                 set -euo pipefail
 
-                   git config --global user.name "github-actions[bot]"
-                   git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Auto update nodes"
 
-                     rm -f all_nodes.txt
 
-                    git add nodes.txt base64.txt clash.yaml singbox.json .gitignore
-
-                   if git diff --cached --quiet; then
-                   echo "没有变化"
-                         exit 0
-                    fi
-
-                   git commit -m "Auto Sync $(date '+%Y-%m-%d %H:%M:%S')"
-
-                      git push origin HEAD:${GITHUB_REF_NAME}
-           
+          git push
