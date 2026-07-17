@@ -141,7 +141,7 @@ jobs:
           NODE_COUNT=$(wc -l < verified_temp.txt)
 
           echo "高速节点数量: $NODE_COUNT"
-          cat verified_temp.txt >> all_nodes.txt
+          cat verified_temp.txt > tcp_alive_nodes.txt
           awk '!seen[$0]++' all_nodes.txt > tcp_alive_nodes.txt
           if [ "$NODE_COUNT" -ge 1 ]; then
               success=true
@@ -187,12 +187,12 @@ jobs:
     
              echo "=== nodes.txt 检查 ==="
 
-          if [ -s nodes.txt ]; then
-            echo "nodes.txt 生成成功"
-            wc -l nodes.txt
-            head -3 nodes.txt
+              if [ -s nodes.txt ]; then
+                   echo "nodes.txt 生成成功"
+                   wc -l nodes.txt
+                  head -3 nodes.txt
             
-          else
+             else
           
            echo "nodes.txt 为空，恢复备份"
           if [ -f /tmp/nodes_backup.txt ]; then
@@ -217,14 +217,14 @@ jobs:
                 verified_temp.txt \
                 speed_nodes.txt \
                 tcp_alive_nodes.txt \
-                all_nodes.txt\
+                all_nodes.txt \
                 nodes_new.txt
                 
           echo "=== 清理完成 ==="
 
            - name: 4. 检测文件变更
-        id: check_changes
-        run: |
+          id: check_changes
+          run: |
           set -euo pipefail
 
           echo "=== 文件状态检查 ==="
