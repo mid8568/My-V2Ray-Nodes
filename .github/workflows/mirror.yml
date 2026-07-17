@@ -250,7 +250,8 @@ jobs:
                 nodes_new.txt
                 
           echo "=== 清理完成 ==="
-
+            fi
+          done
       - name: 4. 检测文件变更
         id: check_changes
         run: |
