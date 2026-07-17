@@ -297,30 +297,26 @@ jobs:
           curl -sL -A "sing-box" "https://sub.xeton.gq/sub?target=singbox&url=${RAW_URL}&insert=false&emoji=true" -o singbox.json || echo '{"outbounds":[]}' > singbox.json
 
       - name: 7. 提交更新
+      
         if: always()
         run: |
-          set -euo pipefail
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-         
-          git add nodes.txt base64.txt clash.yaml singbox.json .gitignore
-          echo "====== 提交检查 ======"
-           git status
-           git diff --cached --stat
-           
-          if git diff --cached --quiet; then
-            echo "无实质变更"
-            exit 0
-          fi
-         
-          CURRENT_BRANCH=$(git branch --show-current)
+            set -euo pipefail
 
-           git fetch origin "$CURRENT_BRANCH"
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-           git add nodes.txt base64.txt clash.yaml singbox.json .gitignore
+            echo "===== 提交前检查 ====="
+            git status
+            md5sum nodes.txt
 
-           BEIJING_TIME=$(date -u -d '+8 hours' '+%Y-%m-%d %H:%M:%S')
+            git add -A
 
-           git commit -m "Auto Sync at $BEIJING_TIME"
+            if git diff --cached --quiet; then
+             echo "没有变化"
+               exit 0
+              fi
 
+             git commit -m "Auto Sync $(date '+%Y-%m-%d %H:%M:%S')"
+
+             git push origin HEAD:${GITHUB_REF_NAME}
            
