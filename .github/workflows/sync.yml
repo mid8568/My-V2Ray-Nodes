@@ -89,12 +89,17 @@ jobs:
 
 
           patterns=[
-              r'vmess://[^\s]+',
-              r'vless://[^\s]+',
-              r'trojan://[^\s]+',
-              r'hysteria2://[^\s]+',
-              r'hy2://[^\s]+',
-              r'ss://[^\s]+'
+              r'vmess://[^\s#]+',
+
+              r'vless://[^\s#]+',
+
+              r'trojan://[^\s#]+',
+
+              r'hysteria2://[^\s#]+',
+
+              r'hy2://[^\s#]+',
+
+              r'ss://[^\s#]+'
           ]
 
 
