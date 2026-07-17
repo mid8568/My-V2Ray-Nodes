@@ -85,7 +85,6 @@ jobs:
                   continue
                 fi
               fi
-             done
              
               sed -i '/^[[:space:]]*#/d;/example-node/Id;/expired/Id;/^$/d' temp_nodes.txt
               awk '!seen[$0]++' temp_nodes.txt > clean_nodes.txt && mv clean_nodes.txt temp_nodes.txt
@@ -107,8 +106,8 @@ jobs:
 
              host_port=$(echo "$clean_uri" \
               | grep -oE '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}:[0-9]+' \
-              | tr -d "@]" \
-              | tail -n1)
+              | tail -n1\
+              | sed 's/^[@]]//')
 
               [ -z "$host_port" ] && exit 0
 
@@ -122,7 +121,7 @@ jobs:
                end=$(date +%s%3N)
                delay=$((end-start))
 
-               if [ "$delay" -le 3000 ]
+               if [ "$delay" -le 800 ]
                then
                echo "${delay}|${line}"
                fi
@@ -171,14 +170,20 @@ jobs:
               
              else
              
-              echo "新节点为空，保留旧节点"
+              echo "新节点为空"
               
           if [ -f /tmp/nodes_backup.txt ]; then
              cp /tmp/nodes_backup.txt nodes.txt
              
-                 fi
-
+            else
+            
+             echo "无旧节点备份"
+             
              fi
+
+              rm -f nodes_new.txt
+
+            fi
     
              echo "=== nodes.txt 检查 ==="
 
@@ -212,23 +217,54 @@ jobs:
                 verified_temp.txt \
                 speed_nodes.txt \
                 tcp_alive_nodes.txt \
-                all_nodes.txt
+                all_nodes.txt\
+                nodes_new.txt
                 
           echo "=== 清理完成 ==="
 
-      - name: 4. 检测文件变更
+           - name: 4. 检测文件变更
         id: check_changes
         run: |
           set -euo pipefail
-          if git ls-files --error-unmatch nodes.txt base64.txt clash.yaml singbox.json >/dev/null 2>&1 \
-             && git add -N nodes.txt base64.txt clash.yaml singbox.json
-            if git diff --quiet -- nodes.txt base64.txt clash.yaml singbox.json; then
-            
+
+          echo "=== 文件状态检查 ==="
+
+          if [ ! -f nodes.txt ]; then
+            echo "nodes.txt 不存在"
             echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
+          NODE_COUNT=$(wc -l < nodes.txt)
+
+          echo "当前节点数量: $NODE_COUNT"
+
+          if [ "$NODE_COUNT" -lt 1 ]; then
+            echo "nodes.txt为空"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+
+          echo "=== Git差异检测 ==="
+
+          git status --short
+
+
+          if git diff --quiet -- nodes.txt; then
+
+            echo "nodes.txt 无变化"
+
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+
+          else
+
+            echo "nodes.txt 有变化"
+
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+
+          fi
+          
       - name: 5. 生成 Base64 编码
         if: ${{ steps.check_changes.outputs.changed == 'true' }}
         run: |
