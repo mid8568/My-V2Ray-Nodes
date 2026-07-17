@@ -1,273 +1,87 @@
-name: V2Ray Public Node Sync V5.4 Lite
+name: V2Ray Ultimate Node Sync
 
 on:
   workflow_dispatch:
-
   schedule:
     - cron: "0 */6 * * *"
-
 
 permissions:
   contents: write
 
-
 jobs:
-
   sync:
-
     runs-on: ubuntu-latest
-
-
     steps:
-
-
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-
-
-    - name: Install Tools
-      run: |
-
-        sudo apt update -qq
-
-        sudo apt install -y curl wget jq
-
-
-
-    - name: Download Public Sources
-
-      run: |
-
-        set -e
-
-
-        > raw.txt
-
-
-        TODAY=$(date -u -d '+8 hours' +%Y%m%d)
-
-        YESTERDAY=$(date -u -d '+8 hours -1 day' +%Y%m%d)
-
-
-
-        urls=(
-
-
-        # free-nodes
-
-        "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}2"
-
-        "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${TODAY}1"
-
-        "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}2"
-
-        "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v${YESTERDAY}1"
-
-
-
-        # EbraSha
-
-        "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/V2Ray-Config-By-EbraSha-All-Type.txt"
-
-        "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
-
-
-
-        # mfuu
-
-        "https://raw.githubusercontent.com/mfuu/v2ray/master/v2"
-
-
-
-        # Barabama
-
-        "https://raw.githubusercontent.com/barabama/FreeNodes/main/nodes.txt"
-
-
-
-        # nodefree
-
-        "https://raw.githubusercontent.com/nodefree/nodefree/main/nodefree"
-
-
-
-        # Eternity
-
-        "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/Eternity.txt"
-
-
-
-        # NoMoreWalls
-
-        "https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.txt"
-
-
-
-        # V2Hub
-
-        "https://raw.githubusercontent.com/youfoundamin/V2Hub/main/merged.txt"
-
-
-
-        )
-
-
-        for url in "${urls[@]}"
-        do
-
-          echo "抓取:"
-          echo "$url"
-
-
-          curl \
-          -L \
-          -s \
-          --connect-timeout 10 \
-          --max-time 30 \
-          "$url" \
-          >> raw.txt || true
-
-
-        done
-
-
-
-        echo "原始数据大小"
-
-        wc -c raw.txt
-
-
-
-
-
-    - name: Extract Nodes
-
-      run: |
-
-        set -e
-
-
-
-        echo "开始提取"
-
-
-
-        grep -Eo \
-        '(vmess|vless|trojan|ss|ssr|hysteria2|hy2)://[^ <"]+' \
-        raw.txt \
-        | sed 's/\r//' \
-        | sed 's/^ *//' \
-        | sort -u \
-        > nodes.txt || true
-
-
-
-        echo "节点数量"
-
-        wc -l nodes.txt
-
-
-
-
-        if [ ! -s nodes.txt ]
-
-        then
-
-          echo "没有提取到节点"
-
-          exit 1
-
-        fi
-
-
-
-
-    - name: Clean
-
-      run: |
-
-        sed -i '/example-node/d' nodes.txt
-
-        sed -i '/expired/d' nodes.txt
-
-
-        sort -u nodes.txt -o nodes.txt
-
-
-
-        echo "最终节点"
-
-        wc -l nodes.txt
-
-
-
-
-
-    - name: Generate Base64
-
-      run: |
-
-        base64 -w0 nodes.txt > base64.txt
-
-
-
-    - name: Generate Subscription Config
-
-      run: |
-
-        RAW_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/nodes.txt"
-
-
-        curl -sL \
-        "https://sub.xeton.gq/sub?target=clash&url=${RAW_URL}&insert=false&emoji=true&udp=true" \
-        -o clash.yaml || true
-
-
-
-        curl -sL \
-        "https://sub.xeton.gq/sub?target=singbox&url=${RAW_URL}&insert=false&emoji=true" \
-        -o singbox.json || true
-
-
-
-
-    - name: Commit Update
-
-      run: |
-
-
-        git config user.name "github-actions"
-
-        git config user.email "github-actions@github.com"
-
-
-
-        git add \
-        nodes.txt \
-        base64.txt \
-        clash.yaml \
-        singbox.json
-
-
-
-        if git diff --cached --quiet
-
-        then
-
-          echo "没有变化"
-
-          exit 0
-
-        fi
-
-
-
-        git commit \
-        -m "Auto Sync Nodes $(date '+%Y-%m-%d %H:%M:%S')"
-
-
-
-        git push origin HEAD:${GITHUB_REF_NAME}
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install sing-box
+        run: |
+          sudo apt update -qq
+          sudo apt install -y jq curl wget unzip
+          wget -q https://github.com/SagerNet/sing-box/releases/latest/download/sing-box_linux_amd64.tar.gz -O sing.tar.gz
+          tar xf sing.tar.gz
+          mv sing-box*/sing-box sing-box
+          chmod +x sing-box
+
+      - name: Download Sources
+        run: |
+          > raw.txt
+          sources=(
+            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(date -u -d '+8 hours' +%Y%m%d)2"
+            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(date -u -d '+8 hours' +%Y%m%d)1"
+            "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/V2Ray-Config-By-EbraSha-All-Type.txt"
+            "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
+            "https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.txt"
+            "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/Eternity.txt"
+            "https://raw.githubusercontent.com/mfuu/v2ray/master/v2"
+            "https://raw.githubusercontent.com/barabama/FreeNodes/main/nodes.txt"
+          )
+          for url in "${sources[@]}"; do
+            curl -Ls --max-time 30 "$url" >> raw.txt || true
+          done
+
+      - name: Extract
+        run: |
+          grep -Eo '(vmess|vless|trojan|ss|ssr|hy2|hysteria2)://[^ <"]+' raw.txt | \
+          sed 's/\r//' | sort -u > nodes_all.txt
+          echo "抓取节点: $(wc -l < nodes_all.txt)"
+
+      - name: Real Test
+        run: |
+          > result.txt
+          mkdir -p work
+          # 注意：请确保你仓库中存在 test_node.sh 脚本
+          while read -r node; do
+            (
+              timeout 15 bash test_node.sh "$node"
+            ) &
+            if [ "$(jobs -r | wc -l)" -ge 20 ]; then
+              wait -n
+            fi
+          done < <(head -500 nodes_all.txt)
+          wait
+
+      - name: Generate
+        run: |
+          if [ ! -s result.txt ]; then
+            echo "没有可用节点"
+            exit 1
+          fi
+          sort -n result.txt | cut -d "|" -f2 | head -100 > nodes.txt
+          base64 -w0 nodes.txt > base64.txt
+          echo "最终节点数量: $(wc -l < nodes.txt)"
+
+      - name: Generate Config
+        run: |
+          RAW="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/nodes.txt"
+          curl -sL "https://sub.xeton.gq/sub?target=clash&url=$RAW" -o clash.yaml
+          curl -sL "https://sub.xeton.gq/sub?target=singbox&url=$RAW" -o singbox.json
+
+      - name: Commit
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add nodes.txt base64.txt clash.yaml singbox.json
+          git commit -m "Ultimate node update: $(date '+%Y-%m-%d %H:%M:%S')" || exit 0
+          git push
