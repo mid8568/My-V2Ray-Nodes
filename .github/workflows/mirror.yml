@@ -87,9 +87,17 @@ jobs:
 
       - name: Generate Config
         run: |
-          RAW="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/nodes.txt"
-          curl -sL "https://sub.xeton.gq/sub?target=clash&url=$RAW" -o clash.yaml
-          curl -sL "https://sub.xeton.gq/sub?target=singbox&url=$RAW" -o singbox.json
+              RAW="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/nodes.txt"
+
+              curl -fL --retry 3 \
+              "https://sub.xeton.gq/sub?target=clash&url=$RAW" \
+               -o clash.yaml || echo "clash转换失败"
+
+                curl -fL --retry 3 \
+               "https://sub.xeton.gq/sub?target=singbox&url=$RAW" \
+                -o singbox.json || echo "singbox转换失败"
+
+                 ls -lh clash.yaml singbox.json || true
 
       - name: Commit
         run: |
