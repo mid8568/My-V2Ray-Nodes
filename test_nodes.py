@@ -17,7 +17,7 @@ INPUT = "nodes_all.txt"
 OUTPUT = "result.txt"
 
 # 更适合免费节点
-TEST_URL = "https://cp.cloudflare.com/generate_204"
+TEST_URL = "https://www.gstatic.com/generate_204"
 
 PROXY_PORT = 10808
 
@@ -143,19 +143,9 @@ def parse_vless(uri):
             u.query
         )
 
-
         host=u.hostname
 
-
-        if ":" in host:
-
-            server="["+host+"]"
-
-        else:
-
             server=host
-
-
 
         out={
 
@@ -169,9 +159,8 @@ def parse_vless(uri):
 
             "uuid":u.username
 
+            "packet_encoding":"xudp"
         }
-
-
 
         flow=q.get(
             "flow",
@@ -183,21 +172,17 @@ def parse_vless(uri):
 
             out["flow"]=flow
 
-
-
         security=q.get(
             "security",
             [""]
         )[0]
-
 
         if security in (
             "tls",
             "reality"
         ):
 
-
-            out["tls"]={
+          out["tls"]={
 
                 "enabled":True,
 
@@ -209,10 +194,7 @@ def parse_vless(uri):
 
             }
 
-
-
         if security=="reality":
-
 
             out["tls"]["reality"]={
 
@@ -232,15 +214,10 @@ def parse_vless(uri):
 
             }
 
-
-
-
         network=q.get(
             "type",
             [""]
         )[0]
-
-
 
         if network=="ws":
 
@@ -256,7 +233,6 @@ def parse_vless(uri):
 
             }
 
-
         elif network=="grpc":
 
             out["transport"]={
@@ -271,20 +247,13 @@ def parse_vless(uri):
 
             }
 
-
         return out
-
 
     except:
 
         return None
 
-
-
-
-
 # ================= TROJAN =================
-
 
 def parse_trojan(uri):
 
@@ -296,22 +265,11 @@ def parse_trojan(uri):
             u.query
         )
 
-
         host=u.hostname
-
-
-        if ":" in host:
-
-            server="["+host+"]"
-
-        else:
 
             server=host
 
-
-
         return {
-
 
             "type":"trojan",
 
@@ -322,7 +280,6 @@ def parse_trojan(uri):
             "server_port":u.port,
 
             "password":u.username,
-
 
             "tls":{
 
@@ -355,51 +312,39 @@ def parse_ss(uri):
 
     try:
 
-        data=uri[5:]
-
-        data=data.split("#")[0]
+        data=uri[5:].split("#")[0]
 
 
-        if "@" not in data:
+        if "@" in data:
+
+            user,host=data.rsplit("@",1)
+
+            if ":" not in user:
+
+                user=b64decode(user)
+
+        else:
 
             return None
 
 
-
-        user,host=data.rsplit(
-            "@",
-            1
-        )
+        if ":" not in user:
+            return None
 
 
-        raw=b64decode(user)
+        method,password=user.split(":",1)
 
 
-        method,password=raw.split(
-            ":",
-            1
-        )
-
-
-        server,port=host.rsplit(
-            ":",
-            1
-        )
+        server,port=host.rsplit(":",1)
 
 
         return {
 
-
             "type":"shadowsocks",
-
             "tag":"node",
-
             "server":server,
-
             "server_port":int(port),
-
             "method":method,
-
             "password":password
 
         }
@@ -408,10 +353,6 @@ def parse_ss(uri):
     except:
 
         return None
-
-
-
-
 
 # ================= HY2 =================
 
@@ -762,7 +703,7 @@ random.shuffle(nodes)
 
 # 测试更多节点
 
-nodes=nodes[:2000]
+nodes=nodes[:800]
 
 
 print(
@@ -774,7 +715,7 @@ print(
 
 with concurrent.futures.ThreadPoolExecutor(
 
-    max_workers=15
+    max_workers=25
 
 ) as pool:
 
