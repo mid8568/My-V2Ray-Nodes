@@ -1,33 +1,17 @@
 #!/usr/bin/env python3
 
-import concurrent.futures
 import os
 import random
 
-
-INPUT="nodes_all.txt"
-OUTPUT="alive_nodes.txt"
-
-
-def check(node):
-
-    # 不做TCP检测
-    # 直接交给sing-box
-
-    return node
-
-
+INPUT = "nodes_all.txt"
+OUTPUT = "alive_nodes.txt"
 
 if not os.path.exists(INPUT):
-
     print("缺少 nodes_all.txt")
     exit(1)
 
-
-
-with open(INPUT,errors="ignore") as f:
-
-    nodes=list(
+with open(INPUT, errors="ignore") as f:
+    nodes = list(
         set(
             x.strip()
             for x in f
@@ -35,38 +19,16 @@ with open(INPUT,errors="ignore") as f:
         )
     )
 
+print("抓取到的总节点数:", len(nodes))
 
-print(
-    "总节点:",
-    len(nodes)
-)
-
-
+# 随机打乱
 random.shuffle(nodes)
 
+# 扩大筛选池，从海量节点中随机抽取 30000 个送去深度测速
+nodes = nodes[:30000]
 
-
-# 控制数量
-# 不要一次测试24万
-
-nodes=nodes[:5000]
-
-
-
-with open(
-    OUTPUT,
-    "w"
-) as f:
-
-
+with open(OUTPUT, "w") as f:
     for n in nodes:
+        f.write(n + "\n")
 
-        f.write(
-            n+"\n"
-        )
-
-
-print(
-    "送测试:",
-    len(nodes)
-)
+print("送入下一步测速的节点数:", len(nodes))
