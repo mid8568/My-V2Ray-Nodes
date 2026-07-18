@@ -1,244 +1,776 @@
 #!/usr/bin/env python3
 
-import requests
-import base64
-import os
+import json
 import time
+import base64
+import random
+import tempfile
+import subprocess
+import concurrent.futures
+import os
+import threading
+import socket
+
+from urllib.parse import urlparse, parse_qs
 
 
-OUTPUT="nodes_all.txt"
+INPUT="nodes_all.txt"
+
+OUTPUT="result.txt"
 
 
-SOURCES=[
-
-    "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/Eternity.txt",
-
-    "https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.txt",
-
-    "https://raw.githubusercontent.com/youfoundamin/V2rayCollector/main/sub.txt"
-
-]
+TEST_URL="https://www.gstatic.com/generate_204"
 
 
-HEADERS={
+MAX_WORKERS=30
 
-    "User-Agent":
-    "Mozilla/5.0"
 
-}
+write_lock=threading.Lock()
 
 
 
-def decode_base64(text):
+open(
+    OUTPUT,
+    "w"
+).close()
+
+
+
+# =========================
+# TCP检测
+# =========================
+
+
+def tcp_check(host,port):
 
     try:
 
-        text=text.strip()
+        s=socket.socket()
 
-        text=text.replace(
-            "\n",
-            ""
+        s.settimeout(2)
+
+        s.connect(
+            (
+                host,
+                port
+            )
         )
 
+        s.close()
 
-        text += "=" * (
-            4-len(text)%4
-        )
-
-
-        data=base64.b64decode(
-            text
-        ).decode(
-            errors="ignore"
-        )
-
-
-        return data
+        return True
 
 
     except:
 
-        return ""
+        return False
 
 
 
 
 
-def extract_nodes(text):
+# =========================
+# VMESS
+# =========================
 
 
-    nodes=set()
+def parse_vmess(uri):
+
+    try:
+
+        raw=uri.replace(
+            "vmess://",
+            ""
+        )
 
 
-    for line in text.splitlines():
+        raw += "=" * (
+            4-len(raw)%4
+        )
 
 
-        line=line.strip()
+        obj=json.loads(
+
+            base64.b64decode(
+                raw
+            ).decode()
+
+        )
 
 
-        if not line:
-
-            continue
+        out={
 
 
+            "type":"vmess",
 
-        if "://" in line:
+            "tag":"proxy",
 
-
-            nodes.add(line)
-
-
-
-    return nodes
+            "server":
+            obj["add"],
 
 
+            "server_port":
+            int(obj["port"]),
+
+
+            "uuid":
+            obj["id"],
+
+
+            "security":
+            obj.get(
+                "scy",
+                "auto"
+            )
+
+        }
+
+
+
+        if obj.get("net")=="ws":
+
+            out["transport"]={
+
+                "type":"ws",
+
+                "path":
+                obj.get(
+                    "path",
+                    "/"
+                )
+
+            }
+
+
+
+        if obj.get("tls")=="tls":
+
+            out["tls"]={
+
+                "enabled":True,
+
+                "server_name":
+                obj.get(
+                    "sni",
+                    obj["add"]
+                )
+
+            }
+
+
+
+        return out
+
+
+    except:
+
+        return None
 
 
 
 
-all_nodes=set()
+
+# =========================
+# VLESS
+# =========================
+
+
+def parse_vless(uri):
+
+    try:
+
+        u=urlparse(uri)
+
+        q=parse_qs(
+            u.query
+        )
+
+
+        host=u.hostname
+
+
+        if not host:
+
+            return None
 
 
 
-for url in SOURCES:
+        out={
+
+
+            "type":"vless",
+
+            "tag":"proxy",
+
+            "server":host,
+
+            "server_port":
+            u.port,
+
+
+            "uuid":
+            u.username,
+
+
+            "encryption":
+            "none"
+
+
+        }
+
+
+
+        security=q.get(
+            "security",
+            [""]
+        )[0]
+
+
+
+        if security in (
+            "tls",
+            "reality"
+        ):
+
+
+            out["tls"]={
+
+                "enabled":True,
+
+                "server_name":
+                q.get(
+                    "sni",
+                    [host]
+                )[0]
+
+            }
+
+
+
+        if security=="reality":
+
+
+            pbk=q.get(
+                "pbk",
+                [""]
+            )[0]
+
+            if not pbk:
+
+                return None
+
+
+
+            out["tls"]["reality"]={
+
+                "enabled":True,
+
+                "public_key":pbk,
+
+                "short_id":
+                q.get(
+                    "sid",
+                    [""]
+                )[0]
+
+            }
+
+
+
+            out["tls"]["utls"]={
+
+                "enabled":True,
+
+                "fingerprint":
+                q.get(
+                    "fp",
+                    ["chrome"]
+                )[0]
+
+            }
+
+
+
+
+        net=q.get(
+            "type",
+            [""]
+        )[0]
+
+
+
+        if net=="ws":
+
+
+            out["transport"]={
+
+                "type":"ws",
+
+                "path":
+                q.get(
+                    "path",
+                    ["/"]
+                )[0]
+
+            }
+
+
+
+        elif net=="grpc":
+
+
+            out["transport"]={
+
+                "type":"grpc",
+
+                "service_name":
+                q.get(
+                    "serviceName",
+                    [""]
+                )[0]
+
+            }
+
+
+
+
+        return out
+
+
+
+    except:
+
+        return None
+
+
+
+
+
+# =========================
+# TROJAN
+# =========================
+
+
+def parse_trojan(uri):
+
+    try:
+
+
+        u=urlparse(uri)
+
+        q=parse_qs(
+            u.query
+        )
+
+
+        return {
+
+
+            "type":"trojan",
+
+            "tag":"proxy",
+
+            "server":
+            u.hostname,
+
+
+            "server_port":
+            u.port,
+
+
+            "password":
+            u.username,
+
+
+            "tls":{
+
+                "enabled":True,
+
+                "server_name":
+                q.get(
+                    "sni",
+                    [u.hostname]
+                )[0]
+
+            }
+
+        }
+
+
+    except:
+
+        return None
+
+
+
+
+
+# =========================
+# parser
+# =========================
+
+
+def parse(uri):
+
+
+    if uri.startswith(
+        "vmess://"
+    ):
+
+        return parse_vmess(uri)
+
+
+    if uri.startswith(
+        "vless://"
+    ):
+
+        return parse_vless(uri)
+
+
+    if uri.startswith(
+        "trojan://"
+    ):
+
+        return parse_trojan(uri)
+
+
+    return None
+
+
+
+
+
+# =========================
+# sing-box config
+# =========================
+
+
+def make_config(out,port):
+
+
+    return {
+
+
+        "log":{
+
+            "level":
+            "error"
+
+        },
+
+
+        "inbounds":[
+
+            {
+
+                "type":
+                "mixed",
+
+                "listen":
+                "127.0.0.1",
+
+                "listen_port":
+                port
+
+            }
+
+        ],
+
+
+        "outbounds":[
+
+            out
+
+        ]
+
+    }
+
+
+
+
+
+def wait_port(port):
+
+
+    for i in range(30):
+
+        if tcp_check(
+            "127.0.0.1",
+            port
+        ):
+
+            return True
+
+
+        time.sleep(
+            0.2
+        )
+
+
+    return False
+
+
+
+
+
+# =========================
+# test
+# =========================
+
+
+def test_node(uri):
+
+
+    out=parse(uri)
+
+
+    if not out:
+
+        return
+
+
+
+    if not tcp_check(
+        out["server"],
+        out["server_port"]
+    ):
+
+        return
+
+
+
+    port=random.randint(
+        20000,
+        50000
+    )
+
+
+
+    cfg=tempfile.mktemp(
+        suffix=".json"
+    )
+
+
+
+    p=None
 
 
     try:
 
 
-        print(
-            "获取:",
-            url
-        )
+        with open(
+            cfg,
+            "w"
+        ) as f:
 
 
-        r=requests.get(
-
-            url,
-
-            headers=HEADERS,
-
-            timeout=30
-
-        )
-
-
-        text=r.text
-
-
-
-        nodes=extract_nodes(
-            text
-        )
-
-
-
-        if len(nodes)==0:
-
-
-            text=decode_base64(
-                text
-            )
-
-
-            nodes=extract_nodes(
-                text
+            json.dump(
+                make_config(
+                    out,
+                    port
+                ),
+                f
             )
 
 
 
-        print(
-            "发现:",
-            len(nodes)
+        p=subprocess.Popen(
+
+            [
+
+                "./sing-box",
+
+                "run",
+
+                "-c",
+
+                cfg
+
+            ],
+
+            stdout=subprocess.DEVNULL,
+
+            stderr=subprocess.DEVNULL
+
+        )
+
+
+
+        if not wait_port(port):
+
+            return
+
+
+
+
+        start=time.time()
+
+
+
+        r=subprocess.run(
+
+            [
+
+                "curl",
+
+                "-x",
+
+                f"socks5h://127.0.0.1:{port}",
+
+                "-m",
+
+                "10",
+
+                "-s",
+
+                "-o",
+
+                "/dev/null",
+
+                "-w",
+
+                "%{{http_code}}",
+
+                TEST_URL
+
+            ],
+
+            capture_output=True,
+
+            timeout=15
+
         )
 
 
 
-        all_nodes.update(
-            nodes
-        )
+        delay=int(
 
-
-
-    except Exception as e:
-
-
-        print(
-            "失败:",
-            str(e)
-        )
-
-
-
-
-
-# 最终清理
-
-
-clean=set()
-
-
-
-for n in all_nodes:
-
-
-    n=n.strip()
-
-
-    if len(n)<20:
-
-        continue
-
-
-
-    if n.startswith(
-
-        (
-            "vmess://",
-            "vless://",
-            "trojan://",
-            "ss://",
-            "hy2://",
-            "hysteria2://"
+            (time.time()-start)*1000
 
         )
 
-    ):
-
-        clean.add(n)
 
 
+        code=r.stdout.decode().strip()
 
 
-print()
+
+        if code in (
+
+            "200",
+
+            "204"
+
+        ):
+
+
+            print(
+                "OK",
+                delay,
+                uri[:50]
+            )
+
+
+
+            with write_lock:
+
+
+                with open(
+                    OUTPUT,
+                    "a"
+                ) as f:
+
+
+                    f.write(
+
+                        f"{delay}ms {uri}\n"
+
+                    )
+
+
+
+
+    except:
+
+        pass
+
+
+
+    finally:
+
+
+        if p:
+
+            try:
+
+                p.kill()
+
+            except:
+
+                pass
+
+
+
+        try:
+
+            os.remove(cfg)
+
+        except:
+
+            pass
+
+
+
+
+
+# =========================
+# main
+# =========================
+
+
+with open(
+    INPUT,
+    errors="ignore"
+) as f:
+
+
+    nodes=list(
+        set(
+            x.strip()
+            for x in f
+            if x.strip()
+        )
+    )
+
+
 
 print(
-    "最终节点:",
-    len(clean)
+    "节点:",
+    len(nodes)
 )
 
 
 
-
-with open(
-
-    OUTPUT,
-
-    "w",
-
-    encoding="utf-8"
-
-) as f:
+random.shuffle(nodes)
 
 
-    for n in sorted(clean):
 
-        f.write(
-            n+"\n"
+with concurrent.futures.ThreadPoolExecutor(
+
+    max_workers=MAX_WORKERS
+
+) as pool:
+
+
+    list(
+        pool.map(
+            test_node,
+            nodes
         )
+    )
 
 
 
 print(
-    "保存完成"
+    "测速完成"
 )
