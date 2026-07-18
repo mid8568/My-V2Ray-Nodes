@@ -39,86 +39,63 @@ jobs:
       - name: Download Sources
         run: |
           > raw.txt
-          > nodes_all.txt
           sources=(
-                   "https://www.xrayvip.com/free.txt"
-              
-                   "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
-
-                   "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt"
-                    )
+            "https://www.xrayvip.com/free.txt"
+            "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
+            "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt"
+          )
           for url in "${sources[@]}"; do
+            # 【修改点】去掉最后的 grep 过滤，把下载的所有原始数据原封不动存进 raw.txt，由下一步 Python 统一提取
             curl -L \
                 --connect-timeout 10 \
                 --max-time 60 \
                 --retry 3 \
-                "$url" | tee -a raw.txt | grep -E "^(vmess|vless|trojan)://" >> nodes_all.txt || true
+                "$url" >> raw.txt || true
+            echo "" >> raw.txt # 加个空行防粘连
           done
           
       - name: Extract
         run: |
           python3 <<'PY'
-
           import re
+          import base64
 
-          data=open(
-              "raw.txt",
-              errors="ignore"
-          ).read()
+          # 尝试读取并自动处理可能存在的 Base64 订阅源
+          raw_content = open("raw.txt", errors="ignore").read()
+          
+          # 如果整个文本看起来像 Base64 密文，先尝试整体解密一次
+          try:
+              # 补齐 Base64 填充符号
+              padded = raw_content.strip() + "=" * (4 - len(raw_content.strip()) % 4)
+              decoded = base64.b64decode(padded).decode(errors="ignore")
+              raw_content += "\n" + decoded
+          except:
+              pass
 
+          # 更加宽容的正则：不限制行首，只要包含协议就抓取
+          patterns = [
+              r'vmess://\S+',
+              r'vless://\S+',
+              r'trojan://\S+',
+          ]
 
-          patterns=[
-                   r'vmess://\S+',
-                   r'vless://\S+',
-                   r'trojan://\S+',
-                   ]
-
-
-          nodes=[]
-
-
+          nodes = []
           for p in patterns:
+              nodes += re.findall(p, raw_content)
 
-              nodes += re.findall(
-                  p,
-                  data
-              )
-
-
-          clean=[]
-
-
+          clean = []
           for n in nodes:
-
-              n=n.replace(
-                  "\r",
-                  ""
-              )
-
-              n=n.replace(
-                  "&amp;",
-                  "&"
-              )
-
+              n = n.strip().replace("\r", "")
+              # 兼容可能被网页 HTML 转义过的 & 符号
+              if "&amp;" in n:
+                  n = n.replace("&amp;", "&")
               clean.append(n)
 
+          # 去重
+          clean = list(dict.fromkeys(clean))
 
-          clean=list(dict.fromkeys(clean))
-
-          open(
-              "nodes_all.txt",
-              "w"
-          ).write(
-              "\n".join(clean)
-          )
-
-
-          print(
-              "节点数量:",
-              len(clean)
-          )
-
-
+          open("nodes_all.txt", "w").write("\n".join(clean))
+          print("最终抓取去重后的总节点数量:", len(clean))
           PY
 
       - name: TCP Fast Filter
