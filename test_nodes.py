@@ -126,7 +126,15 @@ def parse_vless(uri):
             [""]
         )[0]
 
+           flow=q.get(
+            "flow",
+               [""]
+           )[0]
 
+
+if flow:
+
+    out["flow"]=flow
 
         if security in (
             "tls",
