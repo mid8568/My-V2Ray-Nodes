@@ -12,18 +12,17 @@ import socket
 import base64
 from urllib.parse import urlparse, parse_qs
 
-INPUT = "nodes_all.txt" # 对应你上一步抓取的文件名
+INPUT = "alive_nodes.txt"
 OUTPUT = "result.txt"
 
+# 严格使用 204 专用地址
 TEST_URLS = [
     "https://www.gstatic.com/generate_204",
-    "https://www.google.com/generate_204",
     "https://cp.cloudflare.com/generate_204"
 ]
 
 write_lock = threading.Lock()
 
-# 初始化清空输出
 with open(OUTPUT, "w") as f:
     pass
 
@@ -39,10 +38,6 @@ def get_port():
     port = s.getsockname()[1]
     s.close()
     return port
-
-# =====================
-# 协议解析优化
-# =====================
 
 def parse_vless(uri):
     try:
@@ -124,7 +119,6 @@ def parse_trojan(uri):
                 "server_name": q.get("sni", [host])[0]
             }
         }
-        # 补全 Trojan 的传输层协议参数
         network = q.get("type", [""])[0]
         if network == "ws":
             out["transport"] = {"type": "ws", "path": q.get("path", ["/"])[0]}
@@ -164,11 +158,11 @@ def wait_port(port):
             time.sleep(0.2)
     return False
 
-# =====================
-# 核心测试流程修复
-# =====================
-
 def test_node(node):
+    # 过滤明显的诱饵域名，从源头上直接拉黑
+    if "rooster465.autos" in node:
+        return
+
     outbound = parse(node)
     if not outbound: return
 
@@ -191,25 +185,24 @@ def test_node(node):
         start = time.time()
         url = random.choice(TEST_URLS)
 
-        # 改用 http:// 本地解析，提高连通判定率
+        # 核心修复点：严格限制状态码必须返回 204，并且只允许成功连接，防止网页劫持误判
         r = subprocess.run(
             [
-                "curl", "-4", "--connect-timeout", "6", "--max-time", "10",
+                "curl", "-4", "--connect-timeout", "5", "--max-time", "8",
                 "-A", "Mozilla/5.0",
                 "-x", f"http://127.0.0.1:{port}",
                 "-s", "-o", "/dev/null", "-w", "%{http_code}", url
             ],
-            capture_output=True, timeout=12
+            capture_output=True, timeout=10
         )
 
         delay = int((time.time() - start) * 1000)
         code = r.stdout.decode().strip()
 
-        if code in ("200", "204", "301", "302"):
-            print(f"有效节点: {delay}ms")
+        # 诱饵节点通常返回 200，真正的 204 才是能通外网的核心节点
+        if code == "204":
             with write_lock:
                 with open(OUTPUT, "a") as f:
-                    # 改用 | 分隔符，完美兼容你 Actions 里的管道切分
                     f.write(f"{delay}|{node}\n")
     except:
         pass
@@ -221,10 +214,6 @@ def test_node(node):
             os.remove(cfg)
         except: pass
 
-# =====================
-# 主函数
-# =====================
-
 if __name__ == "__main__":
     if not os.path.exists(INPUT):
         print(f"缺少 {INPUT}")
@@ -233,17 +222,16 @@ if __name__ == "__main__":
     with open(INPUT, errors="ignore") as f:
         nodes = list(set(x.strip() for x in f if x.strip()))
 
-    print("总节点数:", len(nodes))
+    print("待测试总数:", len(nodes))
     random.shuffle(nodes)
     
-    # 扩大测试池，从 40 万里面挑 3000 个测，增大撞大运几率
-    nodes = nodes[:3000]
+    # 增加实际测试量，扩大几率
+    nodes = nodes[:25000]
     print("实际测试池:", len(nodes))
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=30) as pool:
         list(pool.map(test_node, nodes))
 
-    # 结果排序
     if os.path.exists(OUTPUT):
         with open(OUTPUT, errors="ignore") as f:
             lines = f.readlines()
