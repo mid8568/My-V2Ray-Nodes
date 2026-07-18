@@ -4,7 +4,7 @@ from urllib.parse import urlparse, parse_qs
 
 INPUT = "alive_nodes.txt"
 OUTPUT = "result.txt"
-TEST_URLS = ["https://www.google.com/generate_204", "https://cp.cloudflare.com/generate_204", "https://www.google.com/generate_204"]
+TEST_URLS = ["https://www.gstatic.com/generate_204", "https://cp.cloudflare.com/generate_204"]
 write_lock = threading.Lock()
 
 # 清空结果文件
@@ -110,21 +110,41 @@ def test_node(node):
         start = time.time()
         
         r = subprocess.run([
-            "curl", "-4", "--connect-timeout", "2", "--max-time", "4", 
-            "-A", "Mozilla/5.0", "-x", f"http://127.0.0.1:{port}", 
-            "-s", "-o", "/dev/null", "-w", "%{http_code}", random.choice(TEST_URLS)
-        ], capture_output=True, timeout=6)
-        
+            "curl", "-4",
+            "--connect-timeout", "5",
+            "--max-time", "10",
+            "-A", "Mozilla/5.0",
+            "-x", f"http://127.0.0.1:{port}",
+            "-s",
+            "-o", "/dev/null",
+            "-w", "%{http_code} %{time_total}",
+            random.choice(TEST_URLS)
+        ], capture_output=True, timeout=15)
+
+
         if r.returncode == 0:
-            http_code = r.stdout.decode().strip()
-            if http_code in ["200", "204","301","302"]:
-                delay = int((time.time() - start) * 1000)
-                with write_lock:
-                    with open(OUTPUT, "a") as f: f.write(f"{delay}|{node}\n")
+
+            result = r.stdout.decode().strip().split()
+
+            if len(result) >= 2:
+
+                http_code = result[0]
+                cost = float(result[1])
+
+
+                # 真实速度筛选
+                if http_code in ["200", "204"] and cost < 8:
+
+                    delay = int(cost * 1000)
+
+                    with write_lock:
+                        with open(OUTPUT, "a") as f:
+                            f.write(f"{delay}|{node}\n")
                         
     except Exception as e:
-        print("失败:",e)
-    
+        with write_lock:
+            with open("error.log","a") as f:
+                f.write(str(e)+"\n")
     finally:
         if p: p.kill()
         if os.path.exists(cfg): os.remove(cfg)
@@ -133,5 +153,5 @@ if __name__ == "__main__":
     if not os.path.exists(INPUT): exit(1)
     with open(INPUT) as f: nodes = list(set(x.strip() for x in f))
     random.shuffle(nodes)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=150) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=80) as pool:
         list(pool.map(test_node, nodes[:15000]))
