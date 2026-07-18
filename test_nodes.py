@@ -874,11 +874,7 @@ def test_node(uri):
     try:
 
 
-        with open(
-            cfg,
-            "w"
-        ) as f:
-
+        with open(cfg,"w") as f:
 
             json.dump(
                 make_config(
@@ -905,13 +901,14 @@ def test_node(uri):
 
         )
 
-          time.sleep(0.5)
 
-          if p.poll() is not None:
-          print("sing-box立即退出")
-          return
+        time.sleep(0.5)
 
-        if not wait_port(port):
+
+        # sing-box启动检查
+
+        if p.poll() is not None:
+
 
             try:
 
@@ -921,28 +918,52 @@ def test_node(uri):
 
             except:
 
-                err="unknown error"
+                err=""
 
 
             print(
-                "sing-box错误:",
-                err[:300]
+                "sing-box启动失败:",
+                err[:200]
             )
 
             return
 
 
+
+        if not wait_port(port):
+
+
+            try:
+
+                err=p.stderr.read().decode(
+                    errors="ignore"
+                )
+
+            except:
+
+                err=""
+
+
+            print(
+                "sing-box端口失败:",
+                err[:200]
+            )
+
+            return
+
+
+
         start=time.time()
 
 
-        url=random.choice(TEST_URLS)
-
+        url=random.choice(
+            TEST_URLS
+        )
 
 
         r=subprocess.run(
 
             [
-
                 "curl",
 
                 "-4",
@@ -974,9 +995,7 @@ def test_node(uri):
                 "%{http_code}",
 
                 url
-
             ],
-
 
             capture_output=True,
 
@@ -1002,21 +1021,20 @@ def test_node(uri):
         if code in (
 
             "200",
+
             "204",
+
             "301",
+
             "302"
 
         ):
 
 
             print(
-
                 "OK",
-
                 delay,
-
                 uri[:60]
-
             )
 
 
@@ -1024,18 +1042,13 @@ def test_node(uri):
 
 
                 with open(
-
                     OUTPUT,
-
                     "a"
-
                 ) as f:
 
 
                     f.write(
-
                         f"{delay}ms {uri}\n"
-
                     )
 
 
@@ -1047,6 +1060,7 @@ def test_node(uri):
             "错误:",
             str(e)[:100]
         )
+
 
     finally:
 
@@ -1070,7 +1084,6 @@ def test_node(uri):
         except:
 
             pass
-
 
 
 
