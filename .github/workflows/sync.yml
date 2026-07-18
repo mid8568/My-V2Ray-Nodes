@@ -41,19 +41,19 @@ jobs:
           > raw.txt
           > nodes_all.txt
           sources=(
-                  "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date +%Y%m%d)1"
-                  "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date +%Y%m%d)2"
-                  "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date -d yesterday +%Y%m%d)1"
-                  "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date -d yesterday +%Y%m%d)2"
-                  "https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2"
-                  "https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/v2ray.txt"
-                  "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity.txt"
-                  "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt"
-                  "https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.txt"
-                  "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
-                  "https://raw.githubusercontent.com/barabama/FreeNodes/main/nodes.txt"
-                  "https://raw.githubusercontent.com/youfoundamin/V2Hub/main/nodes.txt"
-                         )
+            # 每日高频更新的独立活跃源
+            "https://raw.githubusercontent.com/w1770946466/Auto_Proxy/main/Long_term_node_1.txt"
+            "https://raw.githubusercontent.com/tuji-source/Tuji/main/v2ray.txt"
+            "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
+            "https://raw.githubusercontent.com/mianfeifq/share/main/data.txt"
+            "https://raw.githubusercontent.com/AzadNetCH/Clash/master/V2Ray.txt"
+            
+            # 保留原列表中质量尚可的活跃源
+            "https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2"
+            "https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/v2ray.txt"
+            "https://raw.githubusercontent.com/youfoundamin/V2Hub/main/nodes.txt"
+            "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
+          )
           for url in "${sources[@]}"; do
             curl -L \
                 --connect-timeout 10 \
@@ -186,7 +186,7 @@ jobs:
 
           # 修复：利用管道符号 '|' 进行精准排序并提取纯节点信息
           sort -t '|' -k1,1n result.txt \
-          | head -150 \
+          | head -300 \
           | cut -d '|' -f2- \
           > nodes.txt
 
