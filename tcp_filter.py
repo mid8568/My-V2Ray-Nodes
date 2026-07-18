@@ -66,7 +66,7 @@ def check(node):
 
         s=socket.socket()
 
-        s.settimeout(2)
+        s.settimeout(1)
 
 
         s.connect(
@@ -132,7 +132,7 @@ alive=[]
 
 with concurrent.futures.ThreadPoolExecutor(
 
-    max_workers=300
+    max_workers=500
 
 ) as pool:
 
