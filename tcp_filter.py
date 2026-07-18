@@ -1,99 +1,31 @@
 #!/usr/bin/env python3
-#!/usr/bin/env python3
 
-import socket
 import concurrent.futures
-import random
 import os
+import random
 
 
 INPUT="nodes_all.txt"
-
 OUTPUT="alive_nodes.txt"
-
-
-def get_host_port(node):
-
-    try:
-
-        from urllib.parse import urlparse
-
-        u=urlparse(node)
-
-        host=u.hostname
-
-        port=u.port
-
-
-        if host and port:
-
-            return host,port
-
-
-    except:
-
-        return None
-
-
 
 
 def check(node):
 
-    hp=get_host_port(node)
+    # 不做TCP检测
+    # 直接交给sing-box
 
-
-    if not hp:
-
-        return None
-
-
-    host,port=hp
-
-
-    try:
-
-        s=socket.socket()
-
-        s.settimeout(1)
-
-
-        s.connect(
-            (
-                host,
-                port
-            )
-        )
-
-
-        s.close()
-
-
-        return node
-
-
-    except:
-
-        return None
-
-
+    return node
 
 
 
 if not os.path.exists(INPUT):
 
-    print(
-        "缺少 nodes_all.txt"
-    )
-
-    exit()
+    print("缺少 nodes_all.txt")
+    exit(1)
 
 
 
-with open(
-    INPUT,
-    errors="ignore"
-) as f:
-
+with open(INPUT,errors="ignore") as f:
 
     nodes=list(
         set(
@@ -114,34 +46,10 @@ random.shuffle(nodes)
 
 
 
-alive=[]
+# 控制数量
+# 不要一次测试24万
 
-
-
-with concurrent.futures.ThreadPoolExecutor(
-
-    max_workers=500
-
-) as pool:
-
-
-    for r in pool.map(
-        check,
-        nodes
-    ):
-
-
-        if r:
-
-            alive.append(r)
-
-
-            print(
-                "OPEN",
-                len(alive),
-                r[:60]
-            )
-
+nodes=nodes[:5000]
 
 
 
@@ -151,17 +59,14 @@ with open(
 ) as f:
 
 
-    for x in alive:
+    for n in nodes:
 
         f.write(
-            x+"\n"
+            n+"\n"
         )
 
 
-
-print()
-
 print(
-    "存活节点:",
-    len(alive)
+    "送测试:",
+    len(nodes)
 )
