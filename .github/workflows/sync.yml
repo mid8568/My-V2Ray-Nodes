@@ -75,9 +75,6 @@ jobs:
                    r'vmess://\S+',
                    r'vless://\S+',
                    r'trojan://\S+',
-                   r'ss://\S+',
-                   r'hy2://\S+',
-                   r'hysteria2://\S+',
                    ]
 
 
