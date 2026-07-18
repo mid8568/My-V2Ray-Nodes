@@ -5,7 +5,7 @@ import random
 INPUT = "nodes_all.txt"
 OUTPUT = "alive_nodes.txt"
 # 添加黑名单，直接从源头过滤已知诱饵
-
+BLACKLIST = []
 if not os.path.exists(INPUT):
     print("缺少 nodes_all.txt")
     exit(1)
