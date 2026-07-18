@@ -4,7 +4,8 @@ from urllib.parse import urlparse, parse_qs
 
 INPUT = "alive_nodes.txt"
 OUTPUT = "result.txt"
-TEST_URLS = ["https://www.gstatic.com/generate_204", "https://cp.cloudflare.com/generate_204"]
+# 【修改 1】删掉对国内极不准的 Cloudflare 节点，换用对国内出海测试最准的 gstatic 或 百度
+TEST_URLS = ["https://www.gstatic.com/generate_204"] 
 write_lock = threading.Lock()
 
 # 清空结果文件
@@ -107,40 +108,33 @@ def test_node(node):
         p = subprocess.Popen(["./sing-box", "run", "-c", cfg], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         
         if not wait_port(port): return
-        start = time.time()
         
+        # 【修改 2】适度放宽超时时间，确保免费节点不会因为 GitHub 那一瞬间的网络波动被误杀
         r = subprocess.run([
             "curl", "-4",
-            "--connect-timeout", "5",
-            "--max-time", "10",
+            "--connect-timeout", "8",
+            "--max-time", "15",
             "-A", "Mozilla/5.0",
             "-x", f"http://127.0.0.1:{port}",
             "-s",
             "-o", "/dev/null",
             "-w", "%{http_code} %{time_total}",
             random.choice(TEST_URLS)
-        ], capture_output=True, timeout=15)
-
+        ], capture_output=True, timeout=20)
 
         if r.returncode == 0:
-
             result = r.stdout.decode().strip().split()
-
             if len(result) >= 2:
-
                 http_code = result[0]
                 cost = float(result[1])
 
-
-                # 真实速度筛选
-                if http_code in ["200", "204"] and cost < 8:
-
+                # 【修改 3】放宽筛选门槛：只要响应是 200/204 且耗时小于 12 秒都放行，让 v2rayN 去做最终测速
+                if http_code in ["200", "204"] and cost < 12:
                     delay = int(cost * 1000)
-
                     with write_lock:
                         with open(OUTPUT, "a") as f:
                             f.write(f"{delay}|{node}\n")
-                        
+                            
     except Exception as e:
         with write_lock:
             with open("error.log","a") as f:
@@ -153,5 +147,6 @@ if __name__ == "__main__":
     if not os.path.exists(INPUT): exit(1)
     with open(INPUT) as f: nodes = list(set(x.strip() for x in f))
     random.shuffle(nodes)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=80) as pool:
+    # 【修改 4】GitHub 环境下高并发测试容易导致海外服务器拉黑请求，把线程数从 80 降到 40，更加稳定
+    with concurrent.futures.ThreadPoolExecutor(max_workers=40) as pool:
         list(pool.map(test_node, nodes[:15000]))
