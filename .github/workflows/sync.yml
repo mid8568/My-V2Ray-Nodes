@@ -72,17 +72,13 @@ jobs:
 
 
           patterns=[
-              r'vmess://[^\s#]+',
-
-              r'vless://[^\s#]+',
-
-              r'trojan://[^\s#]+',
-              
-               r'ss://[^\s#]+',
-               r'hy2://[^\s#]+',
-               r'hysteria2://[^\s#]+',
-
-            ]
+                   r'vmess://\S+',
+                   r'vless://\S+',
+                   r'trojan://\S+',
+                   r'ss://\S+',
+                   r'hy2://\S+',
+                   r'hysteria2://\S+',
+                   ]
 
 
           nodes=[]
@@ -114,10 +110,7 @@ jobs:
               clean.append(n)
 
 
-          clean=list(
-              set(clean)
-          )
-
+          clean=list(dict.fromkeys(clean))
 
           open(
               "nodes_all.txt",
