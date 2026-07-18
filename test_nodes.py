@@ -124,17 +124,17 @@ def parse_vless(uri):
         security=q.get(
             "security",
             [""]
-        )[0]
+         )[0]
 
            flow=q.get(
-            "flow",
+               "flow",
                [""]
            )[0]
 
 
-if flow:
+           if flow:
 
-    out["flow"]=flow
+               out["flow"]=flow
 
         if security in (
             "tls",
@@ -805,7 +805,7 @@ random.shuffle(nodes)
 
 # 最多测试300个
 
-nodes=nodes[:500]
+nodes=nodes[:2000]
 
 
 
