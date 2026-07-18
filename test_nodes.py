@@ -123,7 +123,7 @@ def test_node(node):
                     with open(OUTPUT, "a") as f: f.write(f"{delay}|{node}\n")
                         
     except Exception as e:
-    print("失败:",e)
+        print("失败:",e)
     
     finally:
         if p: p.kill()
