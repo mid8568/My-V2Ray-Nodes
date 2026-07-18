@@ -1,34 +1,33 @@
 #!/usr/bin/env python3
-
 import os
 import random
 
 INPUT = "nodes_all.txt"
 OUTPUT = "alive_nodes.txt"
+# 添加黑名单，直接从源头过滤已知诱饵
+BLACKLIST = ["rooster465.autos", "gossipglove.com", "ignitelimit.com"]
 
 if not os.path.exists(INPUT):
     print("缺少 nodes_all.txt")
     exit(1)
 
 with open(INPUT, errors="ignore") as f:
-    nodes = list(
-        set(
-            x.strip()
-            for x in f
-            if x.strip()
-        )
-    )
+    raw_nodes = [x.strip() for x in f if x.strip()]
 
-print("抓取到的总节点数:", len(nodes))
+# 剔除黑名单节点并去重
+nodes = []
+for n in set(raw_nodes):
+    if not any(b in n for b in BLACKLIST):
+        nodes.append(n)
 
-# 随机打乱
+print(f"原始抓取: {len(raw_nodes)} | 过滤后: {len(nodes)}")
+
 random.shuffle(nodes)
-
-# 扩大筛选池，从海量节点中随机抽取 30000 个送去深度测速
-nodes = nodes[:30000]
+# 控制在 15000 个，减少测速开销
+nodes = nodes[:15000]
 
 with open(OUTPUT, "w") as f:
     for n in nodes:
         f.write(n + "\n")
 
-print("送入下一步测速的节点数:", len(nodes))
+print(f"送入测试: {len(nodes)}")
