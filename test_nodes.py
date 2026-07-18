@@ -111,13 +111,30 @@ def test_node(node):
     try:
         with open(cfg, "w") as f: json.dump(make_config(outbound, port), f)
         p = subprocess.Popen(["./sing-box", "run", "-c", cfg], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        if not wait_port(port): return
+    if not wait_port(port): return
         start = time.time()
-        r = subprocess.run(["curl", "-4", "--connect-timeout", "2", "--max-time", "4", "-A", "Mozilla/5.0", "-x", f"http://127.0.0.1:{port}", "-s", "-o", "/dev/null", "-w", "%{http_code}", random.choice(TEST_URLS)], capture_output=True, timeout=6)
-        if r.stdout.decode().strip() in ["200", "204", "301", "302"]:
-            delay = int((time.time() - start) * 1000)
-            with write_lock:
-                with open(OUTPUT, "a") as f: f.write(f"{delay}|{node}\n")
+        
+        # 1. 执行严格的 curl 测速请求
+             r = subprocess.run([
+            "curl", "-4", 
+            "--connect-timeout", "2", 
+            "--max-time", "4", 
+            "-A", "Mozilla/5.0", 
+            "-x", f"http://127.0.0.1:{port}", 
+            "-s", "-o", "/dev/null", 
+            "-w", "%{http_code}", 
+            random.choice(TEST_URLS)
+        ], capture_output=True, timeout=6)
+        
+        # 2. 只有当 curl 成功退出(returncode为0)且返回状态码为 200 或 204 时，才记录节点
+        if r.returncode == 0:
+            http_code = r.stdout.decode().strip()
+            if http_code in ["200", "204"]:
+                delay = int((time.time() - start) * 1000)
+                with write_lock:
+                    with open(OUTPUT, "a") as f: 
+                        f.write(f"{delay}|{node}\n")
+                        
     except: pass
     finally:
         if p: p.kill()
