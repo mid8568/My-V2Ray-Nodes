@@ -188,7 +188,25 @@ jobs:
 
               echo "result内容:"
               head -20 result.txt || true
+              
+      - name: Generate Nodes
+        run: |
+          if [ ! -s result.txt ]; then
+            echo "没有测速成功节点"
+            exit 1
+          fi
 
+          sort -n result.txt \
+          | head -100 \
+          | sed 's/^[0-9]*ms //' \
+          > nodes.txt
+
+
+          base64 -w0 nodes.txt > base64.txt
+
+
+          echo "生成节点数量:"
+          wc -l nodes.txt
       - name: Show Result
         run: |
               echo "测速成功数量:"
