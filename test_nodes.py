@@ -9,26 +9,45 @@ import concurrent.futures
 import os
 import threading
 import socket
+import base64
 
 from urllib.parse import urlparse, parse_qs
-import base64
 
 
 INPUT="alive_nodes.txt"
 
 OUTPUT="result.txt"
 
-TEST_URL="https://www.gstatic.com/generate_204"
+TEST_URL="https://cp.cloudflare.com/generate_204"
 
 
 write_lock=threading.Lock()
-
 
 
 open(
     OUTPUT,
     "w"
 ).close()
+
+
+
+# =====================
+# base64
+# =====================
+
+def b64decode(x):
+
+    try:
+
+        return base64.urlsafe_b64decode(
+            x+"==="
+        ).decode(
+            errors="ignore"
+        )
+
+    except:
+
+        return ""
 
 
 
@@ -56,24 +75,6 @@ def get_port():
 
 
 # =====================
-# base64
-# =====================
-
-def b64decode(x):
-
-    try:
-
-        return base64.urlsafe_b64decode(
-            x+"==="
-        ).decode()
-
-    except:
-
-        return ""
-
-
-
-# =====================
 # VLESS
 # =====================
 
@@ -96,7 +97,6 @@ def parse_vless(uri):
             return None
 
 
-
         out={
 
             "type":"vless",
@@ -109,7 +109,9 @@ def parse_vless(uri):
 
             "uuid":u.username,
 
-            "encryption":"none"
+            "encryption":"none",
+
+            "packet_encoding":"xudp"
 
         }
 
@@ -145,6 +147,18 @@ def parse_vless(uri):
         if security=="reality":
 
 
+            pbk=q.get(
+                "pbk",
+                [""]
+            )[0]
+
+
+            if not pbk:
+
+                return None
+
+
+
             out["tls"]["utls"]={
 
                 "enabled":True,
@@ -163,11 +177,7 @@ def parse_vless(uri):
 
                 "enabled":True,
 
-                "public_key":
-                q.get(
-                    "pbk",
-                    [""]
-                )[0],
+                "public_key":pbk,
 
                 "short_id":
                 q.get(
@@ -179,13 +189,14 @@ def parse_vless(uri):
 
 
 
-        net=q.get(
+        network=q.get(
             "type",
             [""]
         )[0]
 
 
-        if net=="ws":
+
+        if network=="ws":
 
 
             out["transport"]={
@@ -201,7 +212,8 @@ def parse_vless(uri):
             }
 
 
-        elif net=="grpc":
+
+        elif network=="grpc":
 
 
             out["transport"]={
@@ -222,13 +234,10 @@ def parse_vless(uri):
 
 
 
-    except:
+    except Exception:
+
 
         return None
-
-
-
-
 
 # =====================
 # VMESS
@@ -237,7 +246,6 @@ def parse_vless(uri):
 def parse_vmess(uri):
 
     try:
-
 
         raw=uri.replace(
             "vmess://",
@@ -274,6 +282,7 @@ def parse_vmess(uri):
         }
 
 
+
         if obj.get("net")=="ws":
 
 
@@ -290,6 +299,7 @@ def parse_vmess(uri):
             }
 
 
+
         if obj.get("tls")=="tls":
 
 
@@ -299,8 +309,11 @@ def parse_vmess(uri):
 
                 "server_name":
                 obj.get(
-                    "host",
-                    obj["add"]
+                    "sni",
+                    obj.get(
+                        "host",
+                        obj["add"]
+                    )
                 )
 
             }
@@ -312,7 +325,9 @@ def parse_vmess(uri):
 
     except:
 
+
         return None
+
 
 
 
@@ -320,7 +335,6 @@ def parse_vmess(uri):
 # =====================
 # Trojan
 # =====================
-
 
 def parse_trojan(uri):
 
@@ -333,8 +347,13 @@ def parse_trojan(uri):
         )
 
 
-        return {
+        if not u.username:
 
+            return None
+
+
+
+        return {
 
             "type":"trojan",
 
@@ -362,17 +381,21 @@ def parse_trojan(uri):
 
             }
 
-
         }
 
 
     except:
+
 
         return None
 
 
 
 
+
+# =====================
+# parser
+# =====================
 
 def parse(uri):
 
@@ -384,11 +407,13 @@ def parse(uri):
         return parse_vless(uri)
 
 
+
     if uri.startswith(
         "vmess://"
     ):
 
         return parse_vmess(uri)
+
 
 
     if uri.startswith(
@@ -398,6 +423,7 @@ def parse(uri):
         return parse_trojan(uri)
 
 
+
     return None
 
 
@@ -405,11 +431,10 @@ def parse(uri):
 
 
 # =====================
-# config
+# sing-box config
 # =====================
 
-
-def config(node,port):
+def make_config(node,port):
 
 
     return {
@@ -424,33 +449,39 @@ def config(node,port):
 
         "inbounds":[
 
+
             {
 
-            "type":"mixed",
+                "type":"mixed",
 
-            "listen":"127.0.0.1",
+                "listen":
+                "127.0.0.1",
 
-            "listen_port":port
+                "listen_port":
+                port
 
             }
+
 
         ],
 
 
+
         "outbounds":[
+
 
             node,
 
+
             {
 
-            "type":"direct",
+                "type":"direct",
 
-            "tag":"direct"
+                "tag":"direct"
 
             }
 
         ]
-
 
     }
 
@@ -458,8 +489,55 @@ def config(node,port):
 
 
 
+# =====================
+# wait sing-box
+# =====================
 
-def test(node):
+def wait_port(port):
+
+
+    for _ in range(30):
+
+        try:
+
+            s=socket.socket()
+
+            s.settimeout(1)
+
+
+            s.connect(
+                (
+                    "127.0.0.1",
+                    port
+                )
+            )
+
+
+            s.close()
+
+
+            return True
+
+
+
+        except:
+
+
+            time.sleep(0.2)
+
+
+
+    return False
+
+
+
+
+
+# =====================
+# test node
+# =====================
+
+def test_node(node):
 
 
     outbound=parse(node)
@@ -474,8 +552,9 @@ def test(node):
     port=get_port()
 
 
+
     cfg=tempfile.mktemp(
-        ".json"
+        suffix=".json"
     )
 
 
@@ -493,7 +572,7 @@ def test(node):
 
 
             json.dump(
-                config(
+                make_config(
                     outbound,
                     port
                 ),
@@ -502,33 +581,30 @@ def test(node):
 
 
 
+
         p=subprocess.Popen(
 
             [
 
-            "./sing-box",
+                "./sing-box",
 
-            "run",
+                "run",
 
-            "-c",
+                "-c",
 
-             cfg
+                cfg
 
             ],
 
             stdout=subprocess.DEVNULL,
 
-            stderr=subprocess.PIPE
+            stderr=subprocess.DEVNULL
 
         )
 
 
 
-        time.sleep(0.5)
-
-
-
-        if p.poll()!=None:
+        if not wait_port(port):
 
             return
 
@@ -543,66 +619,72 @@ def test(node):
 
             [
 
-            "curl",
+                "curl",
 
-            "-4",
+                "-4",
 
-            "--connect-timeout",
-            "5",
+                "--connect-timeout",
 
-            "--max-time",
-            "8",
+                "8",
 
-            "-x",
+                "--max-time",
 
-            f"socks5h://127.0.0.1:{port}",
+                "15",
 
-            "-s",
+                "-A",
 
-            "-o",
+                "Mozilla/5.0",
 
-            "/dev/null",
+                "-x",
 
-            "-w",
+                f"socks5h://127.0.0.1:{port}",
 
-            "%{{http_code}}",
+                "-s",
 
-            TEST_URL
+                "-o",
+
+                "/dev/null",
+
+                "-w",
+
+                "%{http_code}",
+
+                TEST_URL
 
             ],
 
+
             capture_output=True,
 
-            timeout=10
+            timeout=20
 
         )
 
 
 
         delay=int(
-            (time.time()-start)*1000
+
+            (time.time()-start)
+            *
+            1000
+
         )
 
 
 
-        code=r.stdout.decode()
+        code=r.stdout.decode().strip()
 
 
 
-        if code in (
-
-                "200",
-                "204",
-                "301",
-                "302"
-
-          ):
+        if code:
 
 
             print(
                 "OK",
-                delay
+                delay,
+                node[:60]
             )
+
 
 
             with write_lock:
@@ -615,13 +697,18 @@ def test(node):
 
 
                     f.write(
+
                         f"{delay}ms {node}\n"
+
                     )
 
 
-    except:
+
+    except Exception:
+
 
         pass
+
 
 
     finally:
@@ -635,7 +722,9 @@ def test(node):
 
         except:
 
+
             pass
+
 
 
         try:
@@ -644,17 +733,23 @@ def test(node):
 
         except:
 
+
             pass
 
-
-
-
-
-
-
 # =====================
-# main
+# MAIN
 # =====================
+
+
+if not os.path.exists(INPUT):
+
+    print(
+        "缺少 alive_nodes.txt"
+    )
+
+    exit(1)
+
+
 
 
 with open(
@@ -664,12 +759,19 @@ with open(
 
 
     nodes=list(
+
         set(
+
             x.strip()
+
             for x in f
+
             if x.strip()
+
         )
+
     )
+
 
 
 
@@ -680,61 +782,119 @@ print(
 
 
 
+
 random.shuffle(nodes)
 
 
 
-# 最多测试5000
+# 最多测试300个
 
-nodes=nodes[:5000]
+nodes=nodes[:300]
+
+
+
+
+print(
+    "实际测试:",
+    len(nodes)
+)
+
+
 
 
 
 with concurrent.futures.ThreadPoolExecutor(
 
-    max_workers=30
+    max_workers=10
 
 ) as pool:
 
 
     list(
+
         pool.map(
-            test,
+
+            test_node,
+
             nodes
+
         )
+
     )
 
 
 
 
 
-with open(
-    OUTPUT
-) as f:
 
-    lines=f.readlines()
-
+# =====================
+# SORT RESULT
+# =====================
 
 
-lines.sort(
-    key=lambda x:
-    int(x.split("ms")[0])
-)
+if os.path.exists(OUTPUT):
 
 
+    with open(
+        OUTPUT,
+        errors="ignore"
+    ) as f:
 
-with open(
-    OUTPUT,
-    "w"
-) as f:
 
-    f.writelines(lines)
+        lines=f.readlines()
 
 
 
-print()
+    try:
 
-print(
-    "最终可用:",
-    len(lines)
-)
+
+        lines.sort(
+
+            key=lambda x:
+
+            int(
+                x.split("ms")[0]
+            )
+
+        )
+
+
+    except:
+
+
+        pass
+
+
+
+
+    with open(
+        OUTPUT,
+        "w"
+    ) as f:
+
+
+        f.writelines(lines)
+
+
+
+    print()
+
+
+    print(
+
+        "最终可用:",
+
+        len(lines)
+
+    )
+
+
+
+else:
+
+
+    print(
+
+        "最终可用:0"
+
+    )
