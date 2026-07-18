@@ -123,7 +123,9 @@ def parse_vmess(uri):
             "uuid":
             obj["id"],
 
-
+             "alter_id":
+             int(obj.get("aid",0)),
+            
             "security":
             obj.get(
                 "scy",
@@ -214,7 +216,6 @@ def parse_vless(uri):
 
         out={
 
-
             "type":"vless",
 
             "tag":"proxy",
@@ -234,13 +235,6 @@ def parse_vless(uri):
 
             "packet_encoding":"xudp",
 
-
-            "multiplex":{
-
-
-                "enabled":False
-
-            }
 
         }
 
@@ -272,7 +266,9 @@ def parse_vless(uri):
             "tls",
             "reality"
         ):
-
+            
+    if not q.get("pbk"):
+        return None
 
             out["tls"]={
 
@@ -905,21 +901,32 @@ def test_node(uri):
 
             stdout=subprocess.DEVNULL,
 
-            stderr=subprocess.DEVNULL
+            stderr=subprocess.PIPE
 
         )
 
+time.sleep(0.5)
+
+if p.poll() is not None:
+    print("sing-box立即退出")
+    return
+
+if not wait_port(port):
+
+    try:
+        err=p.stderr.read().decode(
+            errors="ignore"
+        )
+    except:
+        err="unknown error"
 
 
-        if not wait_port(port):
+    print(
+        "sing-box错误:",
+        err[:300]
+    )
 
-            print(
-                "sing-box启动失败:",
-                uri[:80]
-            )
-
-            return
-
+    return
 
 
         start=time.time()
