@@ -24,16 +24,17 @@ jobs:
         run: |
           > raw.txt
           sources=(
-            "https://raw.githubusercontent.com/w1770946466/Auto_Proxy/main/Long_term_node_1.txt"
-            "https://raw.githubusercontent.com/tuji-source/Tuji/main/v2ray.txt"
-            "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
-            "https://raw.githubusercontent.com/mianfeifq/share/main/data.txt"
-            "https://raw.githubusercontent.com/AzadNetCH/Clash/master/V2Ray.txt"
-            "https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2"
-            "https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/v2ray.txt"
-            "https://raw.githubusercontent.com/youfoundamin/V2Hub/main/nodes.txt"
-            "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
-          )
+                   "https://raw.githubusercontent.com/tuji-source/Tuji/main/v2ray.txt"
+
+                   "https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2"
+
+                   "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
+
+                   "https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY.txt"
+
+                   "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt"
+                   )
+                   
           for url in "${sources[@]}"; do
             curl -L --connect-timeout 10 --max-time 60 --retry 3 "$url" >> raw.txt || true
           done
@@ -60,8 +61,8 @@ jobs:
           # 去重并过滤已知垃圾字符
           clean = list(set([n.replace("\r", "").replace("&amp;", "&") for n in nodes]))
           
-          # 控制在 5000 个左右，防止本地客户端加载卡死
-          clean = clean[:5000]
+          # 控制在 2000 个左右，防止本地客户端加载卡死
+          clean = clean[:2000]
           
           open("nodes.txt", "w").write("\n".join(clean))
           import base64
