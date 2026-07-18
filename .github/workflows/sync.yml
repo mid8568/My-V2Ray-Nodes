@@ -64,6 +64,13 @@ jobs:
 
                     echo "抓取完成，共计抓取节点: $(wc -l < nodes_all.txt)"
 
+      - name: Debug Sources
+        run: |
+          echo "抓取到的原始节点总行数:"
+          wc -l nodes_all.txt
+          echo "前10行内容:"
+          head -n 10 nodes_all.txt
+          
       - name: Extract
         run: |
           python3 <<'PY'
@@ -153,7 +160,12 @@ jobs:
 
                 echo "前5个:"
                 head -5 alive_nodes.txt
-                
+
+      - name: Verify Core
+        run: |
+          ./sing-box version || echo "Sing-box 核心无法运行！"
+          ls -l sing-box
+          
       - name: Sing-box Real Test
         timeout-minutes: 45
         run: |
