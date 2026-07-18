@@ -512,13 +512,13 @@ def test(node):
 
             "-c",
 
-            cfg
+             cfg
 
             ],
 
             stdout=subprocess.DEVNULL,
 
-            stderr=subprocess.DEVNULL
+            stderr=subprocess.PIPE
 
         )
 
