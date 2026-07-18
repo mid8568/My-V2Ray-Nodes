@@ -159,6 +159,18 @@ jobs:
               chmod +x test_nodes.py
               python3 -u test_nodes.py
 
+      - name: Debug Result
+        run: |
+
+              echo "alive_nodes:"
+              wc -l alive_nodes.txt || true
+
+              echo "result:"
+              wc -l result.txt || true
+
+              echo "result内容:"
+              head -20 result.txt || true
+
       - name: Generate Subscription
         run: |
 
