@@ -54,9 +54,9 @@ jobs:
           # 循环下载并汇总
           for url in "${SOURCES[@]}"; do
             echo "正在抓取: $url"
-            # 核心改进：通过 grep 只提取以协议开头的行，自动剔除 404 错误页和乱码
-            curl -s -L --connect-timeout 5 --max-time 10 "$url" | grep -E "^(vmess|vless|trojan)://" >> nodes_all.txt || true
-          done
+            
+            # 将原来的 curl 命令修改为：
+            curl -s -L --connect-timeout 10 --max-time 20 "https://cors.isteed.cc/$url" | grep -E "^(vmess|vless|trojan)://" >> nodes_all.txt || true
 
           # 最后的去重与清理
           sort -u nodes_all.txt | sed '/^$/d' > nodes_tmp.txt
