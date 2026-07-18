@@ -11,18 +11,17 @@ import os
 import threading
 import socket
 
-from urllib.parse import urlparse, parse_qs, unquote
+from urllib.parse import urlparse, parse_qs
 
 
 INPUT = "nodes_all.txt"
-
 OUTPUT = "result.txt"
 
 
 TEST_URLS = [
     "https://www.gstatic.com/generate_204",
-    "https://www.google.com/generate_204",
-    "https://www.cloudflare.com/cdn-cgi/trace"
+    "https://www.google.com",
+    "https://cloudflare.com"
 ]
 
 
@@ -37,17 +36,15 @@ open(
 
 
 # =========================
-# base64 decode
+# base64
 # =========================
 
 def b64decode(data):
 
     try:
 
-        data += "=" * (-len(data) % 4)
-
         return base64.urlsafe_b64decode(
-            data
+            data + "==="
         ).decode(
             errors="ignore"
         )
@@ -55,8 +52,6 @@ def b64decode(data):
     except:
 
         return ""
-
-
 
 
 
@@ -83,8 +78,6 @@ def get_port():
 
 
 
-
-
 # =========================
 # VMESS
 # =========================
@@ -98,16 +91,9 @@ def parse_vmess(uri):
             ""
         )
 
-
         obj = json.loads(
             b64decode(raw)
         )
-
-
-        if not obj.get("add"):
-
-            return None
-
 
 
         out = {
@@ -116,76 +102,70 @@ def parse_vmess(uri):
 
             "tag":"proxy",
 
-            "server":obj["add"],
+            "server":
+                obj["add"],
 
-            "server_port":int(
-                obj["port"]
-            ),
+            "server_port":
+                int(obj["port"]),
 
-            "uuid":obj["id"],
+            "uuid":
+                obj["id"],
 
-            "security":obj.get(
-                "scy",
-                "auto"
-            ),
-
-            "alter_id":int(
+            "security":
                 obj.get(
-                    "aid",
-                    0
+                    "scy",
+                    "auto"
                 )
-            )
 
         }
 
 
+        if obj.get("aid"):
+
+            out["alter_id"] = int(
+                obj["aid"]
+            )
+
 
         if obj.get("net") == "ws":
-
 
             out["transport"] = {
 
                 "type":"ws",
 
-                "path":obj.get(
-                    "path",
-                    "/"
-                )
+                "path":
+                    obj.get(
+                        "path",
+                        "/"
+                    )
 
             }
 
 
-
-
         if obj.get("tls") == "tls":
-
 
             out["tls"] = {
 
                 "enabled":True,
 
-                "server_name":obj.get(
-                    "sni",
+                "server_name":
                     obj.get(
-                        "host",
-                        obj["add"]
+                        "sni",
+                        obj.get(
+                            "host",
+                            obj["add"]
+                        )
                     )
-                )
 
             }
-
 
 
         return out
 
 
-
-    except Exception:
+    except:
 
         return None
-
-
-
 
 
 
@@ -197,9 +177,7 @@ def parse_vless(uri):
 
     try:
 
-
         u = urlparse(uri)
-
 
         q = parse_qs(
             u.query
@@ -215,18 +193,7 @@ def parse_vless(uri):
 
 
 
-        uuid = u.username
-
-
-        if not uuid:
-
-            return None
-
-
-
-
         out = {
-
 
             "type":"vless",
 
@@ -236,31 +203,11 @@ def parse_vless(uri):
 
             "server_port":u.port,
 
-            "uuid":uuid,
+            "uuid":u.username,
 
-            "encryption":"none",
-
-            "packet_encoding":"xudp"
-
+            "encryption":"none"
 
         }
-
-
-
-
-
-        flow = q.get(
-            "flow",
-            [""]
-        )[0]
-
-
-        if flow:
-
-            out["flow"] = flow
-
-
-
 
 
 
@@ -270,41 +217,25 @@ def parse_vless(uri):
         )[0]
 
 
-
-
-        # TLS
-
         if security in (
-
             "tls",
             "reality"
-
         ):
-
-
-            sni = q.get(
-                "sni",
-                [host]
-            )[0]
 
 
             out["tls"] = {
 
-
                 "enabled":True,
 
-
-                "server_name":sni
-
+                "server_name":
+                    q.get(
+                        "sni",
+                        [host]
+                    )[0]
 
             }
 
 
-
-
-
-
-        # Reality 修复
 
         if security == "reality":
 
@@ -315,36 +246,21 @@ def parse_vless(uri):
             )[0]
 
 
-            sid = q.get(
-                "sid",
-                [""]
-            )[0]
-
-
-            fp = q.get(
-                "fp",
-                ["chrome"]
-            )[0]
-
-
-
-            # Reality 必须有公钥
-
             if not pbk:
 
                 return None
 
 
 
-
             out["tls"]["utls"] = {
-
 
                 "enabled":True,
 
-
-                "fingerprint":fp
-
+                "fingerprint":
+                    q.get(
+                        "fp",
+                        ["chrome"]
+                    )[0]
 
             }
 
@@ -352,24 +268,18 @@ def parse_vless(uri):
 
             out["tls"]["reality"] = {
 
-
                 "enabled":True,
-
 
                 "public_key":pbk,
 
-
-                "short_id":sid
-
+                "short_id":
+                    q.get(
+                        "sid",
+                        [""]
+                    )[0]
 
             }
 
-
-
-
-
-
-        # websocket
 
         network = q.get(
             "type",
@@ -377,43 +287,28 @@ def parse_vless(uri):
         )[0]
 
 
-
         if network == "ws":
-
 
             out["transport"] = {
 
-
                 "type":"ws",
 
-
-                "path":unquote(
-
+                "path":
                     q.get(
                         "path",
                         ["/"]
                     )[0]
 
-                )
-
             }
 
 
-
-
-        # grpc
-
         elif network == "grpc":
-
 
             out["transport"] = {
 
-
                 "type":"grpc",
 
-
                 "service_name":
-
                     q.get(
                         "serviceName",
                         [""]
@@ -422,20 +317,12 @@ def parse_vless(uri):
             }
 
 
-
-
         return out
 
 
+    except:
 
-
-    except Exception as e:
-
-
-        print(
-            "VLESS解析错误:",
-            str(e)[:100]
-        )
+        return None
 
 # =========================
 # TROJAN
@@ -451,7 +338,6 @@ def parse_trojan(uri):
             u.query
         )
 
-
         host = u.hostname
 
 
@@ -461,8 +347,7 @@ def parse_trojan(uri):
 
 
 
-        out = {
-
+        return {
 
             "type":"trojan",
 
@@ -472,63 +357,40 @@ def parse_trojan(uri):
 
             "server_port":u.port,
 
-            "password":unquote(
-                u.username
-            )
-
-        }
+            "password":u.username,
 
 
-
-        out["tls"] = {
-
-
-            "enabled":True,
-
-
-            "server_name":
-
-                q.get(
-                    "sni",
-                    [host]
-                )[0]
-
-        }
-
-
-
-        fp = q.get(
-            "fp",
-            [""]
-        )[0]
-
-
-
-        if fp:
-
-
-            out["tls"]["utls"] = {
-
+            "tls":{
 
                 "enabled":True,
 
+                "server_name":
+                    q.get(
+                        "sni",
+                        [host]
+                    )[0],
 
-                "fingerprint":fp
 
+                "utls":{
+
+                    "enabled":True,
+
+                    "fingerprint":
+                        q.get(
+                            "fp",
+                            ["chrome"]
+                        )[0]
+
+                }
 
             }
 
+        }
 
 
-        return out
-
-
-
-    except Exception:
-
+    except:
 
         return None
-
 
 
 
@@ -537,19 +399,15 @@ def parse_trojan(uri):
 # SHADOWSOCKS
 # =========================
 
-
 def parse_ss(uri):
 
     try:
 
-
         data = uri[5:]
-
 
         data = data.split(
             "#"
         )[0]
-
 
 
         if "@" not in data:
@@ -558,18 +416,18 @@ def parse_ss(uri):
 
 
 
-        user,host = data.rsplit(
+        user, host = data.rsplit(
             "@",
             1
         )
 
 
-
         try:
 
-            user = b64decode(
-                user
-            )
+            user = base64.urlsafe_b64decode(
+                user + "==="
+            ).decode()
+
 
         except:
 
@@ -577,28 +435,34 @@ def parse_ss(uri):
 
 
 
-        method,password = user.split(
+        method, password = user.split(
             ":",
             1
         )
 
 
+        if host.count(":") > 1:
 
-        if ":" not in host:
+            server = host.rsplit(
+                ":",
+                1
+            )[0]
 
-            return None
+            port = host.rsplit(
+                ":",
+                1
+            )[1]
 
+        else:
 
-
-        server,port = host.rsplit(
-            ":",
-            1
-        )
+            server, port = host.split(
+                ":",
+                1
+            )
 
 
 
         return {
-
 
             "type":"shadowsocks",
 
@@ -615,12 +479,9 @@ def parse_ss(uri):
         }
 
 
-
     except:
 
-
         return None
-
 
 
 
@@ -629,7 +490,6 @@ def parse_ss(uri):
 # =========================
 # HYSTERIA2
 # =========================
-
 
 def parse_hy2(uri):
 
@@ -649,14 +509,12 @@ def parse_hy2(uri):
 
         u = urlparse(uri)
 
-
         q = parse_qs(
             u.query
         )
 
 
         host = u.hostname
-
 
 
         if not host:
@@ -667,7 +525,6 @@ def parse_hy2(uri):
 
         return {
 
-
             "type":"hysteria2",
 
             "tag":"proxy",
@@ -675,24 +532,19 @@ def parse_hy2(uri):
             "server":host,
 
             "server_port":
-
                 u.port or 443,
 
-
             "password":
-
                 u.username,
-
 
 
             "tls":{
 
-
                 "enabled":True,
 
+                "insecure":True,
 
                 "server_name":
-
                     q.get(
                         "sni",
                         [host]
@@ -700,13 +552,10 @@ def parse_hy2(uri):
 
             }
 
-
         }
 
 
-
     except:
-
 
         return None
 
@@ -714,12 +563,9 @@ def parse_hy2(uri):
 
 
 
-
-
 # =========================
-# NODE PARSER
+# PARSER
 # =========================
-
 
 def parse(uri):
 
@@ -757,15 +603,9 @@ def parse(uri):
 
 
     if uri.startswith(
-        "hysteria2://"
-    ):
-
-        return parse_hy2(uri)
-
-
-
-    if uri.startswith(
         "hy2://"
+    ) or uri.startswith(
+        "hysteria2://"
     ):
 
         return parse_hy2(uri)
@@ -778,67 +618,34 @@ def parse(uri):
 
 
 
-
-
 # =========================
 # SING-BOX CONFIG
 # =========================
 
-
-def make_config(out,port):
-
+def make_config(out, port):
 
     return {
 
-
         "log":{
-
 
             "level":"error"
 
         },
 
 
-        "dns":{
-
-
-            "servers":[
-
-
-                {
-
-                    "tag":"dns",
-
-                    "address":
-                    "https://1.1.1.1/dns-query"
-
-                }
-
-            ]
-
-        },
-
-
-
         "inbounds":[
-
 
             {
 
-
                 "type":"mixed",
 
-
                 "listen":
+                    "127.0.0.1",
 
-                "127.0.0.1",
-
-
-                "listen_port":port
-
+                "listen_port":
+                    port
 
             }
-
 
         ],
 
@@ -846,12 +653,9 @@ def make_config(out,port):
 
         "outbounds":[
 
-
             out,
 
-
             {
-
 
                 "type":"direct",
 
@@ -859,15 +663,9 @@ def make_config(out,port):
 
             }
 
-
         ]
 
-
     }
-
-
-
-
 
 
 
@@ -876,29 +674,23 @@ def make_config(out,port):
 # WAIT PORT
 # =========================
 
-
 def wait_port(port):
 
 
     for _ in range(40):
 
-
         try:
 
-
             s = socket.socket()
-
 
             s.settimeout(1)
 
 
             s.connect(
-
                 (
                     "127.0.0.1",
                     port
                 )
-
             )
 
 
@@ -920,13 +712,9 @@ def wait_port(port):
 
     return False
 
-
-        return None
-
 # =========================
 # TEST NODE
 # =========================
-
 
 def test_node(uri):
 
@@ -935,13 +723,6 @@ def test_node(uri):
 
 
     if not outbound:
-
-
-        print(
-            "解析失败:",
-            uri[:80]
-        )
-
 
         return
 
@@ -960,7 +741,6 @@ def test_node(uri):
 
 
     try:
-
 
 
         with open(
@@ -1013,23 +793,9 @@ def test_node(uri):
 
 
 
-        # sing-box启动失败
+        # 检查sing-box是否退出
 
         if p.poll() is not None:
-
-
-            err = p.stderr.read().decode(
-                errors="ignore"
-            )
-
-
-            print(
-
-                "sing-box失败:",
-
-                err[:120]
-
-            )
 
 
             return
@@ -1040,17 +806,7 @@ def test_node(uri):
         if not wait_port(port):
 
 
-            print(
-
-                "端口失败:",
-
-                uri[:60]
-
-            )
-
-
             return
-
 
 
 
@@ -1073,38 +829,31 @@ def test_node(uri):
 
                 "-4",
 
-                "--proxy",
-
-                f"socks5h://127.0.0.1:{port}",
-
-
-                "--connect-timeout",
-
-                "10",
-
-
-                "--max-time",
-
-                "20",
-
-
-                "-A",
-
-                "Mozilla/5.0",
-
-
                 "-s",
-
 
                 "-o",
 
                 "/dev/null",
 
+                "-A",
+
+                "Mozilla/5.0",
+
+                "--connect-timeout",
+
+                "10",
+
+                "--max-time",
+
+                "20",
+
+                "-x",
+
+                f"socks5h://127.0.0.1:{port}",
 
                 "-w",
 
                 "%{http_code}",
-
 
                 url
 
@@ -1135,16 +884,7 @@ def test_node(uri):
 
 
 
-        # curl失败
-
-        if not code:
-
-
-            return
-
-
-
-        # 非正常状态
+        # 过滤失败
 
         if code not in (
 
@@ -1164,18 +904,16 @@ def test_node(uri):
 
 
 
-
-        # 成功
-
         print(
 
             "OK",
 
             delay,
 
-            uri[:70]
+            uri[:60]
 
         )
+
 
 
 
@@ -1200,7 +938,7 @@ def test_node(uri):
 
 
 
-    except Exception as e:
+    except Exception:
 
 
         pass
@@ -1242,11 +980,9 @@ def test_node(uri):
 
 
 
-
 # =========================
 # MAIN
 # =========================
-
 
 if not os.path.exists(INPUT):
 
@@ -1254,7 +990,6 @@ if not os.path.exists(INPUT):
     print(
         "缺少 nodes_all.txt"
     )
-
 
     exit(1)
 
@@ -1269,7 +1004,6 @@ with open(
     errors="ignore"
 
 ) as f:
-
 
 
     nodes = list(
@@ -1321,13 +1055,11 @@ print(
 
 
 
-
 with concurrent.futures.ThreadPoolExecutor(
 
     max_workers=10
 
 ) as pool:
-
 
 
     list(
@@ -1346,15 +1078,11 @@ with concurrent.futures.ThreadPoolExecutor(
 
 
 
-
-
 # =========================
 # SORT RESULT
 # =========================
 
-
 if os.path.exists(OUTPUT):
-
 
 
     with open(
@@ -1371,11 +1099,7 @@ if os.path.exists(OUTPUT):
         key=lambda x:
 
         int(
-
-            x.split(
-                "ms"
-            )[0]
-
+            x.split("ms")[0]
         )
 
     )
@@ -1391,9 +1115,7 @@ if os.path.exists(OUTPUT):
     ) as f:
 
 
-        f.writelines(
-            lines
-        )
+        f.writelines(lines)
 
 
 
@@ -1409,7 +1131,6 @@ if os.path.exists(OUTPUT):
     )
 
 
-
 else:
 
 
@@ -1418,7 +1139,6 @@ else:
         "最终可用:0"
 
     )
-
 
 
 
