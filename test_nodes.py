@@ -266,9 +266,10 @@ def parse_vless(uri):
             "tls",
             "reality"
         ):
-            
-    if not q.get("pbk"):
-        return None
+
+            if security == "reality" and not q.get("pbk"):
+                return None
+
 
             out["tls"]={
 
@@ -283,7 +284,6 @@ def parse_vless(uri):
                 )[0]
 
             }
-
 
         if security in (
              "reality",
@@ -905,28 +905,31 @@ def test_node(uri):
 
         )
 
-time.sleep(0.5)
+          time.sleep(0.5)
 
-if p.poll() is not None:
-    print("sing-box立即退出")
-    return
+          if p.poll() is not None:
+          print("sing-box立即退出")
+          return
 
-if not wait_port(port):
+        if not wait_port(port):
 
-    try:
-        err=p.stderr.read().decode(
-            errors="ignore"
-        )
-    except:
-        err="unknown error"
+            try:
+
+                err=p.stderr.read().decode(
+                    errors="ignore"
+                )
+
+            except:
+
+                err="unknown error"
 
 
-    print(
-        "sing-box错误:",
-        err[:300]
-    )
+            print(
+                "sing-box错误:",
+                err[:300]
+            )
 
-    return
+            return
 
 
         start=time.time()
