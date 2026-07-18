@@ -14,203 +14,65 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
-      - name: Install sing-box
-        run: |
-          sudo apt update -qq
-          sudo apt install -y jq curl wget unzip
-          
-          wget -q $(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest \
-          | jq -r '.assets[] | select(.name | contains("linux-amd64.tar.gz")) | .browser_download_url') \
-           -O sing.tar.gz
-
-            tar xf sing.tar.gz
-            mv sing-box-*/sing-box sing-box
-            chmod +x sing-box
             
-      - name: sing-box version
-        run: |
-             ./sing-box version
-             
       - name: Install Python
         run: |
-             sudo apt install -y python3 curl jq
+          sudo apt update -qq
+          sudo apt install -y python3 curl
              
       - name: Download Sources
         run: |
           > raw.txt
-          > nodes_all.txt
           sources=(
-            # 每日高频更新的独立活跃源
             "https://raw.githubusercontent.com/w1770946466/Auto_Proxy/main/Long_term_node_1.txt"
             "https://raw.githubusercontent.com/tuji-source/Tuji/main/v2ray.txt"
             "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
             "https://raw.githubusercontent.com/mianfeifq/share/main/data.txt"
             "https://raw.githubusercontent.com/AzadNetCH/Clash/master/V2Ray.txt"
-            
-            # 保留原列表中质量尚可的活跃源
             "https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2"
             "https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/v2ray.txt"
             "https://raw.githubusercontent.com/youfoundamin/V2Hub/main/nodes.txt"
             "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
           )
           for url in "${sources[@]}"; do
-            curl -L \
-                --connect-timeout 10 \
-                --max-time 60 \
-                --retry 3 \
-                "$url" | tee -a raw.txt | grep -E "^(vmess|vless|trojan)://" >> nodes_all.txt || true
+            curl -L --connect-timeout 10 --max-time 60 --retry 3 "$url" >> raw.txt || true
           done
           
-      - name: Extract
+      - name: Extract & Deduplicate
         run: |
           python3 <<'PY'
-
           import re
-
-          data=open(
-              "raw.txt",
-              errors="ignore"
-          ).read()
-
-
-          patterns=[
+          
+          data = open("raw.txt", errors="ignore").read()
+          patterns = [
               r'vmess://[^\s#]+',
-
               r'vless://[^\s#]+',
-
               r'trojan://[^\s#]+',
-              
-               r'ss://[^\s#]+',
-               r'hy2://[^\s#]+',
-               r'hysteria2://[^\s#]+',
-
-            ]
-
-
-          nodes=[]
-
-
+              r'ss://[^\s#]+',
+              r'hy2://[^\s#]+',
+              r'hysteria2://[^\s#]+'
+          ]
+          
+          nodes = []
           for p in patterns:
-
-              nodes += re.findall(
-                  p,
-                  data
-              )
-
-
-          clean=[]
-
-
-          for n in nodes:
-
-              n=n.replace(
-                  "\r",
-                  ""
-              )
-
-              n=n.replace(
-                  "&amp;",
-                  "&"
-              )
-
-              clean.append(n)
-
-
-          clean=list(
-              set(clean)
-          )
-
-
-          open(
-              "nodes_all.txt",
-              "w"
-          ).write(
-              "\n".join(clean)
-          )
-
-
-          print(
-              "节点数量:",
-              len(clean)
-          )
-
-
+              nodes += re.findall(p, data)
+              
+          # 去重并过滤已知垃圾字符
+          clean = list(set([n.replace("\r", "").replace("&amp;", "&") for n in nodes]))
+          
+          # 控制在 5000 个左右，防止本地客户端加载卡死
+          clean = clean[:5000]
+          
+          open("nodes.txt", "w").write("\n".join(clean))
+          import base64
+          open("base64.txt", "w").write(base64.b64encode("\n".join(clean).encode()).decode())
+          print("有效节点总数:", len(clean))
           PY
 
-      - name: TCP Fast Filter
-        timeout-minutes: 15
-        run: |
-              chmod +x tcp_filter.py
-              python3 -u tcp_filter.py
-
-      - name: Check Alive Nodes
-        run: |
-               echo "alive节点数量:"
-               wc -l alive_nodes.txt
-
-                echo "前5个:"
-                head -5 alive_nodes.txt
-                
-      - name: Sing-box Real Test
-        timeout-minutes: 45
-        run: |
-              chmod +x test_nodes.py
-              python3 -u test_nodes.py
-
-      - name: Check Result
-        run: |
-              echo "测速结果:"
-              wc -l result.txt
-
-              head -20 result.txt
-              
-      - name: Debug Result
-        run: |
-
-              echo "alive_nodes:"
-              wc -l alive_nodes.txt || true
-
-              echo "result:"
-              wc -l result.txt || true
-
-              echo "result内容:"
-              head -20 result.txt || true
-              
-      - name: Generate Nodes
-        run: |
-          if [ ! -s result.txt ]; then
-            echo "没有测速成功节点"
-            exit 1
-          fi
-
-          # 修复：利用管道符号 '|' 进行精准排序并提取纯节点信息
-          sort -t '|' -k1,1n result.txt \
-          | head -300 \
-          | cut -d '|' -f2- \
-          > nodes.txt
-
-          base64 -w0 nodes.txt > base64.txt
-
-          echo "生成节点数量:"
-          wc -l nodes.txt
-
-      - name: Show Result
-        run: |
-              echo "测速成功数量:"
-              wc -l result.txt
-
-              echo "前10:"
-              head -10 result.txt
-              
       - name: Commit
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add \
-          nodes.txt \
-          base64.txt \
-          result.txt
-          
-          git commit -m "Ultimate node update: $(date '+%Y-%m-%d %H:%M:%S')" || exit 0
+          git add nodes.txt base64.txt
+          git commit -m "Grab nodes: $(date '+%Y-%m-%d %H:%M:%S')" || exit 0
           git push
