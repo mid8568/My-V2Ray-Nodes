@@ -181,23 +181,24 @@ jobs:
               
       - name: Generate Nodes
         run: |
+          # 检查 result.txt 是否存在且有内容
           if [ ! -s result.txt ]; then
-            echo "警告：没有测速成功节点，跳过后续步骤。"
-            # exit 1  <-- 注释掉这一行，或者改为 echo
-            exit 0
+            echo "错误：result.txt 为空，没有节点通过测速。"
+            exit 0 # 不中断，防止 workflow 变红
           fi
-          # ... 后续逻辑
 
-          # 修复：利用管道符号 '|' 进行精准排序并提取纯节点信息
-          sort -t '|' -k1,1n result.txt \
-          | head -150 \
-          | cut -d '|' -f2- \
-          > nodes.txt
+          echo "当前 result.txt 行数:"
+          wc -l result.txt
 
-          base64 -w0 nodes.txt > base64.txt
-
-          echo "生成节点数量:"
+          # 排序并提取：-t '|' 指定分隔符，-k1,1n 按第一列数字排序
+          # 确保这一步正确执行
+          sort -t '|' -k1,1n result.txt | head -n 150 | cut -d '|' -f2- > nodes.txt
+          
+          echo "生成后的节点数量:"
           wc -l nodes.txt
+          
+          # 生成 base64
+          base64 -w0 nodes.txt > base64.txt
 
       - name: Show Result
         run: |
