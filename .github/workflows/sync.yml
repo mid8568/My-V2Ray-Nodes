@@ -38,31 +38,31 @@ jobs:
              
       - name: Download Sources
         run: |
-          > raw.txt
+          # 定义高质量源列表
+          SOURCES=(
+            "https://raw.githubusercontent.com/tbbhub/proxy/main/dist/v2ray.txt"
+            "https://raw.githubusercontent.com/yebekhe/TelegramList/main/v2ray/ip/vless"
+            "https://raw.githubusercontent.com/yebekhe/TelegramList/main/v2ray/ip/vmess"
+            "https://raw.githubusercontent.com/yebekhe/TelegramList/main/v2ray/ip/trojan"
+            "https://raw.githubusercontent.com/vpei/Free-Node/main/v2ray.txt"
+            "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
+          )
 
-           SOURCES=(
-                    "https://raw.githubusercontent.com/tbbhub/proxy/main/dist/v2ray.txt"
-                    "https://raw.githubusercontent.com/yebekhe/TelegramList/main/v2ray/ip/vless"
-                    "https://raw.githubusercontent.com/yebekhe/TelegramList/main/v2ray/ip/vmess"
-                    "https://raw.githubusercontent.com/yebekhe/TelegramList/main/v2ray/ip/trojan"
-                    "https://raw.githubusercontent.com/vpei/Free-Node/main/v2ray.txt"
-                    "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
-                     )
+          # 清空旧节点文件
+          > nodes_all.txt
 
-                   # 清空旧节点文件
-                   echo "" > nodes_all.txt
+          # 循环下载并汇总
+          for url in "${SOURCES[@]}"; do
+            echo "正在抓取: $url"
+            # 核心改进：通过 grep 只提取以协议开头的行，自动剔除 404 错误页和乱码
+            curl -s -L --connect-timeout 5 --max-time 10 "$url" | grep -E "^(vmess|vless|trojan)://" >> nodes_all.txt || true
+          done
 
-                   # 循环下载并汇总
-                   for url in "${SOURCES[@]}"; do
-                   echo "正在抓取: $url"
-                   curl -s -L --connect-timeout 5 --max-time 10 "$url" >> nodes_all.txt
-                    done
+          # 最后的去重与清理
+          sort -u nodes_all.txt | sed '/^$/d' > nodes_tmp.txt
+          mv nodes_tmp.txt nodes_all.txt
 
-                    # 简单的去重与过滤清理（仅保留非空行）
-                    sort -u nodes_all.txt | sed '/^$/d' > nodes_tmp.txt
-                    mv nodes_tmp.txt nodes_all.txt
-
-                    echo "抓取完成，共计抓取节点: $(wc -l < nodes_all.txt)"
+          echo "抓取完成，清洗后共计节点: $(wc -l < nodes_all.txt)"
 
       - name: Debug Sources
         run: |
