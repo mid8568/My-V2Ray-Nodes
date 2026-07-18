@@ -18,7 +18,11 @@ INPUT="alive_nodes.txt"
 
 OUTPUT="result.txt"
 
-TEST_URL="https://cp.cloudflare.com/generate_204"
+TEST_URLS=[
+    "https://www.gstatic.com/generate_204",
+    "https://www.google.com/generate_204",
+    "https://cp.cloudflare.com/generate_204"
+]
 
 
 write_lock=threading.Lock()
@@ -613,7 +617,7 @@ def test_node(node):
 
         start=time.time()
 
-
+        TEST_URL=random.choice(TEST_URLS)
 
         r=subprocess.run(
 
@@ -676,7 +680,10 @@ def test_node(node):
 
 
 
-        if code:
+      if code in (
+            "200",
+            "204"
+        ) and delay < 10000:
 
 
             print(
@@ -684,7 +691,6 @@ def test_node(node):
                 delay,
                 node[:60]
             )
-
 
 
             with write_lock:
@@ -789,7 +795,7 @@ random.shuffle(nodes)
 
 # 最多测试300个
 
-nodes=nodes[:300]
+nodes=nodes[:2000]
 
 
 
