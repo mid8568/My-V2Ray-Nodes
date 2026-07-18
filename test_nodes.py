@@ -678,13 +678,15 @@ def test_node(node):
 
         code=r.stdout.decode().strip()
 
-
+        if code=="000":
+            return
 
         if code in (
             "200",
-            "204"
-        ) and delay < 10000:
-
+            "204",
+            "301",
+            "302"
+        ) and delay < 8000:
 
             print(
                 "OK",
@@ -795,7 +797,7 @@ random.shuffle(nodes)
 
 # 最多测试300个
 
-nodes=nodes[:2000]
+nodes=nodes[:500]
 
 
 
@@ -811,7 +813,7 @@ print(
 
 with concurrent.futures.ThreadPoolExecutor(
 
-    max_workers=20
+    max_workers=8
 
 ) as pool:
 
