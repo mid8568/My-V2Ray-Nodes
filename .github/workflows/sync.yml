@@ -39,40 +39,30 @@ jobs:
       - name: Download Sources
         run: |
           > raw.txt
-          sources=(
 
-                  "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date +%Y%m%d)1"
+           SOURCES=(
+                    "https://raw.githubusercontent.com/tbbhub/proxy/main/dist/v2ray.txt"
+                    "https://raw.githubusercontent.com/yebekhe/TelegramList/main/v2ray/ip/vless"
+                    "https://raw.githubusercontent.com/yebekhe/TelegramList/main/v2ray/ip/vmess"
+                    "https://raw.githubusercontent.com/yebekhe/TelegramList/main/v2ray/ip/trojan"
+                    "https://raw.githubusercontent.com/vpei/Free-Node/main/v2ray.txt"
+                    "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
+                     )
 
-                   "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date +%Y%m%d)2"
+                   # 清空旧节点文件
+                   echo "" > nodes_all.txt
 
-                    "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date -d yesterday +%Y%m%d)1"
+                   # 循环下载并汇总
+                   for url in "${SOURCES[@]}"; do
+                   echo "正在抓取: $url"
+                   curl -s -L --connect-timeout 5 --max-time 10 "$url" >> nodes_all.txt
+                    done
 
-                    "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date -d yesterday +%Y%m%d)2"
+                    # 简单的去重与过滤清理（仅保留非空行）
+                    sort -u nodes_all.txt | sed '/^$/d' > nodes_tmp.txt
+                    mv nodes_tmp.txt nodes_all.txt
 
-                   "https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2"
-
-                   "https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/v2ray.txt"
-
-                    "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity.txt"
-
-                    "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt"
-
-                    "https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.txt"
-
-                    "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
-
-                    "https://raw.githubusercontent.com/barabama/FreeNodes/main/nodes.txt"
-
-                    "https://raw.githubusercontent.com/youfoundamin/V2Hub/main/nodes.txt"
-
-                       )
-          for url in "${sources[@]}"; do
-            curl -L \
-                --connect-timeout 10 \
-                --max-time 60 \
-                --retry 3 \
-               "$url" >> raw.txt || true
-          done
+                    echo "抓取完成，共计抓取节点: $(wc -l < nodes_all.txt)"
 
       - name: Extract
         run: |
