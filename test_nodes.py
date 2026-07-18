@@ -4,7 +4,8 @@ from urllib.parse import urlparse, parse_qs
 
 INPUT = "alive_nodes.txt"
 OUTPUT = "result.txt"
-TEST_URLS = ["https://www.gstatic.com/generate_204", "https://cp.cloudflare.com/generate_204"]
+# 建议更换为更加贴近真实代理环境的测试目标（比如强制验证大陆用户最常用且容易受干扰的地址）
+TEST_URLS = ["https://www.google.com/generate_204", "https://www.youtube.com", "https://www.wikipedia.org"]
 write_lock = threading.Lock()
 
 # 清空结果文件
@@ -22,29 +23,69 @@ def parse_vless(uri):
         u = urlparse(uri); q = parse_qs(u.query); host = u.hostname
         if not host: return None
         out = {"type": "vless", "tag": "proxy", "server": host, "server_port": int(u.port) if u.port else 443, "uuid": u.username, "encryption": "none", "packet_encoding": "xudp"}
+        
+        # TLS / REALITY 增强
         security = q.get("security", [""])[0]
-        if security in ("tls", "reality"): out["tls"] = {"enabled": True, "server_name": q.get("sni", [host])[0]}
+        if security in ("tls", "reality"): 
+            out["tls"] = {"enabled": True, "server_name": q.get("sni", [host])[0]}
+            # 允许跳过证书验证
+            if q.get("allowInsecure", [""])[0] in ("1", "true"):
+                out["tls"]["insecure"] = True
+                
         if security == "reality":
             pbk = q.get("pbk", [""])[0]
             if not pbk: return None
             out["tls"]["utls"] = {"enabled": True, "fingerprint": q.get("fp", ["chrome"])[0]}
             out["tls"]["reality"] = {"enabled": True, "public_key": pbk, "short_id": q.get("sid", [""])[0]}
+            
+        # 补全传输层协议 (ws / grpc / httpupgrade 等)
+        net = q.get("type", [""])[0]
+        if net == "ws":
+            out["transport"] = {"type": "ws", "path": q.get("path", ["/"])[0], "headers": {"Host": q.get("host", [host])[0]}}
+        elif net == "grpc":
+            out["transport"] = {"type": "grpc", "service_name": q.get("serviceName", [""])[0]}
+        elif net == "httpupgrade":
+            out["transport"] = {"type": "httpupgrade", "path": q.get("path", ["/"])[0], "host": [q.get("host", [host])[0]]}
+            
         return out
     except: return None
 
 def parse_vmess(uri):
     try:
         raw = uri.replace("vmess://", ""); obj = json.loads(b64decode(raw))
-        return {"type": "vmess", "tag": "proxy", "server": obj.get("add"), "server_port": int(obj.get("port")), "uuid": obj.get("id"), "security": obj.get("scy", "auto")}
+        out = {"type": "vmess", "tag": "proxy", "server": obj.get("add"), "server_port": int(obj.get("port")), "uuid": obj.get("id"), "security": obj.get("scy", "auto")}
+        
+        # VMess TLS
+        if obj.get("tls") in ("tls", 1, "1"):
+            out["tls"] = {"enabled": True, "server_name": obj.get("sni", obj.get("host", obj.get("add")))}
+            
+        # VMess 传输层
+        net = obj.get("net")
+        if net == "ws":
+            out["transport"] = {"type": "ws", "path": obj.get("path", "/"), "headers": {"Host": obj.get("host", obj.get("add"))}}
+        elif net == "grpc":
+            out["transport"] = {"type": "grpc", "service_name": obj.get("path", "")}
+            
+        return out
     except: return None
 
 def parse_trojan(uri):
     try:
         u = urlparse(uri); q = parse_qs(u.query); host = u.hostname
         if not host or not u.username: return None
-        return {"type": "trojan", "tag": "proxy", "server": host, "server_port": int(u.port) if u.port else 443, "password": u.username, "tls": {"enabled": True, "server_name": q.get("sni", [host])[0]}}
+        out = {"type": "trojan", "tag": "proxy", "server": host, "server_port": int(u.port) if u.port else 443, "password": u.username, "tls": {"enabled": True, "server_name": q.get("sni", [host])[0]}}
+        
+        if q.get("allowInsecure", [""])[0] in ("1", "true"):
+            out["tls"]["insecure"] = True
+            
+        net = q.get("type", [""])[0]
+        if net == "ws":
+            out["transport"] = {"type": "ws", "path": q.get("path", ["/"])[0], "headers": {"Host": q.get("host", [host])[0]}}
+        elif net == "grpc":
+            out["transport"] = {"type": "grpc", "service_name": q.get("serviceName", [""])[0]}
+            
+        return out
     except: return None
-
 def parse(uri):
     if uri.startswith("vless://"): return parse_vless(uri)
     if uri.startswith("vmess://"): return parse_vmess(uri)
