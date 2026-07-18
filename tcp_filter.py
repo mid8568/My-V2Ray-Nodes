@@ -21,10 +21,14 @@ def get_host_port(node):
 
         from urllib.parse import urlparse
 
+def get_host_port(node):
+
+    try:
+
+        from urllib.parse import urlparse
+
         if node.startswith("vmess://"):
-
             return None
-
 
         u=urlparse(node)
 
