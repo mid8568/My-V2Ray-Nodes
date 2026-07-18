@@ -27,8 +27,6 @@ TEST_URLS=[
 "https://cloudflare.com"
 ]
 
-url=random.choice(TEST_URLS)
-
 write_lock=threading.Lock()
 
 
@@ -291,10 +289,10 @@ def parse_vless(uri):
             }
 
 
-
-
-        if security=="reality":
-
+        if security in (
+             "reality",
+             "reality-vision"
+          ):
 
             out["tls"]["utls"]={
 
@@ -753,70 +751,57 @@ def parse(uri):
 
 def make_config(out,port):
 
-
     return {
 
-
         "log":{
-
-
             "level":"error"
+        },
+
+
+        "dns":{
+
+            "servers":[
+
+                {
+                    "tag":"remote",
+                    "address":"https://1.1.1.1/dns-query"
+                }
+
+            ]
 
         },
-        
-        "dns":{
-            "servers":[
-                {
-                     "tag":"remote",
-                     "address":"https://1.1.1.1/dns-query"
-        }
-    ]
-},
+
 
         "inbounds":[
 
-
             {
-
 
                 "type":"mixed",
 
-
                 "listen":"127.0.0.1",
-
 
                 "listen_port":port
 
-
             }
-
 
         ],
 
 
-
         "outbounds":[
-
 
             out,
 
-
             {
 
-
                 "type":"direct",
-
 
                 "tag":"direct"
 
             }
 
-
         ]
 
-
     }
-
 # =========================
 # WAIT SING-BOX PORT
 # =========================
@@ -864,14 +849,16 @@ def wait_port(port):
 
 def test_node(uri):
 
-    if not outbound:
-    print("解析失败:",uri[:80])
-    return
 
     outbound=parse(uri)
 
 
     if not outbound:
+
+        print(
+            "解析失败:",
+            uri[:80]
+        )
 
         return
 
@@ -880,15 +867,12 @@ def test_node(uri):
     port=get_port()
 
 
-
     cfg=tempfile.mktemp(
         suffix=".json"
     )
 
 
-
     p=None
-
 
 
     try:
@@ -901,59 +885,47 @@ def test_node(uri):
 
 
             json.dump(
-
                 make_config(
                     outbound,
                     port
                 ),
-
                 f
-
             )
 
 
-      p=subprocess.Popen(
 
-     [
-            "./sing-box",
-            "run",
-            "-c",
-            cfg
-              ],
+        p=subprocess.Popen(
+
+            [
+                "./sing-box",
+                "run",
+                "-c",
+                cfg
+            ],
 
             stdout=subprocess.DEVNULL,
 
             stderr=subprocess.DEVNULL
 
-           )
+        )
 
 
-
-        # 等待 sing-box
 
         if not wait_port(port):
 
-
-            err=p.stderr.read().decode(
-                errors="ignore"
+            print(
+                "sing-box启动失败:",
+                uri[:80]
             )
-
-
-            if err:
-
-                print(
-                    "sing-box启动失败:",
-                    err[:100]
-                )
-
 
             return
 
 
 
-
-
         start=time.time()
+
+
+        url=random.choice(TEST_URLS)
 
 
 
@@ -967,11 +939,11 @@ def test_node(uri):
 
                 "--connect-timeout",
 
-                "10",
+                "15",
 
                 "--max-time",
 
-                "20",
+                "30",
 
                 "-A",
 
@@ -991,15 +963,14 @@ def test_node(uri):
 
                 "%{http_code}",
 
-                TEST_URL
+                url
 
             ],
 
 
             capture_output=True,
 
-
-            timeout=15
+            timeout=35
 
         )
 
@@ -1014,25 +985,18 @@ def test_node(uri):
         )
 
 
-
         code=r.stdout.decode().strip()
 
 
 
-        # 接受多种正常返回
-
         if code in (
 
             "200",
-
             "204",
-
             "301",
-
             "302"
 
         ):
-
 
 
             print(
@@ -1044,7 +1008,6 @@ def test_node(uri):
                 uri[:60]
 
             )
-
 
 
             with write_lock:
@@ -1067,13 +1030,13 @@ def test_node(uri):
 
 
 
-
     except Exception as e:
 
 
-        pass
-
-
+        print(
+            "错误:",
+            str(e)[:100]
+        )
 
     finally:
 
@@ -1182,7 +1145,7 @@ print(
 
 with concurrent.futures.ThreadPoolExecutor(
 
-    max_workers=20
+    max_workers=10
 
 ) as pool:
 
