@@ -42,9 +42,7 @@ jobs:
           > nodes_all.txt
           sources=(
                    "https://www.xrayvip.com/free.txt"
-                   
-                   "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
-
+              
                    "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
 
                    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt"
