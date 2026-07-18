@@ -680,7 +680,7 @@ def test_node(node):
 
 
 
-      if code in (
+        if code in (
             "200",
             "204"
         ) and delay < 10000:
@@ -811,7 +811,7 @@ print(
 
 with concurrent.futures.ThreadPoolExecutor(
 
-    max_workers=10
+    max_workers=20
 
 ) as pool:
 
