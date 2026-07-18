@@ -92,8 +92,12 @@ jobs:
               r'vless://[^\s#]+',
 
               r'trojan://[^\s#]+',
+              
+               r'ss://[^\s#]+',
+               r'hy2://[^\s#]+',
+               r'hysteria2://[^\s#]+',
 
-          ]
+            ]
 
 
           nodes=[]
