@@ -182,42 +182,6 @@ jobs:
               echo "result内容:"
               head -20 result.txt || true
 
-      - name: Generate Subscription
-        run: |
-
-              chmod +x generate_sub.py
-
-              python3 generate_sub.py
-
-
-              if [ ! -s subscribe.txt ]; then
-
-                echo "没有生成订阅"
-
-                exit 1
-
-              fi
-
-
-              cp subscribe.txt base64.txt
-
-
-              echo "订阅节点:"
-              wc -l result.txt
-
-      - name: Generate Config
-        run: |
-              RAW="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/nodes.txt"
-
-              curl -fL --retry 3 \
-              "https://sub.xeton.gq/sub?target=clash&url=$RAW" \
-               -o clash.yaml || echo "clash转换失败"
-
-                curl -fL --retry 3 \
-               "https://sub.xeton.gq/sub?target=singbox&url=$RAW" \
-                -o singbox.json || echo "singbox转换失败"
-
-                 ls -lh clash.yaml singbox.json || true
       - name: Show Result
         run: |
               echo "测速成功数量:"
@@ -233,9 +197,7 @@ jobs:
           git add \
           nodes.txt \
           base64.txt \
-          subscribe.txt \
-          nodes.json \
-          clash.yaml \
-          singbox.json
+          result.txt
+          
           git commit -m "Ultimate node update: $(date '+%Y-%m-%d %H:%M:%S')" || exit 0
           git push
