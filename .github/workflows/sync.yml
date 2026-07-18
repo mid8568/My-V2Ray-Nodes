@@ -57,7 +57,7 @@ jobs:
             
             # 将原来的 curl 命令修改为：
             curl -s -L --connect-timeout 10 --max-time 20 "https://cors.isteed.cc/$url" | grep -E "^(vmess|vless|trojan)://" >> nodes_all.txt || true
-
+          done
           # 最后的去重与清理
           sort -u nodes_all.txt | sed '/^$/d' > nodes_tmp.txt
           mv nodes_tmp.txt nodes_all.txt
