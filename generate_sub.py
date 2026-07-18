@@ -50,11 +50,20 @@ with open(
 
         try:
 
-            node=line.split(
-                "ms ",
-                1
-            )[1]
+import re
 
+
+    m=re.search(
+    r'\d+ms\s+(.*)',
+    line
+    )
+
+
+    if m:
+
+    nodes.append(
+        m.group(1)
+    )
 
             nodes.append(node)
 
