@@ -99,8 +99,7 @@ def wait_port(port):
     return False
 
 def test_node(node):
-    if any(b in node for b in ["rooster465.autos", "gossipglove.com", "ignitelimit.com"]): return
-    outbound = parse(node)
+
     if not outbound: return
     port = get_port(); cfg = tempfile.mktemp(suffix=".json"); p = None
     try:
