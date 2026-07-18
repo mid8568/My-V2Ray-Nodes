@@ -864,6 +864,9 @@ def wait_port(port):
 
 def test_node(uri):
 
+    if not outbound:
+    print("解析失败:",uri[:80])
+    return
 
     outbound=parse(uri)
 
@@ -909,29 +912,20 @@ def test_node(uri):
             )
 
 
+      p=subprocess.Popen(
 
-        p=subprocess.Popen(
-
-            [
-
-                "./sing-box",
-
-                "run",
-
-                "-c",
-
-                cfg
-
-            ],
-
+     [
+            "./sing-box",
+            "run",
+            "-c",
+            cfg
+              ],
 
             stdout=subprocess.DEVNULL,
 
+            stderr=subprocess.DEVNULL
 
-            stderr=subprocess.PIPE
-
-        )
-
+           )
 
 
 
