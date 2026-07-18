@@ -146,24 +146,41 @@ jobs:
 
           PY
 
-      - name: Sing-box Real Test
+      - name: TCP Fast Filter
         timeout-minutes: 15
+        run: |
+              chmod +x tcp_filter.py
+              python3 -u tcp_filter.py
+
+
+      - name: Sing-box Real Test
+        timeout-minutes: 45
         run: |
               chmod +x test_nodes.py
               python3 -u test_nodes.py
 
-      - name: Generate
+      - name: Generate Subscription
         run: |
-          if [ ! -s result.txt ]; then
-            echo "没有测速成功节点"
-            exit 1
-          fi
 
-          sort -n -k1 result.txt | head -100 | sed 's/^[0-9]*ms //' > nodes.txt
+              chmod +x generate_sub.py
 
-          base64 -w0 nodes.txt > base64.txt
+              python3 generate_sub.py
 
-          echo "最终节点数量: $(wc -l < nodes.txt)"
+
+              if [ ! -s subscribe.txt ]; then
+
+                echo "没有生成订阅"
+
+                exit 1
+
+              fi
+
+
+              cp subscribe.txt base64.txt
+
+
+              echo "订阅节点:"
+              wc -l result.txt
 
       - name: Generate Config
         run: |
@@ -190,6 +207,12 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add nodes.txt base64.txt clash.yaml singbox.json
+          git add \
+          nodes.txt \
+          base64.txt \
+          subscribe.txt \
+          nodes.json \
+          clash.yaml \
+          singbox.json
           git commit -m "Ultimate node update: $(date '+%Y-%m-%d %H:%M:%S')" || exit 0
           git push
