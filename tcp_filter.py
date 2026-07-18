@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 import socket
 import concurrent.futures
@@ -11,27 +12,13 @@ INPUT="nodes_all.txt"
 OUTPUT="alive_nodes.txt"
 
 
-lock=None
-
-
-
 def get_host_port(node):
 
     try:
 
         from urllib.parse import urlparse
-
-def get_host_port(node):
-
-    try:
-
-        from urllib.parse import urlparse
-
-        if node.startswith("vmess://"):
-            return None
 
         u=urlparse(node)
-
 
         host=u.hostname
 
@@ -45,10 +32,7 @@ def get_host_port(node):
 
     except:
 
-        pass
-
-
-    return None
+        return None
 
 
 
