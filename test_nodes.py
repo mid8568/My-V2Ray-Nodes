@@ -133,5 +133,5 @@ if __name__ == "__main__":
     if not os.path.exists(INPUT): exit(1)
     with open(INPUT) as f: nodes = list(set(x.strip() for x in f))
     random.shuffle(nodes)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=80) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=150) as pool:
         list(pool.map(test_node, nodes[:15000]))
