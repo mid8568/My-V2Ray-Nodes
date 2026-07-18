@@ -20,8 +20,14 @@ INPUT="nodes_all.txt"
 OUTPUT="result.txt"
 
 
-TEST_URL="https://www.gstatic.com/generate_204"
+TEST_URLS=[
+"https://www.gstatic.com/generate_204",
+"https://www.google.com",
+"https://www.youtube.com",
+"https://cloudflare.com"
+]
 
+url=random.choice(TEST_URLS)
 
 write_lock=threading.Lock()
 
@@ -757,7 +763,15 @@ def make_config(out,port):
             "level":"error"
 
         },
-
+        
+        "dns":{
+            "servers":[
+                {
+                     "tag":"remote",
+                     "address":"https://1.1.1.1/dns-query"
+        }
+    ]
+},
 
         "inbounds":[
 
@@ -959,11 +973,11 @@ def test_node(uri):
 
                 "--connect-timeout",
 
-                "5",
+                "10",
 
                 "--max-time",
 
-                "10",
+                "20",
 
                 "-A",
 
