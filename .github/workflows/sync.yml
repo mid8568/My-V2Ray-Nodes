@@ -156,7 +156,14 @@ jobs:
               chmod +x tcp_filter.py
               python3 -u tcp_filter.py
 
+      - name: Check Alive Nodes
+        run: |
+               echo "alive节点数量:"
+               wc -l alive_nodes.txt
 
+                echo "前5个:"
+                head -5 alive_nodes.txt
+                
       - name: Sing-box Real Test
         timeout-minutes: 45
         run: |
