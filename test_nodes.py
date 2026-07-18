@@ -73,7 +73,7 @@ def test_node(node):
         if not wait_port(port): return
         start = time.time()
         r = subprocess.run(["curl", "-4", "--connect-timeout", "2", "--max-time", "4", "-A", "Mozilla/5.0", "-x", f"http://127.0.0.1:{port}", "-s", "-o", "/dev/null", "-w", "%{http_code}", random.choice(TEST_URLS)], capture_output=True, timeout=6)
-        if r.stdout.decode().strip() == "204":
+        if r.stdout.decode().strip() in ["200", "204"]:
             delay = int((time.time() - start) * 1000)
             with write_lock:
                 with open(OUTPUT, "a") as f: f.write(f"{delay}|{node}\n")
