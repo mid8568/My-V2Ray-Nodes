@@ -38,33 +38,118 @@ jobs:
              
       - name: Download Sources
         run: |
-          # 定义高质量源列表
-          SOURCES=(
-            "https://raw.githubusercontent.com/tbbhub/proxy/main/dist/v2ray.txt"
-            "https://raw.githubusercontent.com/yebekhe/TelegramList/main/v2ray/ip/vless"
-            "https://raw.githubusercontent.com/yebekhe/TelegramList/main/v2ray/ip/vmess"
-            "https://raw.githubusercontent.com/yebekhe/TelegramList/main/v2ray/ip/trojan"
-            "https://raw.githubusercontent.com/vpei/Free-Node/main/v2ray.txt"
-            "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
+          > raw.txt
+          sources=(
+
+                  "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date +%Y%m%d)1"
+
+                   "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date +%Y%m%d)2"
+
+                    "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date -d yesterday +%Y%m%d)1"
+
+                    "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date -d yesterday +%Y%m%d)2"
+
+                   "https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2"
+
+                   "https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/v2ray.txt"
+
+                    "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity.txt"
+
+                    "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt"
+
+                    "https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.txt"
+
+                    "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
+
+                    "https://raw.githubusercontent.com/barabama/FreeNodes/main/nodes.txt"
+
+                    "https://raw.githubusercontent.com/youfoundamin/V2Hub/main/nodes.txt"
+
+                       )
+          for url in "${sources[@]}"; do
+            curl -L \
+                --connect-timeout 10 \
+                --max-time 60 \
+                --retry 3 \
+               "$url" >> raw.txt || true
+          done
+
+      - name: Extract
+        run: |
+          python3 <<'PY'
+
+          import re
+
+          data=open(
+              "raw.txt",
+              errors="ignore"
+          ).read()
+
+
+          patterns=[
+              r'vmess://[^\s#]+',
+
+              r'vless://[^\s#]+',
+
+              r'trojan://[^\s#]+',
+              
+               r'ss://[^\s#]+',
+               r'hy2://[^\s#]+',
+               r'hysteria2://[^\s#]+',
+
+            ]
+
+
+          nodes=[]
+
+
+          for p in patterns:
+
+              nodes += re.findall(
+                  p,
+                  data
+              )
+
+
+          clean=[]
+
+
+          for n in nodes:
+
+              n=n.replace(
+                  "\r",
+                  ""
+              )
+
+              n=n.replace(
+                  "&amp;",
+                  "&"
+              )
+
+              clean.append(n)
+
+
+          clean=list(
+              set(clean)
           )
 
-          # 清空旧节点文件
-          > nodes_all.txt
 
-          # 循环下载并汇总
-            for url in $URLS; do
-            echo "正在抓取: $url"
-            
-            # 将原来的 curl 命令修改为：
-            curl -s -L --connect-timeout 10 --max-time 20 "https://cors.isteed.cc/$url" | grep -E "^(vmess|vless|trojan)://" >> nodes_all.txt || true
-          done
-          # 最后的去重与清理
-          sort -u nodes_all.txt | sed '/^$/d' > nodes_tmp.txt
-          mv nodes_tmp.txt nodes_all.txt
+          open(
+              "nodes_all.txt",
+              "w"
+          ).write(
+              "\n".join(clean)
+          )
 
-          echo "抓取完成，清洗后共计节点: $(wc -l < nodes_all.txt)"
 
-          
+          print(
+              "节点数量:",
+              len(clean)
+          )
+
+
+          PY
+
       - name: TCP Fast Filter
         timeout-minutes: 15
         run: |
@@ -78,12 +163,7 @@ jobs:
 
                 echo "前5个:"
                 head -5 alive_nodes.txt
-
-      - name: Verify Core
-        run: |
-          ./sing-box version || echo "Sing-box 核心无法运行！"
-          ls -l sing-box
-          
+                
       - name: Sing-box Real Test
         timeout-minutes: 45
         run: |
@@ -111,24 +191,21 @@ jobs:
               
       - name: Generate Nodes
         run: |
-          # 检查 result.txt 是否存在且有内容
           if [ ! -s result.txt ]; then
-            echo "错误：result.txt 为空，没有节点通过测速。"
-            exit 0 # 不中断，防止 workflow 变红
+            echo "没有测速成功节点"
+            exit 1
           fi
 
-          echo "当前 result.txt 行数:"
-          wc -l result.txt
+          # 修复：利用管道符号 '|' 进行精准排序并提取纯节点信息
+          sort -t '|' -k1,1n result.txt \
+          | head -150 \
+          | cut -d '|' -f2- \
+          > nodes.txt
 
-          # 排序并提取：-t '|' 指定分隔符，-k1,1n 按第一列数字排序
-          # 确保这一步正确执行
-          sort -t '|' -k1,1n result.txt | head -n 150 | cut -d '|' -f2- > nodes.txt
-          
-          echo "生成后的节点数量:"
-          wc -l nodes.txt
-          
-          # 生成 base64
           base64 -w0 nodes.txt > base64.txt
+
+          echo "生成节点数量:"
+          wc -l nodes.txt
 
       - name: Show Result
         run: |
