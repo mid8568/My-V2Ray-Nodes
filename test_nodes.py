@@ -4,7 +4,7 @@ from urllib.parse import urlparse, parse_qs
 
 INPUT = "alive_nodes.txt"
 OUTPUT = "result.txt"
-TEST_URLS = ["https://www.google.com/generate_204", "https://www.youtube.com", "https://www.wikipedia.org"]
+TEST_URLS = ["https://www.google.com/generate_204", "https://cp.cloudflare.com/generate_204", "https://www.google.com/generate_204"]
 write_lock = threading.Lock()
 
 # 清空结果文件
@@ -117,11 +117,14 @@ def test_node(node):
         
         if r.returncode == 0:
             http_code = r.stdout.decode().strip()
-            if http_code in ["200", "204"]:
+            if http_code in ["200", "204","301","302"]:
                 delay = int((time.time() - start) * 1000)
                 with write_lock:
                     with open(OUTPUT, "a") as f: f.write(f"{delay}|{node}\n")
-    except: pass
+                        
+    except Exception as e:
+    print("失败:",e)
+    
     finally:
         if p: p.kill()
         if os.path.exists(cfg): os.remove(cfg)
