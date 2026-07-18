@@ -39,41 +39,29 @@ jobs:
       - name: Download Sources
         run: |
           > raw.txt
+          > nodes_all.txt
           sources=(
-
                   "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date +%Y%m%d)1"
-
-                   "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date +%Y%m%d)2"
-
-                    "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date -d yesterday +%Y%m%d)1"
-
-                    "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date -d yesterday +%Y%m%d)2"
-
-                   "https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2"
-
-                   "https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/v2ray.txt"
-
-                    "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity.txt"
-
-                    "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt"
-
-                    "https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.txt"
-
-                    "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
-
-                    "https://raw.githubusercontent.com/barabama/FreeNodes/main/nodes.txt"
-
-                    "https://raw.githubusercontent.com/youfoundamin/V2Hub/main/nodes.txt"
-
-                       )
+                  "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date +%Y%m%d)2"
+                  "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date -d yesterday +%Y%m%d)1"
+                  "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/v$(TZ=Asia/Shanghai date -d yesterday +%Y%m%d)2"
+                  "https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2"
+                  "https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/v2ray.txt"
+                  "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity.txt"
+                  "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt"
+                  "https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.txt"
+                  "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
+                  "https://raw.githubusercontent.com/barabama/FreeNodes/main/nodes.txt"
+                  "https://raw.githubusercontent.com/youfoundamin/V2Hub/main/nodes.txt"
+                         )
           for url in "${sources[@]}"; do
             curl -L \
                 --connect-timeout 10 \
                 --max-time 60 \
                 --retry 3 \
-               "$url" >> raw.txt || true
+                "$url" | tee -a raw.txt | grep -E "^(vmess|vless|trojan)://" >> nodes_all.txt || true
           done
-
+          
       - name: Extract
         run: |
           python3 <<'PY'
