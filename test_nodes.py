@@ -99,7 +99,8 @@ def wait_port(port):
     return False
 
 def test_node(node):
-
+    
+    outbound = parse(node)
     if not outbound: return
     port = get_port(); cfg = tempfile.mktemp(suffix=".json"); p = None
     try:
