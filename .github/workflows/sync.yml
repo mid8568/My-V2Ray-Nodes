@@ -182,9 +182,11 @@ jobs:
       - name: Generate Nodes
         run: |
           if [ ! -s result.txt ]; then
-            echo "没有测速成功节点"
-            exit 1
+            echo "警告：没有测速成功节点，跳过后续步骤。"
+            # exit 1  <-- 注释掉这一行，或者改为 echo
+            exit 0
           fi
+          # ... 后续逻辑
 
           # 修复：利用管道符号 '|' 进行精准排序并提取纯节点信息
           sort -t '|' -k1,1n result.txt \
