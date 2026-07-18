@@ -52,7 +52,7 @@ jobs:
           > nodes_all.txt
 
           # 循环下载并汇总
-          for url in "${SOURCES[@]}"; do
+            for url in $URLS; do
             echo "正在抓取: $url"
             
             # 将原来的 curl 命令修改为：
