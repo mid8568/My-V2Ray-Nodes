@@ -7,9 +7,7 @@ from urllib.parse import urlparse
 
 INPUT = "alive_nodes.txt"
 OUTPUT = "result.txt"
-write_lock = threading.Lock()
 
-# 清空并初始化结果文件
 with open(OUTPUT, "w") as f: pass
 
 def b64decode(x):
@@ -19,9 +17,6 @@ def b64decode(x):
         return ""
 
 def is_valid_node(node):
-    """
-    基础格式校验，确保导出的节点参数是完好、无损且可解析的
-    """
     try:
         if node.startswith("vless://"):
             u = urlparse(node)
@@ -39,25 +34,28 @@ if __name__ == "__main__":
         exit(1)
         
     with open(INPUT) as f: 
-        # 去重并清洗两端空格
         raw_nodes = list(set(x.strip() for x in f if x.strip()))
         
-    valid_nodes = []
+    vless_nodes = []
+    vmess_nodes = []
+    
     for node in raw_nodes:
-        # 1. 彻底不要 Trojan
         if node.startswith("trojan://"):
             continue
             
-        # 2. 校验 VLESS 和 VMess 的格式是否完整
         if is_valid_node(node):
-            valid_nodes.append(node)
+            # 将节点按协议分流
+            if node.startswith("vless://"):
+                vless_nodes.append(node)
+            else:
+                vmess_nodes.append(node)
 
-    # 限制最大输出数量，防止订阅撑爆 v2rayN（通常 2000-3000 个优质种子即可）
-    output_nodes = valid_nodes[:3000]
+    # 【核心调整】将 VLESS 节点全部打包放在最前面，VMess 紧随其后
+    # 扩大总量限制到 5000，确保你想找的 VLESS 节点 100% 被收入进去
+    final_nodes = (vless_nodes + vmess_nodes)[:5000]
 
     with open(OUTPUT, "w") as f:
-        for node in output_nodes:
-            # 伪装一个固定的延迟分值（比如 100），让后续的 yml 脚本能正常按格式处理它
+        for node in final_nodes:
             f.write(f"100|{node}\n")
 
-    print(f"云端清洗完成。共注入 {len(output_nodes)} 个完整格式的 VLESS/VMess 节点，等待本地 v2rayN 测速。")
+    print(f"清洗完成。VLESS数量: {len(vless_nodes)}，VMess数量: {len(vmess_nodes)}。已优先将 VLESS 排在首位。")
