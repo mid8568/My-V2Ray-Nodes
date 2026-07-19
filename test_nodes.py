@@ -1,56 +1,106 @@
 #!/usr/bin/env python3
 
 import os
+import json
+import time
+import random
+import subprocess
+import tempfile
+import concurrent.futures
 
-INPUT = "nodes_all.txt"
-OUTPUT = "alive_nodes.txt"
+
+INPUT = "alive_nodes.txt"
+OUTPUT = "result.txt"
+
+SING_BOX = "./sing-box"
+
+TEST_URL = "https://cp.cloudflare.com/generate_204"
 
 
 if not os.path.exists(INPUT):
-    print("缺少 nodes_all.txt")
+    print("缺少 alive_nodes.txt")
     exit(1)
 
 
 with open(INPUT, errors="ignore") as f:
-    raw_nodes = [
+    nodes = [
         x.strip()
         for x in f
         if x.strip()
     ]
 
 
-protocols = (
-    "vless://",
-    "vmess://",
-    "trojan://",
-    "ss://",
-    "hy2://",
-    "hysteria2://"
-)
+nodes = list(dict.fromkeys(nodes))
 
 
-nodes = []
-seen = set()
+print("读取节点:", len(nodes))
 
 
-for n in raw_nodes:
-    if n.startswith(protocols):
-        if n not in seen:
-            seen.add(n)
-            nodes.append(n)
+# 防止 GitHub Actions 超时
+random.shuffle(nodes)
+
+nodes = nodes[:500]
 
 
-print("原始节点:", len(raw_nodes))
-print("保留节点:", len(nodes))
+def test_node(node):
 
+    port = random.randint(20000,40000)
+
+
+    config = {
+        "log": {
+            "level": "error"
+        },
+
+        "inbounds":[
+            {
+                "type":"mixed",
+                "listen":"127.0.0.1",
+                "listen_port":port
+            }
+        ],
+
+        "outbounds":[
+            {
+                "type":"selector",
+                "tag":"proxy",
+                "outbounds":["node"]
+            },
+
+            {
+                "type":"direct",
+                "tag":"direct"
+            }
+        ]
+    }
+
+
+    # 这里暂时跳过复杂协议解析
+    # 防止错误节点导致失败
+
+    return None
+
+
+
+success=[]
+
+
+# 当前只是框架
+# 下一步加入 sing-box 节点解析
+
+
+print("测试完成")
 
 with open(
     OUTPUT,
-    "w",
-    encoding="utf-8"
+    "w"
 ) as f:
-    for n in nodes:
-        f.write(n + "\n")
+
+    for x in success:
+        f.write(x+"\n")
 
 
-print("生成 alive_nodes.txt")
+print(
+    "成功节点:",
+    len(success)
+)
