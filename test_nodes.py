@@ -9,6 +9,7 @@ import tempfile
 import subprocess
 import concurrent.futures
 import urllib.parse
+import urllib.request
 
 
 INPUT = "alive_nodes.txt"
@@ -16,19 +17,18 @@ OUTPUT = "result.txt"
 
 SING_BOX = "./sing-box"
 
-TEST_URL = "https://cp.cloudflare.com/generate_204"
+TEST_URL = "https://www.gstatic.com/generate_204"
 
 
-# ==========================
+# ======================
 # 初始化
-# ==========================
+# ======================
 
 if os.path.exists(OUTPUT):
     os.remove(OUTPUT)
 
 
 if not os.path.exists(INPUT):
-
     print("缺少 alive_nodes.txt")
     exit(1)
 
@@ -44,21 +44,23 @@ with open(INPUT, errors="ignore") as f:
 
 
 
-# 去重
-
 nodes = list(dict.fromkeys(nodes))
+
 
 
 # 只保留 VLESS VMESS
 
 nodes = [
+
     n for n in nodes
+
     if n.startswith(
         (
             "vless://",
             "vmess://"
         )
     )
+
 ]
 
 
@@ -69,17 +71,17 @@ print(
 
 
 
-# 防止超时
-
 random.shuffle(nodes)
 
-nodes = nodes[:1000]
+
+# 防止超时
+nodes = nodes[:3000]
 
 
 
-# ==========================
-# 节点解析
-# ==========================
+# ======================
+# 解析节点
+# ======================
 
 
 def parse_node(node):
@@ -87,18 +89,45 @@ def parse_node(node):
     try:
 
 
-        # ------------------
+        # -----------------
         # VLESS
-        # ------------------
+        # -----------------
 
         if node.startswith("vless://"):
 
 
             u = urllib.parse.urlparse(node)
 
+
             params = urllib.parse.parse_qs(
                 u.query
             )
+
+
+            outbound = {
+
+
+                "type":
+                "vless",
+
+
+                "tag":
+                "proxy",
+
+
+                "server":
+                u.hostname,
+
+
+                "server_port":
+                u.port,
+
+
+                "uuid":
+                u.username
+
+            }
+
 
 
             security = params.get(
@@ -107,24 +136,15 @@ def parse_node(node):
             )[0]
 
 
-            return {
+
+            if security == "tls":
 
 
-                "type":"vless",
+                outbound["tls"] = {
 
-                "tag":"proxy",
-
-                "server":u.hostname,
-
-                "server_port":u.port,
-
-                "uuid":u.username,
-
-
-                "tls":{
 
                     "enabled":
-                    security == "tls",
+                    True,
 
 
                     "server_name":
@@ -138,109 +158,213 @@ def parse_node(node):
                 }
 
 
-            }
+
+            # websocket
+
+
+            if params.get(
+                "type",
+                ["tcp"]
+            )[0] == "ws":
 
 
 
-        # ------------------
-        # VMESS
-        # ------------------
-
-        elif node.startswith("vmess://"):
+                outbound["transport"] = {
 
 
-            raw = node[8:]
+                    "type":
+                    "ws",
 
 
-            try:
-
-                decoded = base64.b64decode(
-                    raw + "==="
-                ).decode(
-                    errors="ignore"
-                )
-
-
-                obj=json.loads(
-                    decoded
-                )
-
-
-                return {
-
-
-                    "type":"vmess",
-
-                    "tag":"proxy",
-
-                    "server":
-                    obj.get("add"),
-
-
-                    "server_port":
-                    int(
-                        obj.get(
-                            "port"
-                        )
-                    ),
-
-
-                    "uuid":
-                    obj.get(
-                        "id"
-                    ),
-
-
-                    "security":
-                    obj.get(
-                        "scy",
-                        "auto"
-                    ),
-
-
-                    "tls":{
-
-
-                        "enabled":
-                        obj.get(
-                            "tls",
-                            ""
-                        )=="tls",
-
-
-                        "server_name":
-                        obj.get(
-                            "sni",
-                            obj.get(
-                                "host",
-                                obj.get(
-                                    "add"
-                                )
-                            )
-                        )
-
-
-                    }
-
+                    "path":
+                    params.get(
+                        "path",
+                        ["/"]
+                    )[0]
 
                 }
 
 
-            except Exception:
 
-                return None
+                host=params.get(
+                    "host",
+                    []
+                )
+
+
+                if host:
+
+
+                    outbound["transport"]["headers"]={
+
+                        "Host":
+                        host[0]
+
+                    }
+
+
+
+            return outbound
+
+
+
+
+        # -----------------
+        # VMESS
+        # -----------------
+
+        if node.startswith("vmess://"):
+
+
+
+            raw=node[8:]
+
+
+            decoded=base64.b64decode(
+
+                raw+"==="
+
+            ).decode(
+
+                errors="ignore"
+
+            )
+
+
+            obj=json.loads(
+                decoded
+            )
+
+
+
+            outbound={
+
+
+                "type":
+                "vmess",
+
+
+                "tag":
+                "proxy",
+
+
+                "server":
+                obj.get(
+                    "add"
+                ),
+
+
+                "server_port":
+                int(
+                    obj.get(
+                        "port"
+                    )
+                ),
+
+
+                "uuid":
+                obj.get(
+                    "id"
+                ),
+
+
+                "security":
+                obj.get(
+                    "scy",
+                    "auto"
+                )
+
+            }
+
+
+
+            # TLS
+
+
+            if obj.get(
+                "tls",
+                ""
+            ) == "tls":
+
+
+
+                outbound["tls"]={
+
+
+                    "enabled":
+                    True,
+
+
+                    "server_name":
+                    obj.get(
+                        "sni",
+                        obj.get(
+                            "host",
+                            obj.get(
+                                "add"
+                            )
+                        )
+                    )
+
+                }
+
+
+
+            # WS
+
+
+            if obj.get(
+                "net"
+            ) == "ws":
+
+
+
+                outbound["transport"]={
+
+
+                    "type":
+                    "ws",
+
+
+                    "path":
+                    obj.get(
+                        "path",
+                        "/"
+                    )
+
+                }
+
+
+
+                if obj.get(
+                    "host"
+                ):
+
+
+                    outbound["transport"]["headers"]={
+
+
+                        "Host":
+                        obj["host"]
+
+                    }
+
+
+
+            return outbound
 
 
 
     except Exception:
 
+
         return None
 
 
 
-# ==========================
-# 测试节点
-# ==========================
+# ======================
+# 测试
+# ======================
 
 
 def test_node(node):
@@ -267,7 +391,8 @@ def test_node(node):
 
         "log":{
 
-            "level":"error"
+            "level":
+            "error"
 
         },
 
@@ -276,10 +401,13 @@ def test_node(node):
 
             {
 
-                "type":"mixed",
+                "type":
+                "mixed",
+
 
                 "listen":
                 "127.0.0.1",
+
 
                 "listen_port":
                 port
@@ -294,9 +422,7 @@ def test_node(node):
 
             outbound
 
-
         ]
-
 
     }
 
@@ -321,7 +447,7 @@ def test_node(node):
 
 
 
-    p=None
+    process=None
 
 
     try:
@@ -331,7 +457,7 @@ def test_node(node):
 
 
 
-        p=subprocess.Popen(
+        process=subprocess.Popen(
 
             [
 
@@ -345,7 +471,9 @@ def test_node(node):
 
             ],
 
+
             stdout=subprocess.DEVNULL,
+
 
             stderr=subprocess.DEVNULL
 
@@ -357,13 +485,10 @@ def test_node(node):
 
 
 
-        import urllib.request
-
-
-
         proxy=urllib.request.ProxyHandler(
 
             {
+
 
                 "http":
                 f"socks5://127.0.0.1:{port}",
@@ -384,7 +509,7 @@ def test_node(node):
 
 
 
-        opener.open(
+        response=opener.open(
 
             TEST_URL,
 
@@ -394,11 +519,15 @@ def test_node(node):
 
 
 
+        if response.status != 204:
+
+            return None
+
+
+
         delay=int(
 
-            (time.time()-start)
-            *
-            1000
+            (time.time()-start)*1000
 
         )
 
@@ -418,11 +547,12 @@ def test_node(node):
     finally:
 
 
-        if p:
+        if process:
+
 
             try:
 
-                p.kill()
+                process.kill()
 
             except:
 
@@ -442,9 +572,10 @@ def test_node(node):
 
 
 
-# ==========================
-# 并发测试
-# ==========================
+
+# ======================
+# 并发测速
+# ======================
 
 
 success=[]
@@ -458,12 +589,13 @@ print(
 
 with concurrent.futures.ThreadPoolExecutor(
 
-    max_workers=20
+    max_workers=40
 
 ) as executor:
 
 
-    tasks=[
+
+    futures=[
 
         executor.submit(
             test_node,
@@ -475,22 +607,24 @@ with concurrent.futures.ThreadPoolExecutor(
     ]
 
 
-    for task in concurrent.futures.as_completed(tasks):
+
+    for future in concurrent.futures.as_completed(futures):
 
 
-        r=task.result()
+        result=future.result()
 
 
-        if r:
+        if result:
 
 
-            success.append(r)
+            success.append(result)
 
 
             print(
-                r.split("|")[0],
+                result.split("|")[0],
                 "ms"
             )
+
 
 
 
@@ -505,9 +639,10 @@ success.sort(
 
 
 
-# ==========================
-# 输出结果
-# ==========================
+
+# ======================
+# 输出
+# ======================
 
 
 with open(
@@ -538,6 +673,6 @@ print(
 
 
 print(
-    "已生成:",
+    "生成:",
     OUTPUT
 )
