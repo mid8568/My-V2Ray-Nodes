@@ -2,7 +2,6 @@
 
 import os
 
-
 INPUT = "nodes_all.txt"
 OUTPUT = "alive_nodes.txt"
 
@@ -20,14 +19,10 @@ with open(INPUT, errors="ignore") as f:
     ]
 
 
-# 支持全部协议
+# 只保留 VLESS / VMESS
 protocols = (
     "vless://",
-    "vmess://",
-    "trojan://",
-    "ss://",
-    "hy2://",
-    "hysteria2://"
+    "vmess://"
 )
 
 
@@ -45,11 +40,11 @@ for n in raw_nodes:
 
 
 print(
-    f"原始抓取总数: {len(raw_nodes)}"
+    f"原始节点数量: {len(raw_nodes)}"
 )
 
 print(
-    f"保留协议节点: {len(nodes)}"
+    f"VLESS+VMESS节点数量: {len(nodes)}"
 )
 
 
