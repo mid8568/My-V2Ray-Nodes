@@ -41,8 +41,6 @@ jobs:
           > raw.txt
           > nodes_all.txt
           sources=(
-
-            "https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/v2ray.txt"
          
             "https://github.com/Epodonios/v2ray-configs/raw/main/All_Configs_Sub.txt"
           )
