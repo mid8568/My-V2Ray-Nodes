@@ -93,48 +93,90 @@ def parse_node(node):
 
 
 
-        elif node.startswith("vmess://"):
+elif node.startswith("vmess://"):
+
+    raw=node[8:]
+
+    # 新格式 vmess://uuid@host:port?参数
+    if "@" in raw:
+
+        u=urllib.parse.urlparse(
+            node
+        )
+
+        params=urllib.parse.parse_qs(
+            u.query
+        )
 
 
-            data=node[8:]
+        return {
 
-            decoded=base64.b64decode(
-                data+"==="
+            "type":"vmess",
 
-            ).decode(
-                errors="ignore"
-            )
+            "tag":"proxy",
 
+            "server":u.hostname,
 
-            obj=json.loads(decoded)
+            "server_port":u.port,
 
+            "uuid":u.username,
 
-            return {
+            "security":params.get(
+                "encryption",
+                ["auto"]
+            )[0],
 
-                "type":"vmess",
-
-                "tag":"proxy",
-
-                "server":obj["add"],
-
-                "server_port":int(obj["port"]),
-
-                "uuid":obj["id"],
-
-                "security":obj.get(
-                    "scy",
-                    "auto"
-                ),
-
-                "tls":{
-                    "enabled":True,
-                    "server_name":obj.get(
-                        "host",
-                        obj["add"]
-                    )
-                }
-
+            "tls":{
+                "enabled":
+                params.get(
+                    "security",
+                    ["none"]
+                )[0]=="tls"
             }
+
+        }
+
+
+    # 老格式 vmess://base64(json)
+
+    decoded=base64.b64decode(
+        raw+"==="
+    ).decode(
+        errors="ignore"
+    )
+
+
+    obj=json.loads(decoded)
+
+
+    return {
+
+        "type":"vmess",
+
+        "tag":"proxy",
+
+        "server":obj["add"],
+
+        "server_port":int(
+            obj["port"]
+        ),
+
+        "uuid":obj["id"],
+
+        "security":obj.get(
+            "scy",
+            "auto"
+        ),
+
+        "tls":{
+            "enabled":
+            obj.get(
+                "tls",
+                ""
+            )=="tls"
+        }
+
+    }
 
 
     except Exception:
