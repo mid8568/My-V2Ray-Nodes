@@ -118,6 +118,10 @@ jobs:
                 echo "前5个:"
                 head -5 alive_nodes.txt
                 
+      - name: Clean Old Result
+        run: |
+          rm -f result.txt nodes.txt base64.txt
+          
       - name: Sing-box Real Test
         timeout-minutes: 45
         run: |
@@ -145,22 +149,28 @@ jobs:
               
       - name: Generate Nodes
         run: |
+          ls -lh
+
+          echo "result:"
+          wc -l result.txt
+
           if [ ! -s result.txt ]; then
             echo "没有测速成功节点"
             exit 1
           fi
 
-          # 修复：利用管道符号 '|' 进行精准排序并提取纯节点信息
+
           sort -t '|' -k1,1n result.txt \
           | head -300 \
           | cut -d '|' -f2- \
           > nodes.txt
 
+
           base64 -w0 nodes.txt > base64.txt
 
-          echo "生成节点数量:"
-          wc -l nodes.txt
 
+          echo "nodes:"
+          wc -l nodes.txt
       - name: Show Result
         run: |
               echo "测速成功数量:"
