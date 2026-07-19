@@ -19,6 +19,7 @@ jobs:
         run: |
           sudo apt update -qq
           sudo apt install -y jq curl wget unzip
+          
           wget -q $(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest \
           | jq -r '.assets[] | select(.name | contains("linux-amd64.tar.gz")) | .browser_download_url') \
            -O sing.tar.gz
@@ -37,73 +38,108 @@ jobs:
              
       - name: Download Sources
         run: |
-          rm -f raw.txt nodes_all.txt
+          > raw.txt
+          > nodes_all.txt
+          sources=(
 
-          curl -fsSL \
-            --connect-timeout 10 \
-            --max-time 60 \
-            --retry 3 \
-            "https://github.com/Epodonios/v2ray-configs/raw/main/All_Configs_Sub.txt" \
-            -o raw.txt
+            # 高质量稳定源
+            "https://github.com/Epodonios/v2ray-configs/raw/main/All_Configs_Sub.txt"
 
+            "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
+
+            "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
+
+            "https://raw.githubusercontent.com/tuji-source/Tuji/main/v2ray.txt"
+
+
+            # 数量较多，质量中等
+            "https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2"
+
+          )
+          for url in "${sources[@]}"; do
+            curl -L \
+                --connect-timeout 10 \
+                --max-time 60 \
+                --retry 3 \
+                "$url" | tee -a raw.txt | grep -E "^(vmess|vless|trojan)://" >> nodes_all.txt || true
+          done
+          
+      - name: Extract
+        run: |
           python3 <<'PY'
-          import base64
+
           import re
 
-          with open("raw.txt", "r", errors="ignore") as f:
-              data = f.read().strip()
+          data=open(
+              "raw.txt",
+              errors="ignore"
+          ).read()
 
-          # 自动判断是否为 Base64 订阅
-          try:
-              decoded = base64.b64decode(data + "===", validate=False).decode("utf-8", errors="ignore")
-              if "://" in decoded:
-                  data = decoded
-                  print("检测到 Base64 订阅，已自动解码")
-              else:
-                  print("检测到明文订阅")
-          except Exception:
-              print("检测到明文订阅")
 
-          patterns = [
-              r'vmess://[^\s]+',
-              r'vless://[^\s]+',
-              r'trojan://[^\s]+',
-              r'ss://[^\s]+',
-              r'hy2://[^\s]+',
-              r'hysteria2://[^\s]+',
-          ]
+          patterns=[
+              r'vmess://[^\s#]+',
 
-          nodes = []
-          seen = set()
+              r'vless://[^\s#]+',
 
-          for pattern in patterns:
-              for node in re.findall(pattern, data):
-                  node = node.strip().replace("\r", "")
-                  if node and node not in seen:
-                      seen.add(node)
-                      nodes.append(node)
+              r'trojan://[^\s#]+',
+              
+               r'ss://[^\s#]+',
+               r'hy2://[^\s#]+',
+               r'hysteria2://[^\s#]+',
 
-          with open("nodes_all.txt", "w", encoding="utf-8") as f:
-              f.write("\n".join(nodes))
+            ]
 
-          print(f"提取节点: {len(nodes)}")
+
+          nodes=[]
+
+
+          for p in patterns:
+
+              nodes += re.findall(
+                  p,
+                  data
+              )
+
+
+          clean=[]
+
+
+          for n in nodes:
+
+              n=n.replace(
+                  "\r",
+                  ""
+              )
+
+              n=n.replace(
+                  "&amp;",
+                  "&"
+              )
+
+              clean.append(n)
+
+
+          clean=list(
+              set(clean)
+          )
+
+
+          open(
+              "nodes_all.txt",
+              "w"
+          ).write(
+              "\n".join(clean)
+          )
+
+
+          print(
+              "节点数量:",
+              len(clean)
+          )
+
+
           PY
-          
-      - name: Check Extract Result
-        run: |
-          echo "原始节点数量:"
-          wc -l nodes_all.txt
 
-          echo "协议统计:"
-          grep -E "^vmess://" nodes_all.txt | wc -l
-          grep -E "^vless://" nodes_all.txt | wc -l
-          grep -E "^trojan://" nodes_all.txt | wc -l
-          grep -E "^ss://" nodes_all.txt | wc -l
-          grep -E "^hy2://" nodes_all.txt | wc -l
-
-          echo "前5节点:"
-          head -5 nodes_all.txt
-          
       - name: TCP Fast Filter
         timeout-minutes: 15
         run: |
@@ -118,10 +154,6 @@ jobs:
                 echo "前5个:"
                 head -5 alive_nodes.txt
                 
-      - name: Clean Old Result
-        run: |
-          rm -f result.txt nodes.txt base64.txt
-          
       - name: Sing-box Real Test
         timeout-minutes: 45
         run: |
@@ -149,28 +181,22 @@ jobs:
               
       - name: Generate Nodes
         run: |
-          ls -lh
-
-          echo "result:"
-          wc -l result.txt
-
           if [ ! -s result.txt ]; then
             echo "没有测速成功节点"
             exit 1
           fi
 
-
+          # 修复：利用管道符号 '|' 进行精准排序并提取纯节点信息
           sort -t '|' -k1,1n result.txt \
           | head -300 \
           | cut -d '|' -f2- \
           > nodes.txt
 
-
           base64 -w0 nodes.txt > base64.txt
 
-
-          echo "nodes:"
+          echo "生成节点数量:"
           wc -l nodes.txt
+
       - name: Show Result
         run: |
               echo "测速成功数量:"
@@ -183,7 +209,7 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add -f \
+          git add \
           nodes.txt \
           base64.txt \
           result.txt
