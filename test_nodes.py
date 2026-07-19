@@ -50,22 +50,10 @@ def parse_vmess(uri):
         return out
     except: return None
 
-def parse_trojan(uri):
-    try:
-        u = urlparse(uri); q = parse_qs(u.query); host = u.hostname
-        if not host or not u.username: return None
-        out = {"type": "trojan", "tag": "proxy", "server": host, "server_port": int(u.port) if u.port else 443, "password": u.username, "tls": {"enabled": True, "server_name": q.get("sni", [host])[0]}}
-        if q.get("allowInsecure", [""])[0] in ("1", "true"): out["tls"]["insecure"] = True
-        net = q.get("type", [""])[0]
-        if net == "ws": out["transport"] = {"type": "ws", "path": q.get("path", ["/"])[0], "headers": {"Host": q.get("host", [host])[0]}}
-        elif net == "grpc": out["transport"] = {"type": "grpc", "service_name": q.get("serviceName", [""])[0]}
-        return out
-    except: return None
-
 def parse(uri):
+    # 【修改点 1】只解析 vless 和 vmess，凡是 trojan 开头的节点一律返回 None 丢弃
     if uri.startswith("vless://"): return parse_vless(uri)
     if uri.startswith("vmess://"): return parse_vmess(uri)
-    if uri.startswith("trojan://"): return parse_trojan(uri)
     return None
 
 def make_config(node, port):
@@ -79,6 +67,9 @@ def wait_port(port):
     return False
 
 def test_node(node):
+    # 【修改点 2】直接拦截 trojan 链接，不进入测试流程
+    if node.startswith("trojan://"): return
+
     outbound = parse(node)
     if not outbound: return
     port = get_port(); cfg = tempfile.mktemp(suffix=".json"); p = None
@@ -107,11 +98,10 @@ def test_node(node):
                 cost = float(result[1])
 
                 if http_code in ["200", "204"]:
-                    # 【核心优化策略】
                     # 如果是 VLESS 节点，给极宽的保留门槛（只要 12 秒内能响应全放行），确保那批好用的低延迟 VLESS 不被截断
                     if node.startswith("vless://") and cost < 12:
                         delay = int(cost * 1000)
-                    # 如果是极易失效的 vmess/trojan 节点，提高筛选门槛（必须在 3.5 秒内完成连接才予保留）
+                    # 如果是 vmess 节点，提高筛选门槛（必须在 3.5 秒内完成连接才予保留）
                     elif cost < 3.5:
                         delay = int(cost * 1000)
                     else:
