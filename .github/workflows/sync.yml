@@ -42,7 +42,6 @@ jobs:
           > nodes_all.txt
           sources=(
             # 每日高频更新的独立活跃源
-            "https://raw.githubusercontent.com/w1770946466/Auto_Proxy/main/Long_term_node_1.txt"
 
             "https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/v2ray.txt"
          
