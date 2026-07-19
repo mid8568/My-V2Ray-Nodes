@@ -34,6 +34,16 @@ with open(INPUT, errors="ignore") as f:
 
 nodes=list(dict.fromkeys(nodes))
 
+# 只测试 VLESS / VMESS
+nodes=[
+    n for n in nodes
+    if n.startswith(
+          (
+            "vless://",
+            "vmess://"
+          )
+       )
+   ]
 
 print(
     "读取节点:",
@@ -81,31 +91,6 @@ def parse_node(node):
 
             }
 
-
-        elif node.startswith("trojan://"):
-
-            u=urllib.parse.urlparse(node)
-
-            password=u.username
-
-            return {
-
-                "type":"trojan",
-
-                "tag":"proxy",
-
-                "server":u.hostname,
-
-                "server_port":u.port,
-
-                "password":password,
-
-                "tls":{
-                    "enabled":True,
-                    "server_name":u.hostname
-                }
-
-            }
 
 
         elif node.startswith("vmess://"):
