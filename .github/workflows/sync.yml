@@ -44,8 +44,9 @@ jobs:
             --connect-timeout 10 \
             --max-time 60 \
             --retry 3 \
+            
             "https://github.com/Epodonios/v2ray-configs/raw/main/All_Configs_Sub.txt" \
-            "https://raw.githubusercontent.com/w1770946466/Auto_Proxy/main/Long_term_node_1.txt" \
+
             -o raw.txt
 
           python3 <<'PY'
