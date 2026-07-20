@@ -41,17 +41,8 @@ jobs:
           > raw.txt
           > nodes_all.txt
           sources=(
-
-            # 高质量稳定源
-            "https://github.com/Epodonios/v2ray-configs/raw/main/All_Configs_Sub.txt"
-
-            "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
-
-            "https://raw.githubusercontent.com/tuji-source/Tuji/main/v2ray.txt"
-
-
-            # 数量较多，质量中等
-            "https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2"
+          
+                "https://github.com/ebrasha/free-v2ray-public-list?utm_source=chatgpt.com"
 
           )
           for url in "${sources[@]}"; do
