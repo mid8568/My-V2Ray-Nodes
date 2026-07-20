@@ -50,7 +50,7 @@ jobs:
                 --connect-timeout 10 \
                 --max-time 60 \
                 --retry 3 \
-                "$url" | tee -a raw.txt | grep -E "^(vmess|vless|trojan)://" >> nodes_all.txt || true
+                "$url" | tee -a raw.txt | grep -E "^(vmess|vless|trojan|ss)://" >> nodes_all.txt || true
           done
           
       - name: Extract
