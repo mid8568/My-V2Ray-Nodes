@@ -42,11 +42,7 @@ jobs:
           > nodes_all.txt
           sources=(
           
-                   "https://github.com/Epodonios/v2ray-configs/raw/main/All_Configs_Sub.txt"
-
-                   "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
-
-                   "https://raw.githubusercontent.com/tuji-source/Tuji/main/v2ray.txt"
+                  "https://freeproxydb.com/api/proxy/subscribe?country=&protocol=vless&anonymity=&speed=0,60&https=0&count=500&subscribe_format=original"
 
           )
           for url in "${sources[@]}"; do
