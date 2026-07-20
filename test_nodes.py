@@ -57,7 +57,9 @@ nodes = [
     if n.startswith(
         (
             "vless://",
-            "vmess://"
+            "vmess://",
+            "trojan://",
+            "ss://"
         )
     )
 
@@ -87,7 +89,135 @@ nodes = nodes[:3000]
 def parse_node(node):
 
     try:
+        # -----------------
+        # TROJAN
+        # -----------------
 
+        if node.startswith("trojan://"):
+
+
+            u = urllib.parse.urlparse(node)
+
+
+            params = urllib.parse.parse_qs(
+                u.query
+            )
+
+
+            outbound = {
+
+                "type":
+                "trojan",
+
+                "tag":
+                "proxy",
+
+                "server":
+                u.hostname,
+
+                "server_port":
+                u.port,
+
+                "password":
+                u.username
+
+            }
+
+
+
+            if params.get(
+                "sni"
+            ):
+
+
+                outbound["tls"]={
+
+                    "enabled":
+                    True,
+
+                    "server_name":
+                    params["sni"][0]
+
+                }
+
+
+            return outbound
+
+        # -----------------
+        # Shadowsocks
+        # -----------------
+
+        if node.startswith("ss://"):
+
+
+            raw=node[5:]
+
+
+            # 去掉 fragment
+
+            raw=raw.split("#")[0]
+
+
+            try:
+
+
+                decoded=base64.urlsafe_b64decode(
+                    raw+"=="
+                ).decode()
+
+
+                method_password,server=decoded.split(
+                    "@"
+                )
+
+
+                method,password=method_password.split(
+                    ":",
+                    1
+                )
+
+
+                host,port=server.split(
+                    ":"
+                )
+
+
+                outbound={
+
+
+                    "type":
+                    "shadowsocks",
+
+
+                    "tag":
+                    "proxy",
+
+
+                    "server":
+                    host,
+
+
+                    "server_port":
+                    int(port),
+
+
+                    "method":
+                    method,
+
+
+                    "password":
+                    password
+
+                }
+
+
+                return outbound
+
+
+            except:
+
+
+                return None
 
         # -----------------
         # VLESS
