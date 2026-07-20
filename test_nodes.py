@@ -611,7 +611,7 @@ def test_node(node):
 
 
 
-        time.sleep(1)
+        time.sleep(3)
 
 
 
@@ -649,7 +649,7 @@ def test_node(node):
 
 
 
-        if response.status != 204:
+        if response.status not in [200,204]:
 
             return None
 
