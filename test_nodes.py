@@ -77,7 +77,7 @@ random.shuffle(nodes)
 
 
 # 防止超时
-nodes = nodes[:3000]
+nodes = nodes[:8000]
 
 
 
@@ -719,7 +719,7 @@ print(
 
 with concurrent.futures.ThreadPoolExecutor(
 
-    max_workers=40
+    max_workers=80
 
 ) as executor:
 
