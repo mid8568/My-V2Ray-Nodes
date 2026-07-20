@@ -42,7 +42,11 @@ jobs:
           > nodes_all.txt
           sources=(
           
-                "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub1.txt"
+                   "https://github.com/Epodonios/v2ray-configs/raw/main/All_Configs_Sub.txt"
+
+                   "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
+
+                   "https://raw.githubusercontent.com/tuji-source/Tuji/main/v2ray.txt"
 
           )
           for url in "${sources[@]}"; do
