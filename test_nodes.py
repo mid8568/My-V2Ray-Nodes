@@ -17,7 +17,7 @@ OUTPUT = "result.txt"
 
 SING_BOX = "./sing-box"
 
-TEST_URL = "https://www.gstatic.com/generate_204, https://api.ipify.org"
+TEST_URL = "https://www.gstatic.com/generate_204"
 
 
 # ======================
@@ -653,9 +653,6 @@ def test_node(node):
 
             return None
 
-        ip=response.read().decode(
-        errors="ignore"
-        ).strip()
 
         delay=int(
 
