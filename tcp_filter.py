@@ -18,13 +18,12 @@ with open(INPUT, errors="ignore") as f:
         if x.strip()
     ]
 
-
-# 只保留 VLESS / VMESS
 protocols = (
     "vless://",
-    "vmess://"
+    "vmess://",
+    "trojan://",
+    "ss://"
 )
-
 
 nodes = []
 seen = set()
@@ -38,7 +37,6 @@ for n in raw_nodes:
             seen.add(n)
             nodes.append(n)
 
-
 print(
     f"原始节点数量: {len(raw_nodes)}"
 )
@@ -46,7 +44,6 @@ print(
 print(
     f"VLESS+VMESS节点数量: {len(nodes)}"
 )
-
 
 with open(
     OUTPUT,
