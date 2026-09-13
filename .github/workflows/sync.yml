@@ -41,7 +41,6 @@ jobs:
           > raw.txt
           > nodes_all.txt
           sources=(
-                 "https://freeproxydb.com/api/proxy/subscribe?country=&protocol=vless&anonymity=&speed=0,60&https=0&count=500&subscribe_format=original"
 
                    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt"
 
