@@ -41,10 +41,16 @@ jobs:
           > raw.txt
           > nodes_all.txt
           sources=(
-          
-                  "https://freeproxydb.com/api/proxy/subscribe?country=&protocol=vless&anonymity=&speed=0,60&https=0&count=500&subscribe_format=original"
+                 "https://freeproxydb.com/api/proxy/subscribe?country=&protocol=vless&anonymity=&speed=0,60&https=0&count=500&subscribe_format=original"
 
-          )
+                   "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt"
+
+                   "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt"
+
+                   "https://raw.githubusercontent.com/rtwo2/FastNodes/main/sub/top.txt"
+
+                    "https://raw.githubusercontent.com/morpheusadam/v2ray-config/main/subs/bundles/best.txt"
+              )
           for url in "${sources[@]}"; do
             curl -L \
                 --connect-timeout 10 \
