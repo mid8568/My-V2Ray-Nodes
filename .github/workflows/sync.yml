@@ -2,6 +2,7 @@ name: V2Ray Ultimate Node Sync
 
 on:
   workflow_dispatch:
+
   schedule:
     - cron: "0 */4 * * *"
 
@@ -9,204 +10,808 @@ permissions:
   contents: write
 
 jobs:
+
   sync:
+
     runs-on: ubuntu-latest
+
     steps:
+
+      # ==========================================
+      # 1. Checkout
+      # ==========================================
+
       - name: Checkout
         uses: actions/checkout@v6
 
+
+      # ==========================================
+      # 2. Install dependencies
+      # ==========================================
+
+      - name: Install Dependencies
+        run: |
+
+          sudo apt update -qq
+
+          sudo apt install -y \
+            jq \
+            curl \
+            wget \
+            unzip \
+            python3 \
+            python3-pip
+
+
+      # ==========================================
+      # 3. Install sing-box
+      # ==========================================
+
       - name: Install sing-box
         run: |
-          sudo apt update -qq
-          sudo apt install -y jq curl wget unzip
-          
-          wget -q $(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest \
-          | jq -r '.assets[] | select(.name | contains("linux-amd64.tar.gz")) | .browser_download_url') \
-           -O sing.tar.gz
 
-            tar xf sing.tar.gz
-            mv sing-box-*/sing-box sing-box
-            chmod +x sing-box
-            
+          echo "正在获取 sing-box 最新版本..."
+
+          URL=$(curl -fsSL \
+            https://api.github.com/repos/SagerNet/sing-box/releases/latest \
+            | jq -r '
+              .assets[]
+              | select(
+                  .name
+                  | contains("linux-amd64.tar.gz")
+                )
+              | .browser_download_url
+            ' \
+            | head -1)
+
+          echo "下载地址:"
+          echo "$URL"
+
+          if [ -z "$URL" ] || [ "$URL" = "null" ]; then
+
+            echo "无法获取 sing-box 下载地址"
+
+            exit 1
+
+          fi
+
+          wget -q \
+            "$URL" \
+            -O sing.tar.gz
+
+          echo "解压 sing-box..."
+
+          tar -xf sing.tar.gz
+
+          mv sing-box-*/sing-box sing-box
+
+          chmod +x sing-box
+
+          echo "sing-box 安装完成"
+
+
+      # ==========================================
+      # 4. Check sing-box
+      # ==========================================
+
       - name: sing-box version
         run: |
-             ./sing-box version
-             
-      - name: Install Python
-        run: |
-             sudo apt install -y python3 curl jq
-             
+
+          ./sing-box version
+
+
+      # ==========================================
+      # 5. Download Sources
+      # ==========================================
+
       - name: Download Sources
         run: |
-          > raw.txt
-          > nodes_all.txt
+
+          set -e
+
+          rm -f raw.txt
+          rm -f nodes_all.txt
+
+          touch raw.txt
+          touch nodes_all.txt
+
+
+          # ======================================
+          # 节点源
+          # ======================================
+
           sources=(
 
-                   "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt"
+            "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt"
 
-                   "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt"
+            "https://raw.githubusercontent.com/rtwo2/FastNodes/main/sub/top.txt"
 
-                   "https://raw.githubusercontent.com/rtwo2/FastNodes/main/sub/top.txt"
+          )
 
-                    "https://raw.githubusercontent.com/morpheusadam/v2ray-config/main/subs/bundles/best.txt"
-              )
+
+          echo ""
+          echo "=========================================="
+          echo "开始下载节点源"
+          echo "=========================================="
+
+
+          total_sources=0
+          success_sources=0
+
+
           for url in "${sources[@]}"; do
-            curl -L \
-                --connect-timeout 10 \
-                --max-time 60 \
-                --retry 3 \
-                "$url" | tee -a raw.txt | grep -E "^(vmess|vless|trojan|ss)://" >> nodes_all.txt || true
+
+            total_sources=$((total_sources + 1))
+
+            echo ""
+            echo "------------------------------------------"
+            echo "正在下载:"
+            echo "$url"
+            echo "------------------------------------------"
+
+
+            tmp_file=$(mktemp)
+
+
+            if curl \
+              -L \
+              --connect-timeout 15 \
+              --max-time 120 \
+              --retry 3 \
+              --retry-delay 2 \
+              --fail \
+              -sS \
+              "$url" \
+              -o "$tmp_file"
+            then
+
+              size=$(wc -c < "$tmp_file")
+
+              echo "下载成功"
+              echo "文件大小: ${size} bytes"
+
+
+              if [ "$size" -gt 0 ]; then
+
+                cat "$tmp_file" >> raw.txt
+
+                echo "" >> raw.txt
+
+                success_sources=$((success_sources + 1))
+
+              else
+
+                echo "警告：源返回空内容"
+
+              fi
+
+            else
+
+              echo "下载失败:"
+              echo "$url"
+
+            fi
+
+
+            rm -f "$tmp_file"
+
           done
-          
-      - name: Extract
+
+
+          echo ""
+          echo "=========================================="
+          echo "下载完成"
+          echo "=========================================="
+
+          echo "源总数:"
+          echo "$total_sources"
+
+          echo "成功源数量:"
+          echo "$success_sources"
+
+          echo ""
+          echo "raw.txt 大小:"
+
+          wc -c raw.txt
+
+
+          if [ ! -s raw.txt ]; then
+
+            echo ""
+            echo "错误：所有节点源都是空的"
+            echo "raw.txt 没有任何内容"
+
+            exit 1
+
+          fi
+
+
+      # ==========================================
+      # 6. Extract Nodes
+      # ==========================================
+
+      - name: Extract Nodes
         run: |
+
+          set -e
+
+
           python3 <<'PY'
 
           import re
+          import base64
 
-          data=open(
+
+          # ======================================
+          # 读取原始数据
+          # ======================================
+
+          with open(
               "raw.txt",
+              "r",
+              encoding="utf-8",
               errors="ignore"
-          ).read()
+          ) as f:
+
+              data = f.read()
 
 
-          patterns=[
-              r'vmess://[^\s#]+',
-
-              r'vless://[^\s#]+',
-
-              r'trojan://[^\s#]+',
-              
-               r'ss://[^\s#]+',
-               r'hy2://[^\s#]+',
-               r'hysteria2://[^\s#]+',
-
-            ]
+          print("raw.txt 字符数:", len(data))
 
 
-          nodes=[]
+          # ======================================
+          # 清理 HTML
+          # ======================================
+
+          data = data.replace(
+              "&amp;",
+              "&"
+          )
+
+          data = data.replace(
+              "\r",
+              ""
+          )
 
 
-          for p in patterns:
+          # ======================================
+          # 直接提取节点
+          # ======================================
 
-              nodes += re.findall(
-                  p,
-                  data
+          patterns = [
+
+              r'vmess://[^\s<>"\']+',
+
+              r'vless://[^\s<>"\']+',
+
+              r'trojan://[^\s<>"\']+',
+
+              r'ss://[^\s<>"\']+',
+
+              r'hy2://[^\s<>"\']+',
+
+              r'hysteria2://[^\s<>"\']+',
+
+          ]
+
+
+          nodes = []
+
+
+          for pattern in patterns:
+
+              found = re.findall(
+                  pattern,
+                  data,
+                  flags=re.IGNORECASE
               )
 
+              nodes.extend(found)
 
-          clean=[]
+
+          print(
+              "直接提取节点:",
+              len(nodes)
+          )
 
 
-          for n in nodes:
+          # ======================================
+          # 尝试 Base64 解码
+          # ======================================
 
-              n=n.replace(
+          # 某些订阅源可能返回 Base64。
+          # 尝试逐行检测并解码。
+
+          decoded_nodes = []
+
+
+          for line in data.splitlines():
+
+              line = line.strip()
+
+
+              if not line:
+                  continue
+
+
+              # 排除已经是 URI 的行
+
+              if re.match(
+                  r'^(vmess|vless|trojan|ss|hy2|hysteria2)://',
+                  line,
+                  re.IGNORECASE
+              ):
+                  continue
+
+
+              # Base64 长度太短的不处理
+
+              if len(line) < 20:
+                  continue
+
+
+              try:
+
+                  padding = "=" * (
+                      (-len(line)) % 4
+                  )
+
+
+                  decoded = base64.b64decode(
+                      line + padding,
+                      validate=False
+                  ).decode(
+                      "utf-8",
+                      errors="ignore"
+                  )
+
+
+                  if any(
+                      x in decoded
+                      for x in [
+                          "vmess://",
+                          "vless://",
+                          "trojan://",
+                          "ss://",
+                          "hy2://",
+                          "hysteria2://"
+                      ]
+                  ):
+
+                      decoded_nodes.append(
+                          decoded
+                      )
+
+              except Exception:
+
+                  pass
+
+
+          print(
+              "Base64 解码得到文本:",
+              len(decoded_nodes)
+          )
+
+
+          # ======================================
+          # 从 Base64 解码结果继续提取
+          # ======================================
+
+          for decoded in decoded_nodes:
+
+              for pattern in patterns:
+
+                  found = re.findall(
+                      pattern,
+                      decoded,
+                      flags=re.IGNORECASE
+                  )
+
+                  nodes.extend(found)
+
+
+          # ======================================
+          # 清理节点
+          # ======================================
+
+          clean = []
+
+
+          for node in nodes:
+
+              node = node.strip()
+
+              node = node.replace(
                   "\r",
                   ""
               )
 
-              n=n.replace(
+              node = node.replace(
                   "&amp;",
                   "&"
               )
 
-              clean.append(n)
+              node = node.rstrip(
+                  "\"'<>"
+              )
 
 
-          clean=list(
-              set(clean)
+              if node:
+
+                  clean.append(
+                      node
+                  )
+
+
+          # ======================================
+          # 去重
+          # ======================================
+
+          clean = list(
+              dict.fromkeys(clean)
           )
 
 
-          open(
+          # ======================================
+          # 保存
+          # ======================================
+
+          with open(
               "nodes_all.txt",
-              "w"
-          ).write(
-              "\n".join(clean)
-          )
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              f.write(
+                  "\n".join(clean)
+              )
 
 
-          print(
-              "节点数量:",
-              len(clean)
-          )
+          print("")
+          print("================================")
+          print("最终节点数量:", len(clean))
+          print("================================")
+
+
+          if len(clean) == 0:
+
+              print("")
+              print("错误：没有提取到任何节点")
+              print("")
+              print("请检查 raw.txt 是否包含:")
+              print("vmess://")
+              print("vless://")
+              print("trojan://")
+              print("ss://")
+              print("hy2://")
+              print("hysteria2://")
+
+              raise SystemExit(1)
 
 
           PY
 
+
+          echo ""
+          echo "nodes_all.txt:"
+          wc -l nodes_all.txt
+
+          echo ""
+          echo "前 10 个节点:"
+
+          head -10 nodes_all.txt
+
+
+      # ==========================================
+      # 7. TCP Fast Filter
+      # ==========================================
+
       - name: TCP Fast Filter
         timeout-minutes: 15
         run: |
-              chmod +x tcp_filter.py
-              python3 -u tcp_filter.py
+
+          chmod +x tcp_filter.py
+
+          echo "开始 TCP 快速检测..."
+
+          python3 -u tcp_filter.py
+
+
+      # ==========================================
+      # 8. Check Alive Nodes
+      # ==========================================
 
       - name: Check Alive Nodes
         run: |
-               echo "alive节点数量:"
-               wc -l alive_nodes.txt
 
-                echo "前5个:"
-                head -5 alive_nodes.txt
-                
+          echo ""
+          echo "=========================================="
+          echo "TCP 筛选结果"
+          echo "=========================================="
+
+
+          if [ -f alive_nodes.txt ]; then
+
+            echo "alive节点数量:"
+
+            wc -l alive_nodes.txt
+
+
+            echo ""
+            echo "前 5 个:"
+
+            head -5 alive_nodes.txt
+
+          else
+
+            echo "错误：alive_nodes.txt 不存在"
+
+            exit 1
+
+          fi
+
+
+      # ==========================================
+      # 9. Sing-box Real Test
+      # ==========================================
+
       - name: Sing-box Real Test
         timeout-minutes: 45
         run: |
-              chmod +x test_nodes.py
-              python3 -u test_nodes.py
+
+          chmod +x test_nodes.py
+
+          echo ""
+          echo "=========================================="
+          echo "开始 sing-box 实际测速"
+          echo "=========================================="
+
+
+          python3 -u test_nodes.py
+
+
+      # ==========================================
+      # 10. Check Result
+      # ==========================================
 
       - name: Check Result
         run: |
-              echo "测速结果:"
-              wc -l result.txt
 
-              head -20 result.txt
-              
+          echo ""
+          echo "=========================================="
+          echo "测速结果"
+          echo "=========================================="
+
+
+          if [ -f result.txt ]; then
+
+            echo "测速成功节点数量:"
+
+            wc -l result.txt
+
+
+            echo ""
+            echo "前 20 个:"
+
+            head -20 result.txt
+
+          else
+
+            echo "错误：result.txt 不存在"
+
+            exit 1
+
+          fi
+
+
+      # ==========================================
+      # 11. Debug
+      # ==========================================
+
       - name: Debug Result
         run: |
 
-              echo "alive_nodes:"
-              wc -l alive_nodes.txt || true
+          echo ""
+          echo "=========================================="
+          echo "Debug"
+          echo "=========================================="
 
-              echo "result:"
-              wc -l result.txt || true
 
-              echo "result内容:"
-              head -20 result.txt || true
-              
+          echo ""
+          echo "nodes_all:"
+
+          wc -l nodes_all.txt || true
+
+
+          echo ""
+          echo "alive_nodes:"
+
+          wc -l alive_nodes.txt || true
+
+
+          echo ""
+          echo "result:"
+
+          wc -l result.txt || true
+
+
+          echo ""
+          echo "result内容:"
+
+          head -20 result.txt || true
+
+
+      # ==========================================
+      # 12. Generate Nodes
+      # ==========================================
+
       - name: Generate Nodes
         run: |
+
+          set -e
+
+
           if [ ! -s result.txt ]; then
+
+            echo ""
             echo "没有测速成功节点"
+
             exit 1
+
           fi
 
-          # 修复：利用管道符号 '|' 进行精准排序并提取纯节点信息
-          sort -t '|' -k1,1n result.txt \
+
+          echo ""
+          echo "=========================================="
+          echo "生成最终节点"
+          echo "=========================================="
+
+
+          # result.txt 格式:
+          #
+          # 延迟|节点
+          #
+          # 例如:
+          #
+          # 120|vless://xxxxx
+          #
+          # 按延迟从低到高排序
+
+
+          sort \
+            -t '|' \
+            -k1,1n \
+            result.txt \
           | head -300 \
           | cut -d '|' -f2- \
           > nodes.txt
 
-          base64 -w0 nodes.txt > base64.txt
 
-          echo "生成节点数量:"
+          # 删除空行
+
+          sed -i '/^[[:space:]]*$/d' nodes.txt
+
+
+          echo ""
+          echo "最终节点数量:"
+
           wc -l nodes.txt
+
+
+          if [ ! -s nodes.txt ]; then
+
+            echo "错误：nodes.txt 为空"
+
+            exit 1
+
+          fi
+
+
+      # ==========================================
+      # 13. Generate Base64
+      # ==========================================
+
+      - name: Generate Base64
+        run: |
+
+          echo "生成 Base64 订阅..."
+
+          base64 \
+            -w 0 \
+            nodes.txt \
+            > base64.txt
+
+
+          echo ""
+          echo "base64.txt 大小:"
+
+          wc -c base64.txt
+
+
+          if [ ! -s base64.txt ]; then
+
+            echo "错误：base64.txt 为空"
+
+            exit 1
+
+          fi
+
+
+      # ==========================================
+      # 14. Show Result
+      # ==========================================
 
       - name: Show Result
         run: |
-              echo "测速成功数量:"
-              wc -l result.txt
 
-              echo "前10:"
-              head -10 result.txt
-              
+          echo ""
+          echo "=========================================="
+          echo "最终结果"
+          echo "=========================================="
+
+
+          echo ""
+          echo "测速成功数量:"
+
+          wc -l result.txt
+
+
+          echo ""
+          echo "最终节点数量:"
+
+          wc -l nodes.txt
+
+
+          echo ""
+          echo "Base64 文件大小:"
+
+          wc -c base64.txt
+
+
+          echo ""
+          echo "前 10 个节点:"
+
+          head -10 nodes.txt
+
+
+      # ==========================================
+      # 15. Commit
+      # ==========================================
+
       - name: Commit
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+
+          git config \
+            user.name \
+            "github-actions"
+
+
+          git config \
+            user.email \
+            "github-actions@github.com"
+
+
           git add \
-          nodes.txt \
-          base64.txt \
-          result.txt
-          
-          git commit -m "Ultimate node update: $(date '+%Y-%m-%d %H:%M:%S')" || exit 0
+            nodes.txt \
+            base64.txt \
+            result.txt
+
+
+          if git diff \
+            --cached \
+            --quiet
+          then
+
+            echo ""
+            echo "没有新的节点变化"
+
+            exit 0
+
+          fi
+
+
+          git commit \
+            -m "Ultimate node update: $(date '+%Y-%m-%d %H:%M:%S')"
+
+
           git push
