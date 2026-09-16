@@ -1816,7 +1816,7 @@ jobs:
                       []
                   )
               )
-
+            )
 
           if len(config["proxies"]) > 30:
 
