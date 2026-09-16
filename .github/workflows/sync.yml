@@ -19,8 +19,8 @@ jobs:
       - name: Install Dependencies
         run: |
           set -e
-          sudo apt update -qq
-          sudo apt install -y jq curl wget unzip python3 python3-pip
+          sudo apt-get update -qq
+          sudo apt-get install -y jq curl wget unzip python3 python3-pip
           python3 -m pip install --break-system-packages pyyaml
 
       - name: Install sing-box
@@ -33,7 +33,7 @@ jobs:
             https://api.github.com/repos/SagerNet/sing-box/releases/latest \
             | jq -r '
               .assets[]
-              | select(.name | contains("linux-amd64.tar.gz"))
+              | select(.name | test("linux-amd64.*\\.tar\\.gz$"))
               | .browser_download_url
             ' \
             | head -1)
@@ -43,10 +43,15 @@ jobs:
             exit 1
           fi
 
+          echo "下载: $URL"
           wget -q "$URL" -O sing.tar.gz
-          tar -xf sing.tar.gz
+          tar -xzf sing.tar.gz
 
-          FOUND=$(find . -type f -name sing-box | head -1)
+          FOUND=$(find . -type f -name sing-box -perm -111 | head -1)
+
+          if [ -z "$FOUND" ]; then
+            FOUND=$(find . -type f -name sing-box | head -1)
+          fi
 
           if [ -z "$FOUND" ]; then
             echo "错误：没有找到 sing-box"
@@ -170,6 +175,7 @@ jobs:
 
               try:
                   padding = "=" * (-len(line) % 4)
+
                   decoded = base64.b64decode(
                       line + padding,
                       validate=False
@@ -277,6 +283,7 @@ jobs:
       - name: Generate Base64
         run: |
           set -e
+
           base64 -w 0 nodes.txt > base64.txt
 
           if [ ! -s base64.txt ]; then
@@ -303,16 +310,21 @@ jobs:
               try:
                   raw = uri[8:].split("#", 1)[0]
                   raw += "=" * (-len(raw) % 4)
-                  data = base64.b64decode(raw).decode(
+
+                  data = base64.b64decode(
+                      raw
+                  ).decode(
                       "utf-8",
                       errors="ignore"
                   )
+
                   return json.loads(data)
               except Exception:
                   return None
 
           def add_vmess(uri, index):
               data = decode_vmess(uri)
+
               if not data:
                   return
 
@@ -338,7 +350,7 @@ jobs:
                   "cipher": data.get("scy", "auto")
               }
 
-              network = data.get("net")
+              network = data.get("net") or "tcp"
 
               if network:
                   proxy["network"] = network
@@ -349,10 +361,16 @@ jobs:
                   }
 
                   host = data.get("host")
+
                   if host:
                       ws["headers"] = {"Host": host}
 
                   proxy["ws-opts"] = ws
+
+              elif network == "grpc":
+                  proxy["grpc-opts"] = {
+                      "grpc-service-name": data.get("path") or ""
+                  }
 
               tls = str(data.get("tls", "")).lower()
 
@@ -368,7 +386,8 @@ jobs:
           def add_vless(uri, index):
               try:
                   u = urllib.parse.urlparse(uri)
-                  uuid = u.username
+
+                  uuid = urllib.parse.unquote(u.username or "")
                   server = u.hostname
                   port = u.port
 
@@ -385,14 +404,17 @@ jobs:
                       or f"VLESS-{index}"
                   )
 
-                  network = params.get("type", ["tcp"])[0]
+                  network = params.get(
+                      "type",
+                      ["tcp"]
+                  )[0]
 
                   proxy = {
                       "name": name,
                       "type": "vless",
                       "server": server,
                       "port": port,
-                      "uuid": urllib.parse.unquote(uuid),
+                      "uuid": uuid,
                       "network": network
                   }
 
@@ -404,35 +426,79 @@ jobs:
                   if security == "tls":
                       proxy["tls"] = True
 
+                      sni = params.get(
+                          "sni",
+                          [None]
+                      )[0]
+
+                      if sni:
+                          proxy["servername"] = sni
+
                   elif security == "reality":
+                      pbk = params.get(
+                          "pbk",
+                          [""]
+                      )[0]
+
+                      if not pbk:
+                          return
+
                       proxy["tls"] = True
+
                       proxy["reality-opts"] = {
-                          "public-key": params.get("pbk", [""])[0],
-                          "short-id": params.get("sid", [""])[0]
+                          "public-key": pbk,
+                          "short-id": params.get(
+                              "sid",
+                              [""]
+                          )[0]
                       }
+
                       proxy["client-fingerprint"] = params.get(
                           "fp",
                           ["chrome"]
                       )[0]
 
-                  sni = params.get("sni", [None])[0]
-                  if sni:
-                      proxy["servername"] = sni
+                      sni = params.get(
+                          "sni",
+                          [None]
+                      )[0]
 
-                  flow = params.get("flow", [None])[0]
+                      if sni:
+                          proxy["servername"] = sni
+
+                  flow = params.get(
+                      "flow",
+                      [None]
+                  )[0]
+
                   if flow:
                       proxy["flow"] = flow
 
                   if network == "ws":
                       proxy["ws-opts"] = {
-                          "path": params.get("path", ["/"])[0]
+                          "path": params.get(
+                              "path",
+                              ["/"]
+                          )[0]
                       }
 
-                      host = params.get("host", [None])[0]
+                      host = params.get(
+                          "host",
+                          [None]
+                      )[0]
+
                       if host:
                           proxy["ws-opts"]["headers"] = {
                               "Host": host
                           }
+
+                  elif network == "grpc":
+                      proxy["grpc-opts"] = {
+                          "grpc-service-name": params.get(
+                              "serviceName",
+                              [""]
+                          )[0]
+                      }
 
                   proxies.append(proxy)
 
@@ -459,24 +525,53 @@ jobs:
                       "type": "trojan",
                       "server": u.hostname,
                       "port": u.port,
-                      "password": urllib.parse.unquote(u.username)
+                      "password": urllib.parse.unquote(
+                          u.username
+                      )
                   }
 
-                  sni = params.get("sni", [None])[0]
+                  sni = params.get(
+                      "sni",
+                      [None]
+                  )[0]
+
                   if sni:
                       proxy["sni"] = sni
 
-                  if params.get("type", ["tcp"])[0] == "ws":
+                  proxy["tls"] = True
+
+                  network = params.get(
+                      "type",
+                      ["tcp"]
+                  )[0]
+
+                  if network == "ws":
                       proxy["network"] = "ws"
                       proxy["ws-opts"] = {
-                          "path": params.get("path", ["/"])[0]
+                          "path": params.get(
+                              "path",
+                              ["/"]
+                          )[0]
                       }
 
-                      host = params.get("host", [None])[0]
+                      host = params.get(
+                          "host",
+                          [None]
+                      )[0]
+
                       if host:
                           proxy["ws-opts"]["headers"] = {
                               "Host": host
                           }
+
+                  elif network == "grpc":
+                      proxy["network"] = "grpc"
+                      proxy["grpc-opts"] = {
+                          "grpc-service-name": params.get(
+                              "serviceName",
+                              [""]
+                          )[0]
+                      }
 
                   proxies.append(proxy)
 
@@ -490,7 +585,9 @@ jobs:
                   if not u.hostname or not u.port:
                       return
 
-                  userinfo = urllib.parse.unquote(u.username or "")
+                  userinfo = urllib.parse.unquote(
+                      u.username or ""
+                  )
 
                   try:
                       decoded = base64.b64decode(
@@ -505,11 +602,16 @@ jobs:
                   if ":" not in decoded:
                       return
 
-                  method, password = decoded.split(":", 1)
+                  method, password = decoded.split(
+                      ":",
+                      1
+                  )
 
                   proxies.append({
                       "name": (
-                          urllib.parse.unquote(u.fragment)
+                          urllib.parse.unquote(
+                              u.fragment
+                          )
                           or f"SS-{index}"
                       ),
                       "type": "ss",
@@ -536,7 +638,9 @@ jobs:
 
                   proxy = {
                       "name": (
-                          urllib.parse.unquote(u.fragment)
+                          urllib.parse.unquote(
+                              u.fragment
+                          )
                           or f"Hysteria2-{index}"
                       ),
                       "type": "hysteria2",
@@ -547,7 +651,11 @@ jobs:
                       )
                   }
 
-                  sni = params.get("sni", [None])[0]
+                  sni = params.get(
+                      "sni",
+                      [None]
+                  )[0]
+
                   if sni:
                       proxy["sni"] = sni
 
@@ -581,13 +689,19 @@ jobs:
 
               if lower.startswith("vmess://"):
                   add_vmess(node, index)
+
               elif lower.startswith("vless://"):
                   add_vless(node, index)
+
               elif lower.startswith("trojan://"):
                   add_trojan(node, index)
+
               elif lower.startswith("ss://"):
                   add_ss(node, index)
-              elif lower.startswith(("hy2://", "hysteria2://")):
+
+              elif lower.startswith(
+                  ("hy2://", "hysteria2://")
+              ):
                   add_hy2(node, index)
 
           unique = []
@@ -608,7 +722,7 @@ jobs:
               seen.add(key)
               unique.append(proxy)
 
-          proxies = unique
+          proxies = unique[:30]
 
           if not proxies:
               raise SystemExit(
@@ -626,7 +740,9 @@ jobs:
               "mode": "rule",
               "log-level": "info",
               "ipv6": False,
+
               "proxies": proxies,
+
               "proxy-groups": [
                   {
                       "name": "🚀 节点选择",
@@ -648,6 +764,7 @@ jobs:
                       "proxies": proxy_names
                   }
               ],
+
               "rules": [
                   "MATCH,🚀 节点选择"
               ]
@@ -683,12 +800,16 @@ jobs:
               config = yaml.safe_load(f)
 
           if not isinstance(config, dict):
-              raise SystemExit("clash.yaml 不是有效 YAML")
+              raise SystemExit(
+                  "clash.yaml 不是有效 YAML"
+              )
 
           proxies = config.get("proxies", [])
 
           if not proxies:
-              raise SystemExit("clash.yaml 的 proxies 为空")
+              raise SystemExit(
+                  "clash.yaml 的 proxies 为空"
+              )
 
           count = len(proxies)
 
@@ -696,11 +817,18 @@ jobs:
           print("节点数量:", count)
           print(
               "代理组数量:",
-              len(config.get("proxy-groups", []))
+              len(
+                  config.get(
+                      "proxy-groups",
+                      []
+                  )
+              )
           )
 
           if count > 30:
-              raise SystemExit("错误：Clash 节点超过30个")
+              raise SystemExit(
+                  "错误：Clash 节点超过30个"
+              )
 
           print("Clash 节点数量检查通过")
           PY
