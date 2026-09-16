@@ -1,64 +1,30 @@
 name: V2Ray Ultimate Node Sync
 
 on:
-
   workflow_dispatch:
-
   schedule:
     - cron: "0 */4 * * *"
-
 
 permissions:
   contents: write
 
-
 jobs:
-
   sync:
-
     runs-on: ubuntu-latest
 
-
     steps:
-
-
-      # ==========================================
-      # 1. Checkout
-      # ==========================================
-
       - name: Checkout
         uses: actions/checkout@v6
 
-
-      # ==========================================
-      # 2. Install Dependencies
-      # ==========================================
-
       - name: Install Dependencies
         run: |
-
           set -e
-
           sudo apt update -qq
-
-          sudo apt install -y \
-            jq \
-            curl \
-            wget \
-            unzip \
-            python3 \
-            python3-pip
-
+          sudo apt install -y jq curl wget unzip python3 python3-pip
           python3 -m pip install --break-system-packages pyyaml
-
-
-      # ==========================================
-      # 3. Install sing-box
-      # ==========================================
 
       - name: Install sing-box
         run: |
-
           set -e
 
           echo "正在获取 sing-box 最新版本..."
@@ -67,109 +33,51 @@ jobs:
             https://api.github.com/repos/SagerNet/sing-box/releases/latest \
             | jq -r '
               .assets[]
-              | select(
-                  .name
-                  | contains("linux-amd64.tar.gz")
-                )
+              | select(.name | contains("linux-amd64.tar.gz"))
               | .browser_download_url
             ' \
             | head -1)
 
-
-          echo "下载地址:"
-          echo "$URL"
-
-
           if [ -z "$URL" ] || [ "$URL" = "null" ]; then
-
             echo "无法获取 sing-box 下载地址"
-
             exit 1
-
           fi
 
-
-          wget -q \
-            "$URL" \
-            -O sing.tar.gz
-
-
-          echo "解压 sing-box..."
-
+          wget -q "$URL" -O sing.tar.gz
           tar -xf sing.tar.gz
 
+          FOUND=$(find . -type f -name sing-box | head -1)
 
-          mv sing-box-*/sing-box sing-box
+          if [ -z "$FOUND" ]; then
+            echo "错误：没有找到 sing-box"
+            exit 1
+          fi
 
-          chmod +x sing-box
-
-
-          echo "sing-box 安装完成"
-
-
-      # ==========================================
-      # 4. Check sing-box
-      # ==========================================
-
-      - name: sing-box version
-        run: |
+          cp "$FOUND" ./sing-box
+          chmod +x ./sing-box
 
           ./sing-box version
 
-
-      # ==========================================
-      # 5. Download Sources
-      # ==========================================
-
       - name: Download Sources
         run: |
-
           set -e
 
-
-          rm -f raw.txt
-          rm -f nodes_all.txt
-
-
-          touch raw.txt
-          touch nodes_all.txt
-
+          rm -f raw.txt nodes_all.txt
+          touch raw.txt nodes_all.txt
 
           sources=(
-
             "https://www.xrayvip.com/free.txt"
-
             "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt"
-
             "https://raw.githubusercontent.com/rtwo2/FastNodes/main/sub/top.txt"
-
           )
 
-
-          echo ""
-          echo "=========================================="
-          echo "开始下载节点源"
-          echo "=========================================="
-
-
-          total_sources=0
           success_sources=0
 
-
           for url in "${sources[@]}"; do
-
-            total_sources=$((total_sources + 1))
-
-
             echo ""
-            echo "------------------------------------------"
-            echo "正在下载:"
-            echo "$url"
-            echo "------------------------------------------"
-
+            echo "下载: $url"
 
             tmp_file=$(mktemp)
-
 
             if curl \
               -L \
@@ -182,86 +90,40 @@ jobs:
               "$url" \
               -o "$tmp_file"
             then
-
               size=$(wc -c < "$tmp_file")
 
-
-              echo "下载成功"
-              echo "文件大小: ${size} bytes"
-
-
               if [ "$size" -gt 0 ]; then
-
                 cat "$tmp_file" >> raw.txt
-
                 echo "" >> raw.txt
-
                 success_sources=$((success_sources + 1))
-
+                echo "下载成功: ${size} bytes"
               else
-
-                echo "警告：源返回空内容"
-
+                echo "源返回空内容"
               fi
-
             else
-
-              echo "下载失败:"
-              echo "$url"
-
+              echo "下载失败: $url"
             fi
 
-
             rm -f "$tmp_file"
-
           done
 
-
           echo ""
-          echo "=========================================="
-          echo "下载完成"
-          echo "=========================================="
-
-
-          echo "源总数:"
-          echo "$total_sources"
-
-
-          echo "成功源数量:"
-          echo "$success_sources"
-
-
-          echo ""
-          echo "raw.txt 大小:"
-
+          echo "成功源数量: $success_sources"
+          echo "raw.txt:"
           wc -c raw.txt
 
-
           if [ ! -s raw.txt ]; then
-
-            echo ""
             echo "错误：所有节点源都是空的"
-
             exit 1
-
           fi
-
-
-      # ==========================================
-      # 6. Extract Nodes
-      # ==========================================
 
       - name: Extract Nodes
         run: |
-
           set -e
 
-
           python3 <<'PY'
-
           import re
           import base64
-
 
           with open(
               "raw.txt",
@@ -269,91 +131,35 @@ jobs:
               encoding="utf-8",
               errors="ignore"
           ) as f:
-
               data = f.read()
 
-
-          print(
-              "raw.txt 字符数:",
-              len(data)
-          )
-
-
-          # ======================================
-          # 清理
-          # ======================================
-
-          data = data.replace(
-              "&amp;",
-              "&"
-          )
-
-          data = data.replace(
-              "\r",
-              ""
-          )
-
-
-          # ======================================
-          # 节点协议
-          # ======================================
+          data = data.replace("&amp;", "&").replace("\r", "")
 
           patterns = [
-
               r'vmess://[^\s<>"\']+',
-
               r'vless://[^\s<>"\']+',
-
               r'trojan://[^\s<>"\']+',
-
               r'ss://[^\s<>"\']+',
-
               r'hy2://[^\s<>"\']+',
-
               r'hysteria2://[^\s<>"\']+',
-
           ]
-
 
           nodes = []
 
-
-          # ======================================
-          # 直接提取
-          # ======================================
-
           for pattern in patterns:
-
-              found = re.findall(
-                  pattern,
-                  data,
-                  flags=re.IGNORECASE
+              nodes.extend(
+                  re.findall(
+                      pattern,
+                      data,
+                      flags=re.IGNORECASE
+                  )
               )
 
-              nodes.extend(found)
-
-
-          print(
-              "直接提取节点:",
-              len(nodes)
-          )
-
-
-          # ======================================
-          # Base64 解码
-          # ======================================
-
-          decoded_nodes = []
-
-
           for line in data.splitlines():
-
               line = line.strip()
 
-
-              if not line:
+              if not line or len(line) < 20:
                   continue
-
 
               if re.match(
                   r'^(vmess|vless|trojan|ss|hy2|hysteria2)://',
@@ -362,18 +168,8 @@ jobs:
               ):
                   continue
 
-
-              if len(line) < 20:
-                  continue
-
-
               try:
-
-                  padding = "=" * (
-                      (-len(line)) % 4
-                  )
-
-
+                  padding = "=" * (-len(line) % 4)
                   decoded = base64.b64decode(
                       line + padding,
                       validate=False
@@ -382,419 +178,391 @@ jobs:
                       errors="ignore"
                   )
 
-
-                  if any(
-                      x in decoded
-                      for x in [
-                          "vmess://",
-                          "vless://",
-                          "trojan://",
-                          "ss://",
-                          "hy2://",
-                          "hysteria2://"
-                      ]
-                  ):
-
-                      decoded_nodes.append(
-                          decoded
-                      )
-
-
+                  if "://" in decoded:
+                      for pattern in patterns:
+                          nodes.extend(
+                              re.findall(
+                                  pattern,
+                                  decoded,
+                                  flags=re.IGNORECASE
+                              )
+                          )
               except Exception:
-
                   pass
-
-
-          print(
-              "Base64 解码得到文本:",
-              len(decoded_nodes)
-          )
-
-
-          # ======================================
-          # 从 Base64 结果继续提取
-          # ======================================
-
-          for decoded in decoded_nodes:
-
-              for pattern in patterns:
-
-                  found = re.findall(
-                      pattern,
-                      decoded,
-                      flags=re.IGNORECASE
-                  )
-
-                  nodes.extend(found)
-
-
-          # ======================================
-          # 清理
-          # ======================================
 
           clean = []
 
-
           for node in nodes:
-
-              node = node.strip()
-
-              node = node.replace(
-                  "\r",
-                  ""
+              node = (
+                  node.strip()
+                  .replace("\r", "")
+                  .replace("&amp;", "&")
+                  .rstrip("\"'<>")
               )
-
-              node = node.replace(
-                  "&amp;",
-                  "&"
-              )
-
-              node = node.rstrip(
-                  "\"'<>"
-              )
-
 
               if node:
+                  clean.append(node)
 
-                  clean.append(
-                      node
-                  )
-
-
-          # ======================================
-          # 去重
-          # ======================================
-
-          clean = list(
-              dict.fromkeys(clean)
-          )
-
-
-          # ======================================
-          # 保存
-          # ======================================
+          clean = list(dict.fromkeys(clean))
 
           with open(
               "nodes_all.txt",
               "w",
               encoding="utf-8"
           ) as f:
+              f.write("\n".join(clean))
 
-              f.write(
-                  "\n".join(clean)
-              )
+          print("最终提取节点:", len(clean))
 
-
-          print("")
-          print(
-              "================================"
-          )
-
-          print(
-              "最终节点数量:",
-              len(clean)
-          )
-
-          print(
-              "================================"
-          )
-
-
-          if len(clean) == 0:
-
-              print(
-                  "错误：没有提取到任何节点"
-              )
-
-              raise SystemExit(1)
-
+          if not clean:
+              raise SystemExit("错误：没有提取到任何节点")
           PY
 
-
           echo ""
-          echo "nodes_all.txt:"
-
           wc -l nodes_all.txt
-
-
           echo ""
-          echo "前 10 个节点:"
-
           head -10 nodes_all.txt
-
-
-      # ==========================================
-      # 7. TCP Fast Filter
-      # ==========================================
-
-      - name: TCP Fast Filter
-        timeout-minutes: 15
-        run: |
-
-          chmod +x tcp_filter.py
-
-          echo ""
-          echo "=========================================="
-          echo "开始 TCP 快速检测"
-          echo "=========================================="
-
-
-          python3 -u tcp_filter.py
-
-
-      # ==========================================
-      # 8. Check Alive Nodes
-      # ==========================================
-
-      - name: Check Alive Nodes
-        run: |
-
-          echo ""
-          echo "=========================================="
-          echo "TCP 筛选结果"
-          echo "=========================================="
-
-
-          if [ -f alive_nodes.txt ]; then
-
-            echo "alive 节点数量:"
-
-            wc -l alive_nodes.txt
-
-
-            echo ""
-            echo "前 5 个:"
-
-            head -5 alive_nodes.txt
-
-          else
-
-            echo "错误：alive_nodes.txt 不存在"
-
-            exit 1
-
-          fi
-
-
-      # ==========================================
-      # 9. Sing-box Real Test
-      # ==========================================
 
       - name: Sing-box Real Test
         timeout-minutes: 45
         run: |
-
+          set -e
           chmod +x test_nodes.py
-
-          echo ""
-          echo "=========================================="
-          echo "开始 sing-box 实际测速"
-          echo "=========================================="
-
-
           python3 -u test_nodes.py
-
-
-      # ==========================================
-      # 10. Check Result
-      # ==========================================
 
       - name: Check Result
         run: |
+          set -e
 
-          echo ""
-          echo "=========================================="
-          echo "测速结果"
-          echo "=========================================="
-
-
-          if [ -f result.txt ]; then
-
-            echo "测速成功节点数量:"
-
-            wc -l result.txt
-
-
-            echo ""
-            echo "前 20 个:"
-
-            head -20 result.txt
-
-          else
-
-            echo "错误：result.txt 不存在"
-
+          if [ ! -s result.txt ]; then
+            echo "错误：没有任何真实可用节点"
             exit 1
-
           fi
 
-
-      # ==========================================
-      # 11. Debug
-      # ==========================================
-
-      - name: Debug Result
-        run: |
+          echo "真实可用节点数量:"
+          wc -l result.txt
 
           echo ""
-          echo "=========================================="
-          echo "Debug"
-          echo "=========================================="
-
-
-          echo ""
-          echo "nodes_all:"
-
-          wc -l nodes_all.txt || true
-
-
-          echo ""
-          echo "alive_nodes:"
-
-          wc -l alive_nodes.txt || true
-
-
-          echo ""
-          echo "result:"
-
-          wc -l result.txt || true
-
-
-          echo ""
-          echo "result 内容:"
-
-          head -20 result.txt || true
-
-
-      # ==========================================
-      # 12. Generate Nodes
-      # ==========================================
+          echo "最快 20 个:"
+          head -20 result.txt
 
       - name: Generate Nodes
         run: |
-
           set -e
-
-
-          if [ ! -s result.txt ]; then
-
-            echo ""
-            echo "没有测速成功节点"
-
-            exit 1
-
-          fi
-
-
-          echo ""
-          echo "=========================================="
-          echo "生成最终节点"
-          echo "=========================================="
-
-
-          # ======================================
-          # 只保留最快 30 个节点
-          # ======================================
 
           sort \
             -t '|' \
             -k1,1n \
             result.txt \
-          | head -30 \
-          | cut -d '|' -f2- \
-          > nodes.txt
-
-
-          # 删除空行
+            | head -30 \
+            | cut -d '|' -f2- \
+            > nodes.txt
 
           sed -i '/^[[:space:]]*$/d' nodes.txt
 
-
-          echo ""
-          echo "最终节点数量:"
-
-          wc -l nodes.txt
-
-
           if [ ! -s nodes.txt ]; then
-
             echo "错误：nodes.txt 为空"
-
             exit 1
-
           fi
 
+          COUNT=$(wc -l < nodes.txt)
 
-      # ==========================================
-      # 13. Generate Base64
-      # ==========================================
+          echo "最终节点数量: $COUNT"
+
+          if [ "$COUNT" -gt 30 ]; then
+            echo "错误：最终节点超过30个"
+            exit 1
+          fi
 
       - name: Generate Base64
         run: |
-
           set -e
-
-
-          echo ""
-          echo "生成 Base64 订阅..."
-
-
-          base64 \
-            -w 0 \
-            nodes.txt \
-            > base64.txt
-
-
-          echo ""
-          echo "base64.txt 大小:"
-
-          wc -c base64.txt
-
+          base64 -w 0 nodes.txt > base64.txt
 
           if [ ! -s base64.txt ]; then
-
             echo "错误：base64.txt 为空"
-
             exit 1
-
           fi
-
-
-      # ==========================================
-      # 14. Generate Clash Mi Config
-      # ==========================================
 
       - name: Generate Clash Mi Config
         run: |
-
           set -e
 
-
-          echo ""
-          echo "=========================================="
-          echo "生成 Clash Mi 配置"
-          echo "=========================================="
-
-
           python3 <<'PY'
-
           import base64
           import json
           import urllib.parse
           import yaml
 
-
           INPUT = "nodes.txt"
-
           OUTPUT = "clash.yaml"
-
 
           proxies = []
 
+          def decode_vmess(uri):
+              try:
+                  raw = uri[8:].split("#", 1)[0]
+                  raw += "=" * (-len(raw) % 4)
+                  data = base64.b64decode(raw).decode(
+                      "utf-8",
+                      errors="ignore"
+                  )
+                  return json.loads(data)
+              except Exception:
+                  return None
 
-          # ======================================
-          # 读取节点
-          # ======================================
+          def add_vmess(uri, index):
+              data = decode_vmess(uri)
+              if not data:
+                  return
+
+              server = data.get("add")
+              port = data.get("port")
+              uuid = data.get("id")
+
+              if not server or not port or not uuid:
+                  return
+
+              try:
+                  port = int(port)
+              except Exception:
+                  return
+
+              proxy = {
+                  "name": data.get("ps") or f"VMess-{index}",
+                  "type": "vmess",
+                  "server": server,
+                  "port": port,
+                  "uuid": uuid,
+                  "alterId": int(data.get("aid", 0)),
+                  "cipher": data.get("scy", "auto")
+              }
+
+              network = data.get("net")
+
+              if network:
+                  proxy["network"] = network
+
+              if network == "ws":
+                  ws = {
+                      "path": data.get("path") or "/"
+                  }
+
+                  host = data.get("host")
+                  if host:
+                      ws["headers"] = {"Host": host}
+
+                  proxy["ws-opts"] = ws
+
+              tls = str(data.get("tls", "")).lower()
+
+              if tls in ("tls", "true", "1"):
+                  proxy["tls"] = True
+                  sni = data.get("sni") or data.get("host")
+
+                  if sni:
+                      proxy["servername"] = sni
+
+              proxies.append(proxy)
+
+          def add_vless(uri, index):
+              try:
+                  u = urllib.parse.urlparse(uri)
+                  uuid = u.username
+                  server = u.hostname
+                  port = u.port
+
+                  if not uuid or not server or not port:
+                      return
+
+                  params = urllib.parse.parse_qs(
+                      u.query,
+                      keep_blank_values=True
+                  )
+
+                  name = (
+                      urllib.parse.unquote(u.fragment)
+                      or f"VLESS-{index}"
+                  )
+
+                  network = params.get("type", ["tcp"])[0]
+
+                  proxy = {
+                      "name": name,
+                      "type": "vless",
+                      "server": server,
+                      "port": port,
+                      "uuid": urllib.parse.unquote(uuid),
+                      "network": network
+                  }
+
+                  security = params.get(
+                      "security",
+                      [""]
+                  )[0].lower()
+
+                  if security == "tls":
+                      proxy["tls"] = True
+
+                  elif security == "reality":
+                      proxy["tls"] = True
+                      proxy["reality-opts"] = {
+                          "public-key": params.get("pbk", [""])[0],
+                          "short-id": params.get("sid", [""])[0]
+                      }
+                      proxy["client-fingerprint"] = params.get(
+                          "fp",
+                          ["chrome"]
+                      )[0]
+
+                  sni = params.get("sni", [None])[0]
+                  if sni:
+                      proxy["servername"] = sni
+
+                  flow = params.get("flow", [None])[0]
+                  if flow:
+                      proxy["flow"] = flow
+
+                  if network == "ws":
+                      proxy["ws-opts"] = {
+                          "path": params.get("path", ["/"])[0]
+                      }
+
+                      host = params.get("host", [None])[0]
+                      if host:
+                          proxy["ws-opts"]["headers"] = {
+                              "Host": host
+                          }
+
+                  proxies.append(proxy)
+
+              except Exception:
+                  pass
+
+          def add_trojan(uri, index):
+              try:
+                  u = urllib.parse.urlparse(uri)
+
+                  if not u.username or not u.hostname or not u.port:
+                      return
+
+                  params = urllib.parse.parse_qs(
+                      u.query,
+                      keep_blank_values=True
+                  )
+
+                  proxy = {
+                      "name": (
+                          urllib.parse.unquote(u.fragment)
+                          or f"Trojan-{index}"
+                      ),
+                      "type": "trojan",
+                      "server": u.hostname,
+                      "port": u.port,
+                      "password": urllib.parse.unquote(u.username)
+                  }
+
+                  sni = params.get("sni", [None])[0]
+                  if sni:
+                      proxy["sni"] = sni
+
+                  if params.get("type", ["tcp"])[0] == "ws":
+                      proxy["network"] = "ws"
+                      proxy["ws-opts"] = {
+                          "path": params.get("path", ["/"])[0]
+                      }
+
+                      host = params.get("host", [None])[0]
+                      if host:
+                          proxy["ws-opts"]["headers"] = {
+                              "Host": host
+                          }
+
+                  proxies.append(proxy)
+
+              except Exception:
+                  pass
+
+          def add_ss(uri, index):
+              try:
+                  u = urllib.parse.urlparse(uri)
+
+                  if not u.hostname or not u.port:
+                      return
+
+                  userinfo = urllib.parse.unquote(u.username or "")
+
+                  try:
+                      decoded = base64.b64decode(
+                          userinfo + "=" * (-len(userinfo) % 4)
+                      ).decode(
+                          "utf-8",
+                          errors="ignore"
+                      )
+                  except Exception:
+                      decoded = userinfo
+
+                  if ":" not in decoded:
+                      return
+
+                  method, password = decoded.split(":", 1)
+
+                  proxies.append({
+                      "name": (
+                          urllib.parse.unquote(u.fragment)
+                          or f"SS-{index}"
+                      ),
+                      "type": "ss",
+                      "server": u.hostname,
+                      "port": u.port,
+                      "cipher": method,
+                      "password": password
+                  })
+
+              except Exception:
+                  pass
+
+          def add_hy2(uri, index):
+              try:
+                  u = urllib.parse.urlparse(uri)
+
+                  if not u.hostname:
+                      return
+
+                  params = urllib.parse.parse_qs(
+                      u.query,
+                      keep_blank_values=True
+                  )
+
+                  proxy = {
+                      "name": (
+                          urllib.parse.unquote(u.fragment)
+                          or f"Hysteria2-{index}"
+                      ),
+                      "type": "hysteria2",
+                      "server": u.hostname,
+                      "port": u.port or 443,
+                      "password": urllib.parse.unquote(
+                          u.username or ""
+                      )
+                  }
+
+                  sni = params.get("sni", [None])[0]
+                  if sni:
+                      proxy["sni"] = sni
+
+                  insecure = params.get(
+                      "insecure",
+                      ["0"]
+                  )[0].lower()
+
+                  if insecure in ("1", "true"):
+                      proxy["skip-cert-verify"] = True
+
+                  proxies.append(proxy)
+
+              except Exception:
+                  pass
 
           with open(
               INPUT,
@@ -802,897 +570,94 @@ jobs:
               encoding="utf-8",
               errors="ignore"
           ) as f:
-
               nodes = [
                   x.strip()
                   for x in f
                   if x.strip()
               ]
 
-
-          print(
-              "读取节点:",
-              len(nodes)
-          )
-
-
-          # ======================================
-          # VMess
-          # ======================================
-
-          def decode_vmess(uri):
-
-              try:
-
-                  raw = uri[8:]
-
-                  raw += "=" * (
-                      -len(raw) % 4
-                  )
-
-
-                  data = base64.b64decode(
-                      raw
-                  ).decode(
-                      "utf-8",
-                      errors="ignore"
-                  )
-
-
-                  return json.loads(data)
-
-
-              except Exception:
-
-                  return None
-
-
-          def add_vmess(uri, index):
-
-              data = decode_vmess(uri)
-
-
-              if not data:
-                  return
-
-
-              server = data.get("add")
-
-              port = data.get("port")
-
-              uuid = data.get("id")
-
-
-              if not server or not port or not uuid:
-                  return
-
-
-              try:
-
-                  port = int(port)
-
-              except Exception:
-
-                  return
-
-
-              name = (
-                  data.get("ps")
-                  or f"VMess-{index}"
-              )
-
-
-              proxy = {
-
-                  "name": name,
-
-                  "type": "vmess",
-
-                  "server": server,
-
-                  "port": port,
-
-                  "uuid": uuid,
-
-                  "alterId": int(
-                      data.get(
-                          "aid",
-                          0
-                      )
-                  ),
-
-                  "cipher": data.get(
-                      "scy",
-                      "auto"
-                  )
-
-              }
-
-
-              network = data.get(
-                  "net"
-              )
-
-
-              if network:
-
-                  proxy["network"] = network
-
-
-              # WebSocket
-
-              if network == "ws":
-
-                  ws_opts = {}
-
-
-                  path = data.get(
-                      "path"
-                  )
-
-                  host = data.get(
-                      "host"
-                  )
-
-
-                  if path:
-
-                      ws_opts["path"] = path
-
-
-                  if host:
-
-                      ws_opts["headers"] = {
-                          "Host": host
-                      }
-
-
-                  if ws_opts:
-
-                      proxy["ws-opts"] = ws_opts
-
-
-              # TLS
-
-              tls = str(
-                  data.get(
-                      "tls",
-                      ""
-                  )
-              ).lower()
-
-
-              if tls in [
-                  "tls",
-                  "true",
-                  "1"
-              ]:
-
-                  proxy["tls"] = True
-
-
-                  sni = data.get(
-                      "sni"
-                  )
-
-
-                  if sni:
-
-                      proxy["servername"] = sni
-
-
-              proxies.append(
-                  proxy
-              )
-
-
-          # ======================================
-          # VLESS
-          # ======================================
-
-          def add_vless(uri, index):
-
-              try:
-
-                  u = urllib.parse.urlparse(
-                      uri
-                  )
-
-
-                  uuid = u.username
-
-                  server = u.hostname
-
-                  port = u.port
-
-
-                  if not uuid or not server or not port:
-                      return
-
-
-                  params = urllib.parse.parse_qs(
-                      u.query
-                  )
-
-
-                  name = (
-                      urllib.parse.unquote(
-                          u.fragment
-                      )
-                      or f"VLESS-{index}"
-                  )
-
-
-                  network = params.get(
-                      "type",
-                      ["tcp"]
-                  )[0]
-
-
-                  proxy = {
-
-                      "name": name,
-
-                      "type": "vless",
-
-                      "server": server,
-
-                      "port": port,
-
-                      "uuid": uuid,
-
-                      "network": network
-
-                  }
-
-
-                  # TLS / Reality
-
-                  security = params.get(
-                      "security",
-                      [""]
-                  )[0].lower()
-
-
-                  if security == "tls":
-
-                      proxy["tls"] = True
-
-
-                  if security == "reality":
-
-                      proxy["tls"] = True
-
-
-                      proxy["reality-opts"] = {
-
-                          "public-key":
-                              params.get(
-                                  "pbk",
-                                  [""]
-                              )[0],
-
-                          "short-id":
-                              params.get(
-                                  "sid",
-                                  [""]
-                              )[0]
-
-                      }
-
-
-                      proxy["client-fingerprint"] = params.get(
-                          "fp",
-                          ["chrome"]
-                      )[0]
-
-
-                  # SNI
-
-                  sni = params.get(
-                      "sni",
-                      [None]
-                  )[0]
-
-
-                  if sni:
-
-                      proxy["servername"] = sni
-
-
-                  # Flow
-
-                  flow = params.get(
-                      "flow",
-                      [None]
-                  )[0]
-
-
-                  if flow:
-
-                      proxy["flow"] = flow
-
-
-                  # WebSocket
-
-                  if network == "ws":
-
-                      path = params.get(
-                          "path",
-                          ["/"]
-                      )[0]
-
-
-                      host = params.get(
-                          "host",
-                          [None]
-                      )[0]
-
-
-                      proxy["ws-opts"] = {
-
-                          "path": path
-
-                      }
-
-
-                      if host:
-
-                          proxy["ws-opts"]["headers"] = {
-
-                              "Host": host
-
-                          }
-
-
-                  proxies.append(
-                      proxy
-                  )
-
-
-              except Exception:
-
-                  pass
-
-
-          # ======================================
-          # Trojan
-          # ======================================
-
-          def add_trojan(uri, index):
-
-              try:
-
-                  u = urllib.parse.urlparse(
-                      uri
-                  )
-
-
-                  password = u.username
-
-                  server = u.hostname
-
-                  port = u.port
-
-
-                  if not password or not server or not port:
-                      return
-
-
-                  params = urllib.parse.parse_qs(
-                      u.query
-                  )
-
-
-                  name = (
-                      urllib.parse.unquote(
-                          u.fragment
-                      )
-                      or f"Trojan-{index}"
-                  )
-
-
-                  proxy = {
-
-                      "name": name,
-
-                      "type": "trojan",
-
-                      "server": server,
-
-                      "port": port,
-
-                      "password": password
-
-                  }
-
-
-                  sni = params.get(
-                      "sni",
-                      [None]
-                  )[0]
-
-
-                  if sni:
-
-                      proxy["sni"] = sni
-
-
-                  network = params.get(
-                      "type",
-                      ["tcp"]
-                  )[0]
-
-
-                  if network == "ws":
-
-                      proxy["network"] = "ws"
-
-
-                      proxy["ws-opts"] = {
-
-                          "path":
-                              params.get(
-                                  "path",
-                                  ["/"]
-                              )[0]
-
-                      }
-
-
-                      host = params.get(
-                          "host",
-                          [None]
-                      )[0]
-
-
-                      if host:
-
-                          proxy["ws-opts"]["headers"] = {
-
-                              "Host": host
-
-                          }
-
-
-                  proxies.append(
-                      proxy
-                  )
-
-
-              except Exception:
-
-                  pass
-
-
-          # ======================================
-          # Shadowsocks
-          # ======================================
-
-          def add_ss(uri, index):
-
-              try:
-
-                  u = urllib.parse.urlparse(
-                      uri
-                  )
-
-
-                  server = u.hostname
-
-                  port = u.port
-
-
-                  if not server or not port:
-                      return
-
-
-                  userinfo = urllib.parse.unquote(
-                      u.username or ""
-                  )
-
-
-                  if not userinfo:
-                      return
-
-
-                  try:
-
-                      decoded = base64.b64decode(
-                          userinfo +
-                          "=" * (
-                              -len(userinfo) % 4
-                          )
-                      ).decode(
-                          "utf-8",
-                          errors="ignore"
-                      )
-
-                  except Exception:
-
-                      decoded = userinfo
-
-
-                  if ":" not in decoded:
-                      return
-
-
-                  method, password = decoded.split(
-                      ":",
-                      1
-                  )
-
-
-                  name = (
-                      urllib.parse.unquote(
-                          u.fragment
-                      )
-                      or f"SS-{index}"
-                  )
-
-
-                  proxy = {
-
-                      "name": name,
-
-                      "type": "ss",
-
-                      "server": server,
-
-                      "port": port,
-
-                      "cipher": method,
-
-                      "password": password
-
-                  }
-
-
-                  proxies.append(
-                      proxy
-                  )
-
-
-              except Exception:
-
-                  pass
-
-
-          # ======================================
-          # Hysteria2
-          # ======================================
-
-          def add_hy2(uri, index):
-
-              try:
-
-                  u = urllib.parse.urlparse(
-                      uri
-                  )
-
-
-                  password = u.username
-
-                  server = u.hostname
-
-                  port = u.port
-
-
-                  if not server:
-                      return
-
-
-                  params = urllib.parse.parse_qs(
-                      u.query
-                  )
-
-
-                  proxy = {
-
-                      "name":
-                          urllib.parse.unquote(
-                              u.fragment
-                          )
-                          or f"Hysteria2-{index}",
-
-                      "type": "hysteria2",
-
-                      "server": server,
-
-                      "port": port or 443,
-
-                      "password":
-                          password or ""
-
-                  }
-
-
-                  sni = params.get(
-                      "sni",
-                      [None]
-                  )[0]
-
-
-                  if sni:
-
-                      proxy["sni"] = sni
-
-
-                  insecure = params.get(
-                      "insecure",
-                      ["0"]
-                  )[0]
-
-
-                  if insecure in [
-                      "1",
-                      "true"
-                  ]:
-
-                      proxy["skip-cert-verify"] = True
-
-
-                  proxies.append(
-                      proxy
-                  )
-
-
-              except Exception:
-
-                  pass
-
-
-          # ======================================
-          # Parse Nodes
-          # ======================================
-
-          for index, node in enumerate(
-              nodes,
-              1
-          ):
-
-              try:
-
-                  if node.startswith(
-                      "vmess://"
-                  ):
-
-                      add_vmess(
-                          node,
-                          index
-                      )
-
-
-                  elif node.startswith(
-                      "vless://"
-                  ):
-
-                      add_vless(
-                          node,
-                          index
-                      )
-
-
-                  elif node.startswith(
-                      "trojan://"
-                  ):
-
-                      add_trojan(
-                          node,
-                          index
-                      )
-
-
-                  elif node.startswith(
-                      "ss://"
-                  ):
-
-                      add_ss(
-                          node,
-                          index
-                      )
-
-
-                  elif (
-                      node.startswith(
-                          "hy2://"
-                      )
-                      or
-                      node.startswith(
-                          "hysteria2://"
-                      )
-                  ):
-
-                      add_hy2(
-                          node,
-                          index
-                      )
-
-
-              except Exception as e:
-
-                  print(
-                      "节点转换失败:",
-                      str(e)
-                  )
-
-
-          # ======================================
-          # 去重
-          # ======================================
+          for index, node in enumerate(nodes, 1):
+              lower = node.lower()
+
+              if lower.startswith("vmess://"):
+                  add_vmess(node, index)
+              elif lower.startswith("vless://"):
+                  add_vless(node, index)
+              elif lower.startswith("trojan://"):
+                  add_trojan(node, index)
+              elif lower.startswith("ss://"):
+                  add_ss(node, index)
+              elif lower.startswith(("hy2://", "hysteria2://")):
+                  add_hy2(node, index)
 
           unique = []
-
           seen = set()
 
-
           for proxy in proxies:
-
               key = (
-
-                  proxy.get(
-                      "type"
-                  ),
-
-                  proxy.get(
-                      "server"
-                  ),
-
-                  proxy.get(
-                      "port"
-                  ),
-
-                  proxy.get(
-                      "uuid"
-                  ),
-
-                  proxy.get(
-                      "password"
-                  )
-
+                  proxy.get("type"),
+                  proxy.get("server"),
+                  proxy.get("port"),
+                  proxy.get("uuid"),
+                  proxy.get("password")
               )
-
 
               if key in seen:
-
                   continue
 
-
-              seen.add(
-                  key
-              )
-
-
-              unique.append(
-                  proxy
-              )
-
+              seen.add(key)
+              unique.append(proxy)
 
           proxies = unique
 
-
-          print("")
-          print(
-              "=========================================="
-          )
-
-          print(
-              "成功转换 Clash 节点:",
-              len(proxies)
-          )
-
-          print(
-              "=========================================="
-          )
-
-
-          if len(proxies) == 0:
-
-              print(
+          if not proxies:
+              raise SystemExit(
                   "错误：没有生成任何 Clash 节点"
               )
 
-              raise SystemExit(1)
-
-
-          # ======================================
-          # Proxy Names
-          # ======================================
-
           proxy_names = [
-
               proxy["name"]
-
               for proxy in proxies
-
           ]
 
-
-          # ======================================
-          # Clash Config
-          # ======================================
-
           config = {
-
               "mixed-port": 7890,
-
               "allow-lan": False,
-
               "mode": "rule",
-
               "log-level": "info",
-
               "ipv6": False,
-
-
               "proxies": proxies,
-
-
               "proxy-groups": [
-
                   {
-
                       "name": "🚀 节点选择",
-
                       "type": "select",
-
                       "proxies": [
-
                           "♻️ 自动选择",
-
                           *proxy_names,
-
                           "DIRECT"
-
                       ]
-
                   },
-
-
                   {
-
                       "name": "♻️ 自动选择",
-
                       "type": "url-test",
-
-                      "url":
-                          "http://www.gstatic.com/generate_204",
-
+                      "url": "http://www.gstatic.com/generate_204",
                       "interval": 600,
-
                       "tolerance": 100,
-
                       "timeout": 5000,
-
                       "lazy": True,
-
-                      "proxies":
-                          proxy_names
-
+                      "proxies": proxy_names
                   }
-
               ],
-
-
               "rules": [
-
                   "MATCH,🚀 节点选择"
-
               ]
-
           }
-
-
-          # ======================================
-          # Write YAML
-          # ======================================
 
           with open(
               OUTPUT,
               "w",
               encoding="utf-8"
           ) as f:
-
               yaml.safe_dump(
                   config,
                   f,
@@ -1700,202 +665,75 @@ jobs:
                   sort_keys=False
               )
 
-
-          print("")
-          print(
-              "Clash 配置生成完成:"
-          )
-
-          print(
-              OUTPUT
-          )
-
-
+          print("Clash 节点:", len(proxies))
           PY
-
-
-          echo ""
-          echo "=========================================="
-          echo "Clash YAML 检查"
-          echo "=========================================="
-
-
-          test -s clash.yaml
-
-
-          echo ""
-          echo "clash.yaml 大小:"
-
-          wc -c clash.yaml
-
-
-          echo ""
-          echo "Clash 节点数量:"
-
-          grep -c '^  - name:' clash.yaml || true
-
-
-          echo ""
-          echo "Clash 配置前 50 行:"
-
-          head -50 clash.yaml
-
-
-      # ==========================================
-      # 15. Validate Clash Config
-      # ==========================================
 
       - name: Validate Clash Config
         run: |
-
           set -e
 
-
-          echo ""
-          echo "=========================================="
-          echo "验证 Clash YAML"
-          echo "=========================================="
-
-
           python3 <<'PY'
-
           import yaml
-
 
           with open(
               "clash.yaml",
               "r",
               encoding="utf-8"
           ) as f:
-
               config = yaml.safe_load(f)
 
+          if not isinstance(config, dict):
+              raise SystemExit("clash.yaml 不是有效 YAML")
 
-          if not isinstance(
-              config,
-              dict
-          ):
+          proxies = config.get("proxies", [])
 
-              raise SystemExit(
-                  "clash.yaml 不是有效 YAML"
-              )
+          if not proxies:
+              raise SystemExit("clash.yaml 的 proxies 为空")
 
+          count = len(proxies)
 
-          if "proxies" not in config:
-
-              raise SystemExit(
-                  "clash.yaml 缺少 proxies"
-              )
-
-
-          if not config["proxies"]:
-
-              raise SystemExit(
-                  "clash.yaml 的 proxies 为空"
-              )
-
-
-          print(
-              "YAML 验证成功"
-          )
-
-
-          print(
-              "节点数量:",
-              len(
-                  config["proxies"]
-              )
-          )
-
-
+          print("YAML 验证成功")
+          print("节点数量:", count)
           print(
               "代理组数量:",
-              len(
-                  config.get(
-                      "proxy-groups",
-                      []
-                  )
-              )
-            )
+              len(config.get("proxy-groups", []))
+          )
 
-          if len(config["proxies"]) > 30:
+          if count > 30:
+              raise SystemExit("错误：Clash 节点超过30个")
 
-              raise SystemExit(
-                  "错误：Clash 节点超过 30 个"
-              )
-
-
+          print("Clash 节点数量检查通过")
           PY
-
-
-      # ==========================================
-      # 16. Show Result
-      # ==========================================
 
       - name: Show Result
         run: |
-
           echo ""
           echo "=========================================="
           echo "最终结果"
           echo "=========================================="
 
-
-          echo ""
-          echo "测速成功数量:"
-
+          echo "真实可用节点:"
           wc -l result.txt
 
-
-          echo ""
-          echo "最终节点数量:"
-
+          echo "最终节点:"
           wc -l nodes.txt
 
-
-          echo ""
-          echo "Base64 文件大小:"
-
+          echo "Base64:"
           wc -c base64.txt
 
-
-          echo ""
-          echo "Clash YAML 大小:"
-
+          echo "Clash YAML:"
           wc -c clash.yaml
 
-
           echo ""
-          echo "Clash 节点数量:"
-
-          grep -c '^  - name:' clash.yaml || true
-
-
-          echo ""
-          echo "前 10 个节点:"
-
+          echo "前10个:"
           head -10 nodes.txt
-
-
-      # ==========================================
-      # 17. Commit
-      # ==========================================
 
       - name: Commit
         run: |
-
           set -e
 
-
-          git config \
-            user.name \
-            "github-actions"
-
-
-          git config \
-            user.email \
-            "github-actions@github.com"
-
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
 
           git add \
             nodes.txt \
@@ -1903,22 +741,12 @@ jobs:
             result.txt \
             clash.yaml
 
-
-          if git diff \
-            --cached \
-            --quiet
-          then
-
-            echo ""
+          if git diff --cached --quiet; then
             echo "没有新的节点变化"
-
             exit 0
-
           fi
-
 
           git commit \
             -m "Ultimate node update: $(date '+%Y-%m-%d %H:%M:%S')"
-
 
           git push
