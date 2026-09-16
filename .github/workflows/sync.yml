@@ -1,3 +1,4 @@
+```yaml
 name: V2Ray Ultimate Node Sync
 
 on:
@@ -135,10 +136,6 @@ jobs:
           touch nodes_all.txt
 
 
-          # ======================================
-          # 节点源
-          # ======================================
-
           sources=(
 
             "https://www.xrayvip.com/free.txt"
@@ -245,7 +242,6 @@ jobs:
 
             echo ""
             echo "错误：所有节点源都是空的"
-            echo "raw.txt 没有任何内容"
 
             exit 1
 
@@ -268,10 +264,6 @@ jobs:
           import base64
 
 
-          # ======================================
-          # 读取原始数据
-          # ======================================
-
           with open(
               "raw.txt",
               "r",
@@ -289,7 +281,7 @@ jobs:
 
 
           # ======================================
-          # 清理 HTML
+          # 清理
           # ======================================
 
           data = data.replace(
@@ -304,7 +296,7 @@ jobs:
 
 
           # ======================================
-          # 直接提取节点
+          # 节点协议
           # ======================================
 
           patterns = [
@@ -326,6 +318,10 @@ jobs:
 
           nodes = []
 
+
+          # ======================================
+          # 直接提取
+          # ======================================
 
           for pattern in patterns:
 
@@ -417,7 +413,7 @@ jobs:
 
 
           # ======================================
-          # 从 Base64 解码结果继续提取
+          # 从 Base64 结果继续提取
           # ======================================
 
           for decoded in decoded_nodes:
@@ -434,7 +430,7 @@ jobs:
 
 
           # ======================================
-          # 清理节点
+          # 清理
           # ======================================
 
           clean = []
@@ -494,10 +490,12 @@ jobs:
           print(
               "================================"
           )
+
           print(
               "最终节点数量:",
               len(clean)
           )
+
           print(
               "================================"
           )
@@ -505,12 +503,9 @@ jobs:
 
           if len(clean) == 0:
 
-              print("")
               print(
                   "错误：没有提取到任何节点"
               )
-
-              print("请检查 raw.txt 是否包含节点")
 
               raise SystemExit(1)
 
@@ -519,6 +514,7 @@ jobs:
 
           echo ""
           echo "nodes_all.txt:"
+
           wc -l nodes_all.txt
 
 
@@ -538,7 +534,11 @@ jobs:
 
           chmod +x tcp_filter.py
 
-          echo "开始 TCP 快速检测..."
+          echo ""
+          echo "=========================================="
+          echo "开始 TCP 快速检测"
+          echo "=========================================="
+
 
           python3 -u tcp_filter.py
 
@@ -558,7 +558,7 @@ jobs:
 
           if [ -f alive_nodes.txt ]; then
 
-            echo "alive节点数量:"
+            echo "alive 节点数量:"
 
             wc -l alive_nodes.txt
 
@@ -662,7 +662,7 @@ jobs:
 
 
           echo ""
-          echo "result内容:"
+          echo "result 内容:"
 
           head -20 result.txt || true
 
@@ -693,16 +693,9 @@ jobs:
           echo "=========================================="
 
 
-          # result.txt 格式:
-          #
-          # 延迟|节点
-          #
-          # 例如:
-          #
-          # 120|vless://xxxxx
-          #
-          # 按延迟从低到高排序
-
+          # ======================================
+          # 只保留最快 30 个节点
+          # ======================================
 
           sort \
             -t '|' \
@@ -740,6 +733,10 @@ jobs:
       - name: Generate Base64
         run: |
 
+          set -e
+
+
+          echo ""
           echo "生成 Base64 订阅..."
 
 
@@ -795,6 +792,10 @@ jobs:
 
           proxies = []
 
+
+          # ======================================
+          # 读取节点
+          # ======================================
 
           with open(
               INPUT,
@@ -871,7 +872,7 @@ jobs:
 
                   port = int(port)
 
-              except:
+              except Exception:
 
                   return
 
@@ -937,25 +938,19 @@ jobs:
 
                   if path:
 
-                      ws_opts[
-                          "path"
-                      ] = path
+                      ws_opts["path"] = path
 
 
                   if host:
 
-                      ws_opts[
-                          "headers"
-                      ] = {
+                      ws_opts["headers"] = {
                           "Host": host
                       }
 
 
                   if ws_opts:
 
-                      proxy[
-                          "ws-opts"
-                      ] = ws_opts
+                      proxy["ws-opts"] = ws_opts
 
 
               # TLS
@@ -984,9 +979,7 @@ jobs:
 
                   if sni:
 
-                      proxy[
-                          "servername"
-                      ] = sni
+                      proxy["servername"] = sni
 
 
               proxies.append(
@@ -1031,6 +1024,12 @@ jobs:
                   )
 
 
+                  network = params.get(
+                      "type",
+                      ["tcp"]
+                  )[0]
+
+
                   proxy = {
 
                       "name": name,
@@ -1043,18 +1042,17 @@ jobs:
 
                       "uuid": uuid,
 
-                      "network": params.get(
-                          "type",
-                          ["tcp"]
-                      )[0]
+                      "network": network
 
                   }
 
 
+                  # TLS / Reality
+
                   security = params.get(
                       "security",
                       [""]
-                  )[0]
+                  )[0].lower()
 
 
                   if security == "tls":
@@ -1066,9 +1064,8 @@ jobs:
 
                       proxy["tls"] = True
 
-                      proxy[
-                          "reality-opts"
-                      ] = {
+
+                      proxy["reality-opts"] = {
 
                           "public-key":
                               params.get(
@@ -1085,6 +1082,14 @@ jobs:
                       }
 
 
+                      proxy["client-fingerprint"] = params.get(
+                          "fp",
+                          ["chrome"]
+                      )[0]
+
+
+                  # SNI
+
                   sni = params.get(
                       "sni",
                       [None]
@@ -1093,10 +1098,10 @@ jobs:
 
                   if sni:
 
-                      proxy[
-                          "servername"
-                      ] = sni
+                      proxy["servername"] = sni
 
+
+                  # Flow
 
                   flow = params.get(
                       "flow",
@@ -1106,16 +1111,12 @@ jobs:
 
                   if flow:
 
-                      proxy[
-                          "flow"
-                      ] = flow
+                      proxy["flow"] = flow
 
 
                   # WebSocket
 
-                  if proxy[
-                      "network"
-                  ] == "ws":
+                  if network == "ws":
 
                       path = params.get(
                           "path",
@@ -1129,9 +1130,7 @@ jobs:
                       )[0]
 
 
-                      proxy[
-                          "ws-opts"
-                      ] = {
+                      proxy["ws-opts"] = {
 
                           "path": path
 
@@ -1140,11 +1139,7 @@ jobs:
 
                       if host:
 
-                          proxy[
-                              "ws-opts"
-                          ][
-                              "headers"
-                          ] = {
+                          proxy["ws-opts"]["headers"] = {
 
                               "Host": host
 
@@ -1221,9 +1216,7 @@ jobs:
 
                   if sni:
 
-                      proxy[
-                          "sni"
-                      ] = sni
+                      proxy["sni"] = sni
 
 
                   network = params.get(
@@ -1234,14 +1227,10 @@ jobs:
 
                   if network == "ws":
 
-                      proxy[
-                          "network"
-                      ] = "ws"
+                      proxy["network"] = "ws"
 
 
-                      proxy[
-                          "ws-opts"
-                      ] = {
+                      proxy["ws-opts"] = {
 
                           "path":
                               params.get(
@@ -1260,11 +1249,7 @@ jobs:
 
                       if host:
 
-                          proxy[
-                              "ws-opts"
-                          ][
-                              "headers"
-                          ] = {
+                          proxy["ws-opts"]["headers"] = {
 
                               "Host": host
 
@@ -1303,17 +1288,12 @@ jobs:
                       return
 
 
-                  # ss://BASE64(method:password)@server:port
-
-                  userinfo = (
-                      urllib.parse.unquote(
-                          u.username or ""
-                      )
+                  userinfo = urllib.parse.unquote(
+                      u.username or ""
                   )
 
 
                   if not userinfo:
-
                       return
 
 
@@ -1329,13 +1309,12 @@ jobs:
                           errors="ignore"
                       )
 
-                  except:
+                  except Exception:
 
                       decoded = userinfo
 
 
                   if ":" not in decoded:
-
                       return
 
 
@@ -1401,7 +1380,6 @@ jobs:
 
 
                   if not server:
-
                       return
 
 
@@ -1438,9 +1416,7 @@ jobs:
 
                   if sni:
 
-                      proxy[
-                          "sni"
-                      ] = sni
+                      proxy["sni"] = sni
 
 
                   insecure = params.get(
@@ -1454,9 +1430,7 @@ jobs:
                       "true"
                   ]:
 
-                      proxy[
-                          "skip-cert-verify"
-                      ] = True
+                      proxy["skip-cert-verify"] = True
 
 
                   proxies.append(
@@ -1627,8 +1601,11 @@ jobs:
           # ======================================
 
           proxy_names = [
+
               proxy["name"]
+
               for proxy in proxies
+
           ]
 
 
@@ -1840,7 +1817,14 @@ jobs:
                       []
                   )
               )
-          )
+
+
+          if len(config["proxies"]) > 30:
+
+              raise SystemExit(
+                  "错误：Clash 节点超过 30 个"
+              )
+
 
           PY
 
@@ -1939,3 +1923,4 @@ jobs:
 
 
           git push
+```
