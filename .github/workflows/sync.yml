@@ -708,7 +708,7 @@ jobs:
             -t '|' \
             -k1,1n \
             result.txt \
-          | head -300 \
+          | head -30 \
           | cut -d '|' -f2- \
           > nodes.txt
 
@@ -1640,7 +1640,7 @@ jobs:
 
               "mixed-port": 7890,
 
-              "allow-lan": True,
+              "allow-lan": False,
 
               "mode": "rule",
 
@@ -1682,9 +1682,9 @@ jobs:
                       "url":
                           "http://www.gstatic.com/generate_204",
 
-                      "interval": 300,
+                      "interval": 600,
 
-                      "tolerance": 50,
+                      "tolerance": 100,
 
                       "timeout": 5000,
 
