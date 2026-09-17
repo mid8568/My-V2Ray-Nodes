@@ -5,18 +5,29 @@ log-level: info
 ipv6: false
 proxies:
 - name: EPODONIOS
-  type: vless
-  server: 47.253.226.114
+  type: ss
+  server: 156.146.38.170
   port: 443
-  uuid: 055a1ce8-2a16-4a0d-a2c2-22826c9b2413
-  network: tcp
-  tls: true
-  reality-opts:
-    public-key: Svl81isn16RPAFnjtmYw7A6TPnsEPLHuYYaJht65Rzc
-    short-id: ''
-  client-fingerprint: chrome
-  servername: www.cloudflare.com
-  flow: xtls-rprx-vision
+  cipher: aes-128-gcm
+  password: shadowsocks
+- name: EPODONIOS
+  type: ss
+  server: 156.146.38.168
+  port: 443
+  cipher: aes-128-gcm
+  password: shadowsocks
+- name: EPODONIOS
+  type: ss
+  server: 156.146.38.167
+  port: 443
+  cipher: aes-128-gcm
+  password: shadowsocks
+- name: EPODONIOS
+  type: ss
+  server: 156.146.38.169
+  port: 443
+  cipher: aes-128-gcm
+  password: shadowsocks
 - name: EPODONIOS
   type: vmess
   server: 82.198.246.37
@@ -27,92 +38,25 @@ proxies:
   network: tcp
 - name: EPODONIOS
   type: vmess
-  server: 82.198.246.233
+  server: 82.198.246.97
   port: 180
   uuid: d13fc2f5-3e05-4795-81eb-44143a09e552
   alterId: 0
   cipher: auto
   network: tcp
 - name: EPODONIOS
-  type: ss
-  server: 216.105.168.18
-  port: 443
-  cipher: chacha20-ietf-poly1305
-  password: bQZl7HDxSabr1FurTYQHFU
-- name: EPODONIOS
-  type: ss
-  server: 198.98.53.130
-  port: 443
-  cipher: chacha20-ietf-poly1305
-  password: eDfN7SODQceIOmIAbtJJtK
-- name: 🇩🇪 Germany · Inception Hosting… | 169.40.42.179 :443·vless·#3
   type: vless
-  server: 169.40.42.179
-  port: 443
-  uuid: d65cc14c-f53f-4fe2-b262-97856601319c
+  server: 15.204.97.195
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
   tls: true
   reality-opts:
-    public-key: e2RLf57Li_-MDZGE9ss1BWPgP54mqRb5PfXhW2jcVVg
-    short-id: c39cc7310a
-  client-fingerprint: ios
-  servername: yahoo.com
-  flow: xtls-rprx-vision
-- name: EPODONIOS
-  type: vless
-  server: 45.149.172.80
-  port: 443
-  uuid: 21a4d978-2c0b-4b26-8ac9-37d54e3a4ab1
-  network: tcp
-  tls: true
-  reality-opts:
-    public-key: FKTaFzF4zfAqXBdDQHwSVl_XyNcC3T17s_FqhHyZchg
-    short-id: fb9456392070128e
-  client-fingerprint: ''
-  servername: www.amazon.com
-  flow: xtls-rprx-vision
-- name: EPODONIOS
-  type: vless
-  server: 195.123.235.177
-  port: 443
-  uuid: 729dd5f2-f5ff-4070-8c10-863eceded0b1
-  network: tcp
-  tls: true
-  reality-opts:
-    public-key: 5B83otQ5ZQwtBFhR7xzsGJRXflkFKRJpQguYbE5JWGI
-    short-id: c85d029f5e8eb393
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
   client-fingerprint: chrome
-  servername: gateway.icloud.com
+  servername: fuck.rkn
   flow: xtls-rprx-vision
-- name: EPODONIOS
-  type: vless
-  server: 169.40.42.212
-  port: 443
-  uuid: d65cc14c-f53f-4fe2-b262-97856601319c
-  network: tcp
-  tls: true
-  reality-opts:
-    public-key: e2RLf57Li_-MDZGE9ss1BWPgP54mqRb5PfXhW2jcVVg
-    short-id: c39cc7310a
-  client-fingerprint: ''
-  servername: yahoo.com
-  flow: xtls-rprx-vision
-- name: EPODONIOS
-  type: ss
-  server: 108.181.0.177
-  port: 8388
-  cipher: chacha20-ietf-poly1305
-  password: G5p6ww4o67HB
-- name: EPODONIOS
-  type: vmess
-  server: 129.146.77.248
-  port: 39495
-  uuid: f836c736-87fc-4fde-aabc-00857ecdff3e
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /cctv13.m3u8
 - name: EPODONIOS
   type: vless
   server: 15.204.97.206
@@ -128,7 +72,100 @@ proxies:
   flow: xtls-rprx-vision
 - name: EPODONIOS
   type: vless
-  server: 169.40.42.231
+  server: 15.204.97.197
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
+  network: tcp
+  tls: true
+  reality-opts:
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
+  client-fingerprint: chrome
+  servername: fuck.rkn
+  flow: xtls-rprx-vision
+- name: EPODONIOS
+  type: trojan
+  server: 104.21.76.194
+  port: 443
+  password: Telegram_healer_config
+  sni: X8xus4X7UTZMDozv2.bZuH25LZINNeTwTOcXYIcx.WORkERs.deV
+  tls: true
+  network: ws
+  ws-opts:
+    path: /tr/nDuppKYyUqsEcG0rcQEg5sghG0?ed
+    headers:
+      Host: x8xus4x7utzmdozv2.bzuh25lzinnetwtocxyicx.workers.dev
+- name: EPODONIOS
+  type: vless
+  server: 15.204.97.219
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
+  network: tcp
+  tls: true
+  reality-opts:
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
+  client-fingerprint: chrome
+  servername: fuck.rkn
+  flow: xtls-rprx-vision
+- name: EPODONIOS
+  type: vmess
+  server: 216.106.183.35
+  port: 22324
+  uuid: 04621bae-ab36-11ec-b909-0242ac120002
+  alterId: 0
+  cipher: auto
+  network: tcp
+- name: EPODONIOS
+  type: vmess
+  server: 38.91.107.49
+  port: 18000
+  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
+  alterId: 0
+  cipher: auto
+  network: tcp
+- name: EPODONIOS
+  type: vless
+  server: 159.89.87.21
+  port: 28190
+  uuid: 14c80e0e-f7ce-4991-94fc-99a1db4a9b1e
+  network: tcp
+  tls: true
+  reality-opts:
+    public-key: ZJRnFU-1s1JOnO8E9uZ7b00l1fPEh63fGRbdBANFRno
+    short-id: ''
+  client-fingerprint: chrome
+  servername: aws.amazon.com
+  flow: xtls-rprx-vision
+- name: EPODONIOS
+  type: vless
+  server: 31.58.50.200
+  port: 8443
+  uuid: e45762cb-9cd1-4e69-8638-9126456b79bd
+  network: tcp
+  tls: true
+  reality-opts:
+    public-key: mr5AF0LFyDzYDRoYAwH6QNcHXL77-LoiwRx50ZzU8QU
+    short-id: ''
+  client-fingerprint: chrome
+  servername: tradingview.com
+  flow: xtls-rprx-vision
+- name: EPODONIOS
+  type: vless
+  server: 5.34.178.120
+  port: 443
+  uuid: 9063f9fb-e88a-4ee0-b4a4-a92ca7316a9f
+  network: tcp
+  tls: true
+  reality-opts:
+    public-key: EVhq2BxKuw2Cody1DmF_HPvUYKwzdXbHP47blUv-eRM
+    short-id: 55ab5559e3a6d10a
+  client-fingerprint: ''
+  servername: www.cloudflare.com
+  flow: xtls-rprx-vision
+- name: 🇩🇪 Germany · Inception Hosting… | 169.40.42.212 :443
+  type: vless
+  server: 169.40.42.212
   port: 443
   uuid: d65cc14c-f53f-4fe2-b262-97856601319c
   network: tcp
@@ -138,6 +175,83 @@ proxies:
     short-id: c39cc7310a
   client-fingerprint: chrome
   servername: yahoo.com
+  flow: xtls-rprx-vision
+- name: EPODONIOS
+  type: vless
+  server: 169.40.42.225
+  port: 443
+  uuid: d65cc14c-f53f-4fe2-b262-97856601319c
+  network: tcp
+  tls: true
+  reality-opts:
+    public-key: e2RLf57Li_-MDZGE9ss1BWPgP54mqRb5PfXhW2jcVVg
+    short-id: c39cc7310a
+  client-fingerprint: chrome
+  servername: yahoo.com
+  flow: xtls-rprx-vision
+- name: EPODONIOS
+  type: vless
+  server: 66.70.179.198
+  port: 2053
+  uuid: dc620cd6-a9d8-4a0f-8f18-006b895db77e
+  network: tcp
+  tls: true
+  reality-opts:
+    public-key: k4l6TxwkBbx9DhZAFpByq5rfCWFSgyOex3f_eFe9CWU
+    short-id: 83f8317a948bb769
+  client-fingerprint: chrome
+  servername: www.cloudflare.com
+- name: EPODONIOS
+  type: vless
+  server: 167.17.69.171
+  port: 443
+  uuid: 00144519-7e0d-476b-8d28-435576af9262
+  network: tcp
+  tls: true
+  reality-opts:
+    public-key: ALT8hIGeZEhi0sQFbXP_ntBg8Xo-v7i0YCLrqTnBxRk
+    short-id: 0990d22f
+  client-fingerprint: chrome
+  servername: www.cloudflare.com
+  flow: xtls-rprx-vision
+- name: EPODONIOS
+  type: vless
+  server: 169.40.42.95
+  port: 443
+  uuid: d65cc14c-f53f-4fe2-b262-97856601319c
+  network: tcp
+  tls: true
+  reality-opts:
+    public-key: e2RLf57Li_-MDZGE9ss1BWPgP54mqRb5PfXhW2jcVVg
+    short-id: c39cc7310a
+  client-fingerprint: chrome
+  servername: yahoo.com
+  flow: xtls-rprx-vision
+- name: EPODONIOS
+  type: vless
+  server: 169.40.42.235
+  port: 443
+  uuid: d65cc14c-f53f-4fe2-b262-97856601319c
+  network: tcp
+  tls: true
+  reality-opts:
+    public-key: e2RLf57Li_-MDZGE9ss1BWPgP54mqRb5PfXhW2jcVVg
+    short-id: c39cc7310a
+  client-fingerprint: chrome
+  servername: yahoo.com
+  flow: xtls-rprx-vision
+- name: EPODONIOS
+  type: vless
+  server: 158.69.112.254
+  port: 443
+  uuid: 661f395d-b153-4199-a04b-693f5fe7f261
+  network: tcp
+  tls: true
+  reality-opts:
+    public-key: wo417FrFdjy7ZhccQ-VWGZEKcoCHSEfyWcJT1pIVc1Y
+    short-id: 3d3c1e645f763ee3
+  client-fingerprint: chrome
+  servername: www.speedtest.net
   flow: xtls-rprx-vision
 - name: EPODONIOS
   type: vless
@@ -154,83 +268,6 @@ proxies:
   flow: xtls-rprx-vision
 - name: EPODONIOS
   type: vless
-  server: 107.173.237.146
-  port: 8443
-  uuid: 1d39f715-2740-4d99-bc3b-197cc48dcee7
-  network: tcp
-  tls: true
-  reality-opts:
-    public-key: D3ojIs3AUKP_tV0E4TEjh90HBVJp24Nq3qMfdxD30kc
-    short-id: df8611c07d
-  client-fingerprint: ''
-  servername: updates.cdn-apple.com
-- name: EPODONIOS
-  type: vless
-  server: 172.235.43.210
-  port: 53957
-  uuid: 7ab29f89-6eef-4171-b232-fc4f580ad31b
-  network: tcp
-  tls: true
-  reality-opts:
-    public-key: XUHlbk5VH5z4E2wxZBhlpLZ33qevyQgqU7dheRDgoGQ
-    short-id: 44e82fd7b97b14
-  client-fingerprint: ''
-  servername: www.nvidia.com
-  flow: xtls-rprx-vision
-- name: EPODONIOS
-  type: vless
-  server: 15.204.97.197
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  tls: true
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-  servername: fuck.rkn
-  flow: xtls-rprx-vision
-- name: EPODONIOS
-  type: vless
-  server: 169.40.42.90
-  port: 443
-  uuid: d65cc14c-f53f-4fe2-b262-97856601319c
-  network: tcp
-  tls: true
-  reality-opts:
-    public-key: e2RLf57Li_-MDZGE9ss1BWPgP54mqRb5PfXhW2jcVVg
-    short-id: c39cc7310a
-  client-fingerprint: chrome
-  servername: yahoo.com
-  flow: xtls-rprx-vision
-- name: 🇩🇪 Germany · Inception Hosting… | 169.40.42.74 :443
-  type: vless
-  server: 169.40.42.74
-  port: 443
-  uuid: d65cc14c-f53f-4fe2-b262-97856601319c
-  network: tcp
-  tls: true
-  reality-opts:
-    public-key: e2RLf57Li_-MDZGE9ss1BWPgP54mqRb5PfXhW2jcVVg
-    short-id: c39cc7310a
-  client-fingerprint: ios
-  servername: yahoo.com
-  flow: xtls-rprx-vision
-- name: EPODONIOS
-  type: vless
-  server: 15.204.97.216
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  tls: true
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-  servername: fuck.rkn
-  flow: xtls-rprx-vision
-- name: 🇩🇪 Germany · Inception Hosting… | 169.40.42.224 :443
-  type: vless
   server: 169.40.42.224
   port: 443
   uuid: d65cc14c-f53f-4fe2-b262-97856601319c
@@ -242,9 +279,9 @@ proxies:
   client-fingerprint: chrome
   servername: yahoo.com
   flow: xtls-rprx-vision
-- name: EPODONIOS
+- name: 🇩🇪 Germany · Inception Hosting… | 169.40.42.182 :443
   type: vless
-  server: 169.40.42.95
+  server: 169.40.42.182
   port: 443
   uuid: d65cc14c-f53f-4fe2-b262-97856601319c
   network: tcp
@@ -252,27 +289,9 @@ proxies:
   reality-opts:
     public-key: e2RLf57Li_-MDZGE9ss1BWPgP54mqRb5PfXhW2jcVVg
     short-id: c39cc7310a
-  client-fingerprint: ''
+  client-fingerprint: chrome
   servername: yahoo.com
   flow: xtls-rprx-vision
-- name: 🇬🇧 Portsmouth, GB · Contabo | 149.102.132.184 :80
-  type: ss
-  server: 149.102.132.184
-  port: 80
-  cipher: aes-256-gcm
-  password: g5h5jleTRSyO3Rk4
-- name: EPODONIOS
-  type: ss
-  server: 213.202.208.199
-  port: 7001
-  cipher: aes-256-gcm
-  password: RexnBgU7EV5ADxG
-- name: EPODONIOS
-  type: ss
-  server: 82.38.31.187
-  port: 8080
-  cipher: chacha20-ietf-poly1305
-  password: k1dBOmOB4oqi7Ump37a1bQ
 proxy-groups:
 - name: 🚀 节点选择
   type: select
@@ -283,7 +302,6 @@ proxy-groups:
   - EPODONIOS
   - EPODONIOS
   - EPODONIOS
-  - 🇩🇪 Germany · Inception Hosting… | 169.40.42.179 :443·vless·#3
   - EPODONIOS
   - EPODONIOS
   - EPODONIOS
@@ -295,14 +313,16 @@ proxy-groups:
   - EPODONIOS
   - EPODONIOS
   - EPODONIOS
-  - EPODONIOS
-  - 🇩🇪 Germany · Inception Hosting… | 169.40.42.74 :443
-  - EPODONIOS
-  - 🇩🇪 Germany · Inception Hosting… | 169.40.42.224 :443
-  - EPODONIOS
-  - 🇬🇧 Portsmouth, GB · Contabo | 149.102.132.184 :80
+  - 🇩🇪 Germany · Inception Hosting… | 169.40.42.212 :443
   - EPODONIOS
   - EPODONIOS
+  - EPODONIOS
+  - EPODONIOS
+  - EPODONIOS
+  - EPODONIOS
+  - EPODONIOS
+  - EPODONIOS
+  - 🇩🇪 Germany · Inception Hosting… | 169.40.42.182 :443
   - DIRECT
 - name: ♻️ 自动选择
   type: url-test
@@ -317,7 +337,6 @@ proxy-groups:
   - EPODONIOS
   - EPODONIOS
   - EPODONIOS
-  - 🇩🇪 Germany · Inception Hosting… | 169.40.42.179 :443·vless·#3
   - EPODONIOS
   - EPODONIOS
   - EPODONIOS
@@ -329,13 +348,15 @@ proxy-groups:
   - EPODONIOS
   - EPODONIOS
   - EPODONIOS
-  - EPODONIOS
-  - 🇩🇪 Germany · Inception Hosting… | 169.40.42.74 :443
-  - EPODONIOS
-  - 🇩🇪 Germany · Inception Hosting… | 169.40.42.224 :443
-  - EPODONIOS
-  - 🇬🇧 Portsmouth, GB · Contabo | 149.102.132.184 :80
+  - 🇩🇪 Germany · Inception Hosting… | 169.40.42.212 :443
   - EPODONIOS
   - EPODONIOS
+  - EPODONIOS
+  - EPODONIOS
+  - EPODONIOS
+  - EPODONIOS
+  - EPODONIOS
+  - EPODONIOS
+  - 🇩🇪 Germany · Inception Hosting… | 169.40.42.182 :443
 rules:
 - MATCH,🚀 节点选择
