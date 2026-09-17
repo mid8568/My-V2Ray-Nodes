@@ -1,558 +1,593 @@
 name: V2Ray Ultimate Node Sync
 
 on:
-workflow_dispatch:
-schedule:
-- cron: "0 */4 * * *"
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */4 * * *"
 
 permissions:
-contents: write
+  contents: write
 
 jobs:
-sync:
-runs-on: ubuntu-latest
+  sync:
+    runs-on: ubuntu-latest
 
-```
-steps:
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  # =========================
-  # 1. Checkout
-  # =========================
-  - name: Checkout
-    uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y curl jq python3 python3-pip wget
+          pip3 install --break-system-packages pyyaml requests
 
-  # =========================
-  # 2. Install dependencies
-  # =========================
-  - name: Install dependencies
-    run: |
-      sudo apt-get update -qq
-      sudo apt-get install -y jq curl python3 python3-pip
-      pip3 install --break-system-packages pyyaml
+      - name: Install sing-box
+        run: |
+          VERSION=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest | jq -r '.tag_name')
+          VERSION=${VERSION#v}
 
-  # =========================
-  # 3. Install sing-box
-  # =========================
-  - name: Install sing-box
-    run: |
-      VERSION=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest | jq -r .tag_name)
-      VERSION=${VERSION#v}
+          wget -q "https://github.com/SagerNet/sing-box/releases/download/v${VERSION}/sing-box-${VERSION}-linux-amd64.tar.gz" -O sing-box.tar.gz
 
-      wget -q \
-        "https://github.com/SagerNet/sing-box/releases/download/v${VERSION}/sing-box-${VERSION}-linux-amd64.tar.gz" \
-        -O sing-box.tar.gz
+          tar -xzf sing-box.tar.gz
 
-      tar -xzf sing-box.tar.gz
+          sudo install "sing-box-${VERSION}-linux-amd64/sing-box" /usr/local/bin/sing-box
 
-      sudo install \
-        sing-box-${VERSION}-linux-amd64/sing-box \
-        /usr/local/bin/sing-box
+          sing-box version
 
-      sing-box version
+      - name: Prepare files
+        run: |
+          mkdir -p output
 
-  # =========================
-  # 4. Prepare directories
-  # =========================
-  - name: Prepare directories
-    run: |
-      mkdir -p data
-      mkdir -p output
+          touch nodes_all.txt
+          touch alive_nodes.txt
+          touch result.txt
+          touch nodes.txt
+          touch base64.txt
 
-      touch nodes_all.txt
-      touch alive_nodes.txt
-      touch result.txt
-      touch nodes.txt
-      touch base64.txt
+      - name: Download latest ClashFree
+        run: |
+          python3 <<'PY'
+          import requests
+          import re
+          import sys
 
-  # =========================
-  # 5. Download clashfree latest YAML
-  # =========================
-  - name: Download clashfree latest nodes
-    run: |
-      python3 <<'PY'
-      import requests
-      import re
-      import sys
+          API_URL = "https://api.github.com/repos/free-nodes/clashfree/contents"
 
-      API = "https://api.github.com/repos/free-nodes/clashfree/contents"
+          headers = {
+              "Accept": "application/vnd.github+json",
+              "User-Agent": "My-V2Ray-Nodes"
+          }
 
-      headers = {
-          "Accept": "application/vnd.github+json",
-          "User-Agent": "My-V2Ray-Nodes"
-      }
+          response = requests.get(
+              API_URL,
+              headers=headers,
+              timeout=30
+          )
 
-      r = requests.get(API, headers=headers, timeout=30)
-      r.raise_for_status()
+          response.raise_for_status()
 
-      files = r.json()
+          files = response.json()
 
-      pattern = re.compile(r"^clash(\d{8})\.ya?ml$")
+          pattern = re.compile(r"^clash\d{8}\.ya?ml$")
 
-      candidates = []
+          candidates = []
 
-      for item in files:
-          name = item.get("name", "")
+          for item in files:
+              name = item.get("name", "")
 
-          if pattern.match(name):
-              candidates.append(name)
+              if pattern.match(name):
+                  candidates.append(name)
 
-      if not candidates:
-          print("没有找到 clashYYYYMMDD.yml")
-          sys.exit(1)
+          if not candidates:
+              print("ERROR: 没有找到 ClashFree 日期 YAML 文件")
+              sys.exit(1)
 
-      candidates.sort(reverse=True)
+          candidates.sort(reverse=True)
 
-      latest = candidates[0]
+          latest = candidates[0]
 
-      url = f"https://raw.githubusercontent.com/free-nodes/clashfree/main/{latest}"
+          print("ClashFree 最新文件:", latest)
 
-      print("使用最新文件:", latest)
-      print("下载地址:", url)
+          download_url = (
+              "https://raw.githubusercontent.com/"
+              "free-nodes/clashfree/main/"
+              + latest
+          )
 
-      data = requests.get(
-          url,
-          headers={"User-Agent": "My-V2Ray-Nodes"},
-          timeout=60
-      )
+          print("下载地址:", download_url)
 
-      data.raise_for_status()
+          data = requests.get(
+              download_url,
+              headers={
+                  "User-Agent": "My-V2Ray-Nodes"
+              },
+              timeout=120
+          )
 
-      with open("clashfree.yml", "wb") as f:
-          f.write(data.content)
+          data.raise_for_status()
 
-      print("下载完成:", len(data.content), "bytes")
-      PY
+          with open(
+              "clashfree.yml",
+              "wb"
+          ) as f:
+              f.write(data.content)
 
-  # =========================
-  # 6. Extract clashfree proxies
-  # =========================
-  - name: Extract clashfree proxies
-    run: |
-      python3 <<'PY'
-      import yaml
+          print(
+              "ClashFree 下载完成:",
+              len(data.content),
+              "bytes"
+          )
+          PY
 
-      INPUT = "clashfree.yml"
-      OUTPUT = "clashfree_nodes.yml"
+      - name: Extract ClashFree proxies
+        run: |
+          python3 <<'PY'
+          import yaml
+          import sys
 
-      with open(INPUT, "r", encoding="utf-8") as f:
-          data = yaml.safe_load(f) or {}
+          with open(
+              "clashfree.yml",
+              "r",
+              encoding="utf-8"
+          ) as f:
+              data = yaml.safe_load(f) or {}
 
-      proxies = data.get("proxies", [])
+          proxies = data.get("proxies", [])
 
-      if not isinstance(proxies, list):
-          proxies = []
+          if not isinstance(proxies, list):
+              print("ERROR: ClashFree 文件没有有效 proxies")
+              sys.exit(1)
 
-      clean = []
+          clean = []
 
-      for proxy in proxies:
-          if isinstance(proxy, dict):
+          for proxy in proxies:
+              if not isinstance(proxy, dict):
+                  continue
+
+              if not proxy.get("type"):
+                  continue
+
+              if not proxy.get("server"):
+                  continue
+
+              if not proxy.get("port"):
+                  continue
+
               clean.append(proxy)
 
-      output = {
-          "proxies": clean
-      }
-
-      with open(
-          OUTPUT,
-          "w",
-          encoding="utf-8"
-      ) as f:
-          yaml.safe_dump(
-              output,
-              f,
-              allow_unicode=True,
-              sort_keys=False
-          )
-
-      print("clashfree 节点数量:", len(clean))
-      PY
-
-  # =========================
-  # 7. Convert clashfree nodes
-  # =========================
-  - name: Convert clashfree nodes
-    run: |
-      python3 <<'PY'
-      import yaml
-
-      INPUT = "clashfree_nodes.yml"
-      OUTPUT = "clashfree_nodes.txt"
-
-      with open(INPUT, "r", encoding="utf-8") as f:
-          data = yaml.safe_load(f) or {}
-
-      proxies = data.get("proxies", [])
-
-      lines = []
-
-      for p in proxies:
-
-          if not isinstance(p, dict):
-              continue
-
-          name = p.get("name", "ClashFree")
-
-          ptype = str(p.get("type", "")).lower()
-
-          server = p.get("server")
-          port = p.get("port")
-
-          if not server or not port:
-              continue
-
-          # =========================
-          # Shadowsocks
-          # =========================
-          if ptype in ["ss", "shadowsocks"]:
-
-              cipher = p.get("cipher")
-              password = p.get("password")
-
-              if cipher and password:
-                  lines.append(
-                      f"ss://{cipher}:{password}@{server}:{port}#{name}"
-                  )
-
-          # =========================
-          # Trojan
-          # =========================
-          elif ptype == "trojan":
-
-              password = p.get("password")
-
-              if password:
-                  lines.append(
-                      f"trojan://{password}@{server}:{port}#{name}"
-                  )
-
-          # =========================
-          # VMess
-          # =========================
-          elif ptype == "vmess":
-
-              uuid = p.get("uuid")
-
-              if uuid:
-                  lines.append(
-                      f"vmess://{uuid}@{server}:{port}#{name}"
-                  )
-
-          # =========================
-          # HTTP / SOCKS5
-          # =========================
-          elif ptype in ["http", "socks5"]:
-
-              lines.append(
-                  f"{ptype}://{server}:{port}#{name}"
+          with open(
+              "clashfree_nodes.yml",
+              "w",
+              encoding="utf-8"
+          ) as f:
+              yaml.safe_dump(
+                  {
+                      "proxies": clean
+                  },
+                  f,
+                  allow_unicode=True,
+                  sort_keys=False
               )
 
-      with open(
-          OUTPUT,
-          "w",
-          encoding="utf-8"
-      ) as f:
-          f.write("\n".join(lines))
+          print(
+              "ClashFree 有效节点:",
+              len(clean)
+          )
+          PY
 
-      print("转换节点数量:", len(lines))
-      PY
+      - name: Convert ClashFree nodes
+        run: |
+          python3 <<'PY'
+          import yaml
+          import base64
 
-  # =========================
-  # 8. Merge all node sources
-  # =========================
-  - name: Merge nodes
-    run: |
-      cat clashfree_nodes.txt >> nodes_all.txt
+          with open(
+              "clashfree_nodes.yml",
+              "r",
+              encoding="utf-8"
+          ) as f:
+              data = yaml.safe_load(f) or {}
 
-      if [ -f data/links.txt ]; then
-        while IFS= read -r url; do
-          [ -z "$url" ] && continue
+          proxies = data.get("proxies", [])
 
-          echo "读取订阅: $url"
+          output = []
 
-          curl -L \
-            --max-time 60 \
-            --retry 2 \
-            -A "Mozilla/5.0" \
-            "$url" \
-            >> nodes_all.txt || true
+          for proxy in proxies:
+              name = str(
+                  proxy.get(
+                      "name",
+                      "ClashFree"
+                  )
+              )
 
-          echo "" >> nodes_all.txt
+              ptype = str(
+                  proxy.get(
+                      "type",
+                      ""
+                  )
+              ).lower()
 
-        done < data/links.txt
-      fi
+              server = proxy.get("server")
+              port = proxy.get("port")
 
-      sed -i 's/\r$//' nodes_all.txt
-
-      grep -v '^[[:space:]]*$' nodes_all.txt \
-        | sort -u \
-        > nodes_all.tmp
-
-      mv nodes_all.tmp nodes_all.txt
-
-      echo "合并后节点数量:"
-      wc -l nodes_all.txt
-
-  # =========================
-  # 9. Extract standard node URLs
-  # =========================
-  - name: Normalize nodes
-    run: |
-      python3 <<'PY'
-      import re
-      import base64
-
-      INPUT = "nodes_all.txt"
-      OUTPUT = "nodes.txt"
-
-      protocols = (
-          "vmess://",
-          "vless://",
-          "trojan://",
-          "ss://",
-          "ssr://",
-          "hysteria://",
-          "hysteria2://",
-          "hy2://",
-          "tuic://",
-          "socks5://",
-          "http://",
-          "https://"
-      )
-
-      result = []
-
-      with open(INPUT, "r", encoding="utf-8", errors="ignore") as f:
-
-          for line in f:
-
-              line = line.strip()
-
-              if not line:
+              if not server or not port:
                   continue
 
-              if line.startswith(protocols):
-                  result.append(line)
-                  continue
+              if ptype in (
+                  "ss",
+                  "shadowsocks"
+              ):
+                  cipher = proxy.get("cipher")
+                  password = proxy.get("password")
 
-              # Base64 尝试解码
-              try:
+                  if cipher and password:
+                      output.append(
+                          f"ss://{cipher}:{password}@{server}:{port}#{name}"
+                      )
 
-                  padded = line + "=" * (-len(line) % 4)
+              elif ptype == "trojan":
+                  password = proxy.get("password")
 
-                  decoded = base64.b64decode(
-                      padded
-                  ).decode(
-                      "utf-8",
-                      errors="ignore"
+                  if password:
+                      output.append(
+                          f"trojan://{password}@{server}:{port}#{name}"
+                      )
+
+              elif ptype == "vmess":
+                  uuid = proxy.get("uuid")
+
+                  if uuid:
+                      output.append(
+                          f"vmess://{uuid}@{server}:{port}#{name}"
+                      )
+
+              elif ptype in (
+                  "http",
+                  "socks5"
+              ):
+                  output.append(
+                      f"{ptype}://{server}:{port}#{name}"
                   )
 
-                  for item in decoded.splitlines():
-
-                      item = item.strip()
-
-                      if item.startswith(protocols):
-                          result.append(item)
-
-              except Exception:
-                  pass
-
-      result = list(dict.fromkeys(result))
-
-      with open(
-          OUTPUT,
-          "w",
-          encoding="utf-8"
-      ) as f:
-
-          f.write(
-              "\n".join(result)
+          output = list(
+              dict.fromkeys(output)
           )
 
-      print("标准节点数量:", len(result))
-      PY
+          with open(
+              "clashfree_nodes.txt",
+              "w",
+              encoding="utf-8"
+          ) as f:
+              f.write(
+                  "\n".join(output)
+              )
 
-  # =========================
-  # 10. Keep all nodes
-  # =========================
-  - name: Prepare alive nodes
-    run: |
-      cp nodes.txt alive_nodes.txt
+          print(
+              "ClashFree 转换节点:",
+              len(output)
+          )
+          PY
 
-      echo "当前节点数量:"
-      wc -l alive_nodes.txt
+      - name: Merge node sources
+        run: |
+          cat clashfree_nodes.txt >> nodes_all.txt
 
-  # =========================
-  # 11. Generate Clash YAML
-  # =========================
-  - name: Generate clash.yaml
-    run: |
-      python3 <<'PY'
-      import yaml
-      import base64
-      import urllib.parse
-      import re
+          if [ -f data/links.txt ]; then
 
-      INPUT = "clashfree.yml"
-      OUTPUT = "clash.yaml"
+            while IFS= read -r url; do
 
-      with open(
-          INPUT,
-          "r",
-          encoding="utf-8"
-      ) as f:
-          source = yaml.safe_load(f) or {}
+              if [ -z "$url" ]; then
+                continue
+              fi
 
-      proxies = source.get("proxies", [])
+              echo "读取订阅:"
+              echo "$url"
 
-      if not isinstance(proxies, list):
-          proxies = []
+              curl -L \
+                --max-time 120 \
+                --retry 2 \
+                --silent \
+                --show-error \
+                -A "Mozilla/5.0" \
+                "$url" >> nodes_all.txt || true
 
-      clean = []
+              echo "" >> nodes_all.txt
 
-      seen = set()
+            done < data/links.txt
 
-      for p in proxies:
+          else
 
-          if not isinstance(p, dict):
-              continue
+            echo "没有找到 data/links.txt"
 
-          server = p.get("server")
-          port = p.get("port")
-          ptype = p.get("type")
+          fi
 
-          if not server or not port or not ptype:
-              continue
+          sed -i 's/\r$//' nodes_all.txt
 
-          key = (
-              str(ptype),
-              str(server),
-              str(port),
-              str(p.get("uuid", "")),
-              str(p.get("password", "")),
-              str(p.get("cipher", "")),
+          grep -v '^[[:space:]]*$' nodes_all.txt \
+            | sort -u \
+            > nodes_all.tmp || true
+
+          mv nodes_all.tmp nodes_all.txt
+
+          echo "合并完成"
+
+          echo "nodes_all.txt 行数:"
+          wc -l nodes_all.txt
+
+      - name: Extract node URLs
+        run: |
+          python3 <<'PY'
+          import base64
+
+          protocols = (
+              "vmess://",
+              "vless://",
+              "trojan://",
+              "ss://",
+              "ssr://",
+              "hysteria://",
+              "hysteria2://",
+              "hy2://",
+              "tuic://",
+              "socks5://",
+              "http://",
+              "https://"
           )
 
-          if key in seen:
-              continue
+          result = []
 
-          seen.add(key)
+          with open(
+              "nodes_all.txt",
+              "r",
+              encoding="utf-8",
+              errors="ignore"
+          ) as f:
 
-          clean.append(p)
+              for line in f:
 
-      # =========================
-      # Proxy groups
-      # =========================
+                  line = line.strip()
 
-      names = [
-          p.get("name")
-          for p in clean
-          if p.get("name")
-      ]
+                  if not line:
+                      continue
 
-      config = {
-          "mixed-port": 7890,
-          "allow-lan": False,
-          "mode": "rule",
-          "log-level": "info",
+                  if line.startswith(protocols):
+                      result.append(line)
+                      continue
 
-          "proxies": clean,
+                  try:
 
-          "proxy-groups": [
-              {
-                  "name": "🚀 节点选择",
-                  "type": "select",
-                  "proxies": [
-                      "♻️ 自动选择",
-                      "DIRECT"
-                  ] + names
-              },
-              {
-                  "name": "♻️ 自动选择",
-                  "type": "url-test",
-                  "url": "http://www.gstatic.com/generate_204",
-                  "interval": 300,
-                  "tolerance": 50,
-                  "proxies": names
-              }
-          ],
+                      padded = (
+                          line
+                          + "=" * (-len(line) % 4)
+                      )
 
-          "rules": [
-              "MATCH,🚀 节点选择"
-          ]
-      }
+                      decoded = base64.b64decode(
+                          padded
+                      ).decode(
+                          "utf-8",
+                          errors="ignore"
+                      )
 
-      with open(
-          OUTPUT,
-          "w",
-          encoding="utf-8"
-      ) as f:
+                      for item in decoded.splitlines():
 
-          yaml.safe_dump(
-              config,
-              f,
-              allow_unicode=True,
-              sort_keys=False
+                          item = item.strip()
+
+                          if item.startswith(protocols):
+                              result.append(item)
+
+                  except Exception:
+                      pass
+
+          result = list(
+              dict.fromkeys(result)
           )
 
-      print("最终 Clash 节点数量:", len(clean))
-      PY
+          with open(
+              "nodes.txt",
+              "w",
+              encoding="utf-8"
+          ) as f:
+              f.write(
+                  "\n".join(result)
+              )
 
-  # =========================
-  # 12. Generate Base64
-  # =========================
-  - name: Generate base64.txt
-    run: |
-      base64 -w 0 nodes.txt > base64.txt
-      echo >> base64.txt
+          print(
+              "标准节点数量:",
+              len(result)
+          )
+          PY
 
-  # =========================
-  # 13. Generate result.txt
-  # =========================
-  - name: Generate result.txt
-    run: |
-      {
-        echo "My-V2Ray-Nodes"
-        echo
-        echo "Updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-        echo
-        echo "Total nodes:"
-        wc -l < nodes.txt
-        echo
-        echo "ClashFree source:"
-        echo "https://github.com/free-nodes/clashfree"
-      } > result.txt
+      - name: Prepare alive nodes
+        run: |
+          cp nodes.txt alive_nodes.txt
 
-  # =========================
-  # 14. Save source information
-  # =========================
-  - name: Save source information
-    run: |
-      {
-        echo "ClashFree"
-        echo "https://github.com/free-nodes/clashfree"
-        echo
-        echo "Generated:"
-        date -u '+%Y-%m-%d %H:%M:%S UTC'
-      } > output/source.txt
+          echo "当前节点数量:"
+          wc -l alive_nodes.txt
 
-  # =========================
-  # 15. Git commit
-  # =========================
-  - name: Commit changes
-    run: |
-      git config user.name "github-actions[bot]"
-      git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Generate Clash YAML
+        run: |
+          python3 <<'PY'
+          import yaml
 
-      git add \
-        nodes_all.txt \
-        alive_nodes.txt \
-        result.txt \
-        nodes.txt \
-        base64.txt \
-        clash.yaml \
-        output/source.txt
+          with open(
+              "clashfree.yml",
+              "r",
+              encoding="utf-8"
+          ) as f:
+              source = yaml.safe_load(f) or {}
 
-      git diff --cached --quiet || \
-        git commit -m "Auto update nodes"
+          proxies = source.get(
+              "proxies",
+              []
+          )
 
-      git push
+          if not isinstance(
+              proxies,
+              list
+          ):
+              proxies = []
+
+          clean = []
+
+          seen = set()
+
+          for proxy in proxies:
+
+              if not isinstance(
+                  proxy,
+                  dict
+              ):
+                  continue
+
+              server = proxy.get("server")
+              port = proxy.get("port")
+              ptype = proxy.get("type")
+
+              if not server:
+                  continue
+
+              if not port:
+                  continue
+
+              if not ptype:
+                  continue
+
+              key = (
+                  str(ptype),
+                  str(server),
+                  str(port),
+                  str(proxy.get("uuid", "")),
+                  str(proxy.get("password", "")),
+                  str(proxy.get("cipher", ""))
+              )
+
+              if key in seen:
+                  continue
+
+              seen.add(key)
+
+              clean.append(proxy)
+
+          names = []
+
+          for proxy in clean:
+
+              name = proxy.get("name")
+
+              if name:
+                  names.append(
+                      str(name)
+                  )
+
+          config = {
+              "mixed-port": 7890,
+
+              "allow-lan": False,
+
+              "mode": "rule",
+
+              "log-level": "info",
+
+              "proxies": clean,
+
+              "proxy-groups": [
+                  {
+                      "name": "🚀 节点选择",
+
+                      "type": "select",
+
+                      "proxies": [
+                          "♻️ 自动选择",
+                          "DIRECT"
+                      ] + names
+                  },
+
+                  {
+                      "name": "♻️ 自动选择",
+
+                      "type": "url-test",
+
+                      "url": "http://www.gstatic.com/generate_204",
+
+                      "interval": 300,
+
+                      "tolerance": 50,
+
+                      "proxies": names
+                  }
+              ],
+
+              "rules": [
+                  "MATCH,🚀 节点选择"
+              ]
+          }
+
+          with open(
+              "clash.yaml",
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              yaml.safe_dump(
+                  config,
+                  f,
+                  allow_unicode=True,
+                  sort_keys=False
+              )
+
+          print(
+              "Clash YAML 节点数量:",
+              len(clean)
+          )
+          PY
+
+      - name: Generate Base64
+        run: |
+          base64 -w 0 nodes.txt > base64.txt
+          echo >> base64.txt
+
+      - name: Generate result
+        run: |
+          {
+            echo "My-V2Ray-Nodes"
+            echo
+            echo "Updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            echo
+            echo "Total nodes:"
+            wc -l < nodes.txt
+            echo
+            echo "ClashFree source:"
+            echo "https://github.com/free-nodes/clashfree"
+          } > result.txt
+
+      - name: Save source information
+        run: |
+          {
+            echo "ClashFree"
+            echo "https://github.com/free-nodes/clashfree"
+            echo
+            echo "Updated:"
+            date -u '+%Y-%m-%d %H:%M:%S UTC'
+          } > output/source.txt
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add \
+            nodes_all.txt \
+            alive_nodes.txt \
+            result.txt \
+            nodes.txt \
+            base64.txt \
+            clash.yaml \
+            output/source.txt
+
+          if git diff --cached --quiet; then
+            echo "没有新的变化"
+          else
+            git commit -m "Auto update nodes"
+            git push
+          fi
