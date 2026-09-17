@@ -556,4 +556,3 @@ steps:
         git commit -m "Auto update nodes"
 
       git push
-```
