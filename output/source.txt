@@ -2,4 +2,4 @@ ClashFree
 https://github.com/free-nodes/clashfree
 
 Updated:
-2026-09-18 02:44:05 UTC
+2026-09-18 08:40:23 UTC
