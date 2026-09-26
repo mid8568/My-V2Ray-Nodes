@@ -482,7 +482,7 @@ jobs:
                           str(e)
                       )
 
-          # 去重
+          # 去除完全相同的节点
           clean = []
           seen = set()
 
@@ -493,7 +493,8 @@ jobs:
                   proxy.get("server"),
                   proxy.get("port"),
                   proxy.get("uuid"),
-                  proxy.get("password")
+                  proxy.get("password"),
+                  proxy.get("cipher")
               )
 
               if key in seen:
@@ -502,21 +503,30 @@ jobs:
               seen.add(key)
               clean.append(proxy)
 
-          names = [
-              str(proxy["name"])
-              for proxy in clean
-              if proxy.get("name")
-          ]
-
-          # 防止名称重复
+          # 强制保证每个节点名称唯一
+          name_count = {}
           unique_names = []
-          seen_names = set()
 
-          for name in names:
-              if name not in seen_names:
-                  seen_names.add(name)
-                  unique_names.append(name)
+          for index, proxy in enumerate(clean, 1):
 
+              base_name = str(
+                  proxy.get("name") or f"Node-{index}"
+              ).strip()
+
+              if not base_name:
+                  base_name = f"Node-{index}"
+
+              if base_name not in name_count:
+                  name_count[base_name] = 1
+                  final_name = base_name
+              else:
+                  name_count[base_name] += 1
+                  final_name = (
+                      f"{base_name}-{name_count[base_name]}"
+                  )
+
+              proxy["name"] = final_name
+              unique_names.append(final_name)
           config = {
               "mixed-port": 7890,
               "allow-lan": False,
