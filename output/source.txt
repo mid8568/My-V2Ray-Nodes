@@ -1,5 +1,5 @@
-ClashFree
-https://github.com/free-nodes/clashfree
+V2RayFree
+https://raw.githubusercontent.com/free-nodes/v2rayfree/main/sub
 
 Updated:
-2026-09-26 09:00:27 UTC
+2026-09-26 13:59:11 UTC
