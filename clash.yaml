@@ -83,7 +83,7 @@ proxies:
   server: 104.21.33.59
   port: 443
   password: humanity
-- name: 未知 TROJAN-579 | free-nodes
+- name: 未知 TROJAN-579 | free-nodes-2
   type: trojan
   server: 165.215.250.14
   port: 443
@@ -108,7 +108,7 @@ proxies:
   server: 188.114.97.6
   port: 443
   password: humanity
-- name: 未知 TROJAN-24 | free-nodes
+- name: 未知 TROJAN-24 | free-nodes-2
   type: trojan
   server: 188.42.145.180
   port: 443
@@ -128,7 +128,7 @@ proxies:
   server: 78.47.146.151
   port: 443
   password: humanity
-- name: 未知 TROJAN-26 | free-nodes
+- name: 未知 TROJAN-26 | free-nodes-2
   type: trojan
   server: 8.47.69.0
   port: 443
@@ -1179,13 +1179,16 @@ proxy-groups:
   - 未知 TROJAN-54 | free-nodes
   - 未知 TROJAN-567 | free-nodes
   - 未知 TROJAN-59 | free-nodes
+  - 未知 TROJAN-579 | free-nodes-2
   - 未知 TROJAN-603 | free-nodes
   - 未知 TROJAN-569 | free-nodes
   - 未知 TROJAN-570 | free-nodes
   - 未知 TROJAN-26 | free-nodes
+  - 未知 TROJAN-24 | free-nodes-2
   - 未知 TROJAN-583 | free-nodes
   - 未知 TROJAN-605 | free-nodes
   - 未知 TROJAN-25 | free-nodes
+  - 未知 TROJAN-26 | free-nodes-2
   - 未知 TROJAN-623 | free-nodes
   - 未知 TROJAN-27 | free-nodes
   - 🇺🇸 US TROJAN-34 | free-nodes
@@ -1347,13 +1350,16 @@ proxy-groups:
   - 未知 TROJAN-54 | free-nodes
   - 未知 TROJAN-567 | free-nodes
   - 未知 TROJAN-59 | free-nodes
+  - 未知 TROJAN-579 | free-nodes-2
   - 未知 TROJAN-603 | free-nodes
   - 未知 TROJAN-569 | free-nodes
   - 未知 TROJAN-570 | free-nodes
   - 未知 TROJAN-26 | free-nodes
+  - 未知 TROJAN-24 | free-nodes-2
   - 未知 TROJAN-583 | free-nodes
   - 未知 TROJAN-605 | free-nodes
   - 未知 TROJAN-25 | free-nodes
+  - 未知 TROJAN-26 | free-nodes-2
   - 未知 TROJAN-623 | free-nodes
   - 未知 TROJAN-27 | free-nodes
   - 🇺🇸 US TROJAN-34 | free-nodes
