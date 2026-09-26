@@ -1,9 +1,9 @@
 My-V2Ray-Nodes
 
-Updated: 2026-09-25 23:00:53 UTC
+Updated: 2026-09-26 03:03:21 UTC
 
 Total nodes:
-14450
+14538
 
 ClashFree source:
 https://github.com/free-nodes/clashfree
