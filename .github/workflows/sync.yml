@@ -1,4 +1,3 @@
-```yaml
 name: V2Ray Ultimate Node Sync
 
 on:
@@ -355,4 +354,3 @@ jobs:
           if [ -f mihomo.pid ]; then
             kill "$(cat mihomo.pid)" 2>/dev/null || true
           fi
-```
