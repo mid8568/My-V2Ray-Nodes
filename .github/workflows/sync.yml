@@ -1,9 +1,10 @@
+```yaml
 name: V2Ray Ultimate Node Sync
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */4 * * *"
+    - cron: "0 * * * *"
 
 permissions:
   contents: write
@@ -11,6 +12,7 @@ permissions:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -19,611 +21,338 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y curl jq python3 python3-pip wget
-          pip3 install --break-system-packages pyyaml requests
+          sudo apt-get install -y curl jq python3 python3-yaml gzip
 
-      - name: Prepare files
+      - name: Download Mihomo
+        shell: bash
         run: |
-          mkdir -p output
-          touch nodes_all.txt
-          touch alive_nodes.txt
-          touch result.txt
-          touch nodes.txt
-          touch base64.txt
+          set -e
 
-      - name: Download V2RayFree source
-        run: |
-          curl -L \
-            --max-time 120 \
-            --retry 3 \
-            --retry-delay 5 \
-            --silent \
-            --show-error \
-            -A "Mozilla/5.0" \
-            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/sub" \
-            -o v2rayfree_sub.txt
+          URL=$(curl -fsSL https://api.github.com/repos/MetaCubeX/mihomo/releases/latest \
+            | jq -r '.assets[] | select(.name | test("^mihomo-linux-amd64-compatible-.*\\.gz$")) | .browser_download_url' \
+            | head -n 1)
 
-          echo "V2RayFree source downloaded"
-
-          echo "文件大小:"
-          wc -c v2rayfree_sub.txt
-
-          echo "前几行:"
-          head -n 5 v2rayfree_sub.txt || true
-
-      - name: Decode V2RayFree subscription
-        run: |
-          python3 <<'PY'
-          import base64
-          import re
-
-          INPUT = "v2rayfree_sub.txt"
-          OUTPUT = "v2rayfree_nodes.txt"
-
-          protocols = (
-              "vmess://",
-              "vless://",
-              "trojan://",
-              "ss://",
-              "ssr://",
-              "hysteria://",
-              "hysteria2://",
-              "hy2://",
-              "tuic://",
-              "socks5://",
-              "http://",
-              "https://"
-          )
-
-          with open(INPUT, "rb") as f:
-              raw = f.read()
-
-          text = raw.decode("utf-8", errors="ignore").strip()
-
-          nodes = []
-
-          # 先尝试直接读取协议节点
-          for line in text.splitlines():
-              line = line.strip()
-
-              if not line:
-                  continue
-
-              if line.startswith(protocols):
-                  nodes.append(line)
-
-          # 如果没有直接节点，则尝试 Base64 解码
-          if not nodes:
-              compact = re.sub(r"\s+", "", text)
-
-              try:
-                  padded = compact + "=" * (-len(compact) % 4)
-
-                  decoded = base64.b64decode(
-                      padded,
-                      validate=False
-                  ).decode(
-                      "utf-8",
-                      errors="ignore"
-                  )
-
-                  for line in decoded.splitlines():
-                      line = line.strip()
-
-                      if line.startswith(protocols):
-                          nodes.append(line)
-
-              except Exception as e:
-                  print("Base64 解码失败:", e)
-
-          # 去重
-          nodes = list(dict.fromkeys(nodes))
-
-          with open(
-              OUTPUT,
-              "w",
-              encoding="utf-8"
-          ) as f:
-              f.write("\n".join(nodes))
-
-          print("V2RayFree 节点数量:", len(nodes))
-
-          if not nodes:
-              print("WARNING: 没有提取到节点")
-          PY
-
-      - name: Merge additional sources
-        run: |
-          cat v2rayfree_nodes.txt >> nodes_all.txt
-
-          if [ -f data/links.txt ]; then
-            while IFS= read -r url; do
-
-              if [ -z "$url" ]; then
-                continue
-              fi
-
-              echo "读取额外订阅:"
-              echo "$url"
-
-              curl -L \
-                --max-time 120 \
-                --retry 2 \
-                --silent \
-                --show-error \
-                -A "Mozilla/5.0" \
-                "$url" >> nodes_all.txt || true
-
-              echo "" >> nodes_all.txt
-
-            done < data/links.txt
-          else
-            echo "没有找到 data/links.txt"
+          if [ -z "$URL" ] || [ "$URL" = "null" ]; then
+            echo "无法找到 Mihomo Linux amd64 compatible 版本"
+            exit 1
           fi
 
-          sed -i 's/\r$//' nodes_all.txt
+          echo "下载 Mihomo:"
+          echo "$URL"
 
-          grep -v '^[[:space:]]*$' nodes_all.txt \
-            | sort -u \
-            > nodes_all.tmp || true
+          curl -fL "$URL" -o mihomo.gz
+          gunzip -f mihomo.gz
+          chmod +x mihomo
 
-          mv nodes_all.tmp nodes_all.txt
+          ./mihomo -v
 
-          echo "合并完成"
-
-          echo "nodes_all.txt 行数:"
-          wc -l nodes_all.txt
-
-      - name: Extract node URLs
+      - name: Download source subscription
         run: |
-          python3 <<'PY'
-          import base64
+          set -e
 
-          protocols = (
-              "vmess://",
-              "vless://",
-              "trojan://",
-              "ss://",
-              "ssr://",
-              "hysteria://",
-              "hysteria2://",
-              "hy2://",
-              "tuic://",
-              "socks5://",
-              "http://",
-              "https://"
-          )
+          curl -fL \
+            --retry 3 \
+            --connect-timeout 20 \
+            --max-time 120 \
+            "https://github.com/Au1rxx/free-vpn-subscriptions/raw/main/output/clash.yaml" \
+            -o source.yaml
 
-          result = []
+          test -s source.yaml
 
-          with open(
-              "nodes_all.txt",
-              "r",
-              encoding="utf-8",
-              errors="ignore"
-          ) as f:
+          echo "原始订阅大小:"
+          wc -c source.yaml
 
-              for line in f:
-                  line = line.strip()
+          echo "节点数量:"
+          python3 - <<'PY'
+          import yaml
 
-                  if not line:
-                      continue
+          with open("source.yaml", "r", encoding="utf-8") as f:
+              data = yaml.safe_load(f)
 
-                  # 直接节点
-                  if line.startswith(protocols):
-                      result.append(line)
-                      continue
+          proxies = data.get("proxies", [])
 
-                  # Base64 订阅
-                  try:
-                      padded = line + "=" * (-len(line) % 4)
-
-                      decoded = base64.b64decode(
-                          padded,
-                          validate=False
-                      ).decode(
-                          "utf-8",
-                          errors="ignore"
-                      )
-
-                      for item in decoded.splitlines():
-                          item = item.strip()
-
-                          if item.startswith(protocols):
-                              result.append(item)
-
-                  except Exception:
-                      pass
-
-          # 去重
-          result = list(dict.fromkeys(result))
-
-          with open(
-              "nodes.txt",
-              "w",
-              encoding="utf-8"
-          ) as f:
-              f.write("\n".join(result))
-
-          print("标准节点数量:", len(result))
+          print(len(proxies))
           PY
 
-      - name: Prepare alive nodes
+      - name: Prepare Mihomo test config
         run: |
-          cp nodes.txt alive_nodes.txt
+          python3 - <<'PY'
+          from pathlib import Path
 
-          echo "当前节点数量:"
-          wc -l alive_nodes.txt
+          src = Path("source.yaml").read_text(encoding="utf-8")
 
-      - name: Generate Clash YAML
+          prefix = ""
+
+          if not any(line.startswith("mixed-port:") for line in src.splitlines()):
+              prefix += "mixed-port: 7890\n"
+
+          if not any(line.startswith("external-controller:") for line in src.splitlines()):
+              prefix += "external-controller: 127.0.0.1:9090\n"
+
+          if not any(line.startswith("secret:") for line in src.splitlines()):
+              prefix += "secret: \"\"\n"
+
+          Path("test.yaml").write_text(prefix + src, encoding="utf-8")
+          PY
+
+          echo "启动 Mihomo..."
+
+          nohup ./mihomo -d . -f test.yaml > mihomo.log 2>&1 &
+          echo $! > mihomo.pid
+
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:9090/version >/dev/null 2>&1; then
+              echo "Mihomo 启动成功"
+              break
+            fi
+
+            sleep 1
+          done
+
+          if ! curl -fsS http://127.0.0.1:9090/version >/dev/null 2>&1; then
+            echo "Mihomo 启动失败"
+            cat mihomo.log
+            exit 1
+          fi
+
+      - name: Test nodes
         run: |
-          python3 <<'PY'
-          import yaml
-          import base64
-          import urllib.parse
+          python3 - <<'PY'
           import json
+          import time
+          import urllib.parse
+          import urllib.request
+          from pathlib import Path
 
-          INPUT = "nodes.txt"
-          OUTPUT = "clash.yaml"
+          API = "http://127.0.0.1:9090"
+          TEST_URL = "https://www.gstatic.com/generate_204"
+          TIMEOUT = 5000
 
-          proxies = []
+          def api(path):
+              req = urllib.request.Request(API + path)
+              with urllib.request.urlopen(req, timeout=10) as r:
+                  return json.loads(r.read().decode())
 
-          with open(
-              INPUT,
-              "r",
-              encoding="utf-8",
-              errors="ignore"
-          ) as f:
+          with open("source.yaml", "r", encoding="utf-8") as f:
+              import yaml
+              config = yaml.safe_load(f)
 
-              for index, line in enumerate(f, 1):
+          proxies = config.get("proxies", [])
 
-                  line = line.strip()
+          print(f"开始测试 {len(proxies)} 个节点")
+          print("=" * 60)
 
-                  if not line:
-                      continue
+          alive = []
+          dead = []
 
-                  try:
+          for index, proxy in enumerate(proxies, 1):
+              name = str(proxy.get("name", "")).strip()
 
-                      # ==========================
-                      # VMESS
-                      # ==========================
-                      if line.startswith("vmess://"):
-
-                          raw = line[8:]
-                          padded = raw + "=" * (-len(raw) % 4)
-
-                          decoded = base64.b64decode(
-                              padded
-                          ).decode(
-                              "utf-8",
-                              errors="ignore"
-                          )
-
-                          data = json.loads(decoded)
-
-                          server = data.get("add")
-                          port = int(data.get("port", 443))
-                          uuid = data.get("id")
-
-                          if not server or not uuid:
-                              continue
-
-                          proxy = {
-                              "name": data.get(
-                                  "ps",
-                                  f"VMess-{index}"
-                              ),
-                              "type": "vmess",
-                              "server": server,
-                              "port": port,
-                              "uuid": uuid,
-                              "alterId": int(
-                                  data.get("aid", 0)
-                              ),
-                              "cipher": "auto"
-                          }
-
-                          net = data.get("net", "tcp")
-
-                          if net:
-                              proxy["network"] = net
-
-                          if data.get("tls") == "tls":
-                              proxy["tls"] = True
-
-                          if data.get("sni"):
-                              proxy["servername"] = data["sni"]
-
-                          proxies.append(proxy)
-
-                      # ==========================
-                      # VLESS
-                      # ==========================
-                      elif line.startswith("vless://"):
-
-                          parsed = urllib.parse.urlparse(line)
-
-                          uuid = parsed.username
-                          server = parsed.hostname
-                          port = parsed.port
-
-                          if not uuid or not server or not port:
-                              continue
-
-                          params = urllib.parse.parse_qs(
-                              parsed.query
-                          )
-
-                          name = urllib.parse.unquote(
-                              parsed.fragment
-                          ) or f"VLESS-{index}"
-
-                          proxy = {
-                              "name": name,
-                              "type": "vless",
-                              "server": server,
-                              "port": port,
-                              "uuid": uuid
-                          }
-
-                          if params.get("security", [""])[0] == "tls":
-                              proxy["tls"] = True
-
-                          if params.get("sni"):
-                              proxy["servername"] = params["sni"][0]
-
-                          if params.get("type"):
-                              proxy["network"] = params["type"][0]
-
-                          proxies.append(proxy)
-
-                      # ==========================
-                      # TROJAN
-                      # ==========================
-                      elif line.startswith("trojan://"):
-
-                          parsed = urllib.parse.urlparse(line)
-
-                          password = parsed.username
-                          server = parsed.hostname
-                          port = parsed.port
-
-                          if not password or not server or not port:
-                              continue
-
-                          params = urllib.parse.parse_qs(
-                              parsed.query
-                          )
-
-                          name = urllib.parse.unquote(
-                              parsed.fragment
-                          ) or f"Trojan-{index}"
-
-                          proxy = {
-                              "name": name,
-                              "type": "trojan",
-                              "server": server,
-                              "port": port,
-                              "password": password
-                          }
-
-                          if params.get("sni"):
-                              proxy["sni"] = params["sni"][0]
-
-                          proxies.append(proxy)
-
-                      # ==========================
-                      # SOCKS5
-                      # ==========================
-                      elif line.startswith("socks5://"):
-
-                          parsed = urllib.parse.urlparse(line)
-
-                          server = parsed.hostname
-                          port = parsed.port
-
-                          if not server or not port:
-                              continue
-
-                          name = urllib.parse.unquote(
-                              parsed.fragment
-                          ) or f"SOCKS5-{index}"
-
-                          proxy = {
-                              "name": name,
-                              "type": "socks5",
-                              "server": server,
-                              "port": port
-                          }
-
-                          if parsed.username:
-                              proxy["username"] = parsed.username
-
-                          if parsed.password:
-                              proxy["password"] = parsed.password
-
-                          proxies.append(proxy)
-
-                      # ==========================
-                      # HTTP
-                      # ==========================
-                      elif line.startswith("http://"):
-
-                          parsed = urllib.parse.urlparse(line)
-
-                          server = parsed.hostname
-                          port = parsed.port
-
-                          if not server or not port:
-                              continue
-
-                          name = urllib.parse.unquote(
-                              parsed.fragment
-                          ) or f"HTTP-{index}"
-
-                          proxy = {
-                              "name": name,
-                              "type": "http",
-                              "server": server,
-                              "port": port
-                          }
-
-                          if parsed.username:
-                              proxy["username"] = parsed.username
-
-                          if parsed.password:
-                              proxy["password"] = parsed.password
-
-                          proxies.append(proxy)
-
-                  except Exception as e:
-                      print(
-                          f"跳过节点 {index}:",
-                          str(e)
-                      )
-
-          # 去除完全相同的节点
-          clean = []
-          seen = set()
-
-          for proxy in proxies:
-
-              key = (
-                  proxy.get("type"),
-                  proxy.get("server"),
-                  proxy.get("port"),
-                  proxy.get("uuid"),
-                  proxy.get("password"),
-                  proxy.get("cipher")
-              )
-
-              if key in seen:
+              if not name:
                   continue
 
-              seen.add(key)
-              clean.append(proxy)
+              encoded_name = urllib.parse.quote(name, safe="")
 
-          # 强制保证每个节点名称唯一
-          name_count = {}
-          unique_names = []
-
-          for index, proxy in enumerate(clean, 1):
-
-              base_name = str(
-                  proxy.get("name") or f"Node-{index}"
-              ).strip()
-
-              if not base_name:
-                  base_name = f"Node-{index}"
-
-              if base_name not in name_count:
-                  name_count[base_name] = 1
-                  final_name = base_name
-              else:
-                  name_count[base_name] += 1
-                  final_name = (
-                      f"{base_name}-{name_count[base_name]}"
-                  )
-
-              proxy["name"] = final_name
-              unique_names.append(final_name)
-          config = {
-              "mixed-port": 7890,
-              "allow-lan": False,
-              "mode": "rule",
-              "log-level": "info",
-
-              "proxies": clean,
-
-              "proxy-groups": [
-                  {
-                      "name": "🚀 节点选择",
-                      "type": "select",
-                      "proxies": [
-                          "♻️ 自动选择",
-                          "DIRECT"
-                      ] + unique_names
-                  },
-                  {
-                      "name": "♻️ 自动选择",
-                      "type": "url-test",
-                      "url": "http://www.gstatic.com/generate_204",
-                      "interval": 300,
-                      "tolerance": 50,
-                      "proxies": unique_names
-                  }
-              ],
-
-              "rules": [
-                  "MATCH,🚀 节点选择"
-              ]
-          }
-
-          with open(
-              OUTPUT,
-              "w",
-              encoding="utf-8"
-          ) as f:
-
-              yaml.safe_dump(
-                  config,
-                  f,
-                  allow_unicode=True,
-                  sort_keys=False
+              query = (
+                  "?url="
+                  + urllib.parse.quote(TEST_URL, safe="")
+                  + "&timeout="
+                  + str(TIMEOUT)
+                  + "&expected=204"
               )
 
-          print(
-              "Clash YAML 节点数量:",
-              len(clean)
+              url = f"{API}/proxies/{encoded_name}/delay{query}"
+
+              try:
+                  with urllib.request.urlopen(url, timeout=8) as r:
+                      result = json.loads(r.read().decode())
+
+                  delay = int(result.get("delay", 0))
+
+                  if delay > 0:
+                      alive.append((name, delay))
+                      print(f"[{index}/{len(proxies)}] OK      {delay:>5} ms  {name}")
+                  else:
+                      dead.append(name)
+                      print(f"[{index}/{len(proxies)}] TIMEOUT         {name}")
+
+              except Exception as e:
+                  dead.append(name)
+                  print(f"[{index}/{len(proxies)}] FAILED          {name}")
+
+              time.sleep(0.05)
+
+          print("=" * 60)
+          print(f"可用节点: {len(alive)}")
+          print(f"无效节点: {len(dead)}")
+
+          Path("alive_nodes.json").write_text(
+              json.dumps(
+                  [{"name": n, "delay": d} for n, d in alive],
+                  ensure_ascii=False,
+                  indent=2
+              ),
+              encoding="utf-8"
           )
+
+          Path("dead_nodes.json").write_text(
+              json.dumps(dead, ensure_ascii=False, indent=2),
+              encoding="utf-8"
+          )
+
+          if len(alive) == 0:
+              print("没有任何节点通过测试")
+              print("保留原订阅，避免 GitHub 发布空配置")
+              raise SystemExit(2)
           PY
 
-      - name: Generate Base64
+      - name: Remove invalid nodes
         run: |
-          base64 -w 0 nodes.txt > base64.txt
-          echo >> base64.txt
+          python3 - <<'PY'
+          import json
+          import yaml
 
-      - name: Generate result
+          with open("source.yaml", "r", encoding="utf-8") as f:
+              data = yaml.safe_load(f)
+
+          with open("alive_nodes.json", "r", encoding="utf-8") as f:
+              alive_data = json.load(f)
+
+          alive_names = {x["name"] for x in alive_data}
+
+          original_proxies = data.get("proxies", [])
+
+          data["proxies"] = [
+              proxy
+              for proxy in original_proxies
+              if proxy.get("name") in alive_names
+          ]
+
+          valid_names = {
+              proxy.get("name")
+              for proxy in data["proxies"]
+          }
+
+          removed_groups = 0
+
+          for group in data.get("proxy-groups", []):
+              if "proxies" not in group:
+                  continue
+
+              old_list = group["proxies"]
+
+              new_list = [
+                  name
+                  for name in old_list
+                  if name in valid_names
+                  or name in {
+                      "DIRECT",
+                      "REJECT",
+                      "PASS",
+                      "COMPATIBLE"
+                  }
+              ]
+
+              removed_groups += len(old_list) - len(new_list)
+
+              group["proxies"] = new_list
+
+          with open("clash.yaml", "w", encoding="utf-8") as f:
+              yaml.safe_dump(
+                  data,
+                  f,
+                  allow_unicode=True,
+                  sort_keys=False,
+                  default_flow_style=False
+              )
+
+          print("原始节点:", len(original_proxies))
+          print("有效节点:", len(data["proxies"]))
+          print("删除节点:", len(original_proxies) - len(data["proxies"]))
+          print("清理策略组引用:", removed_groups)
+          PY
+
+      - name: Sort nodes by latency
         run: |
-          {
-            echo "My-V2Ray-Nodes"
-            echo
-            echo "Updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-            echo
-            echo "Total nodes:"
-            wc -l < nodes.txt
-            echo
-            echo "V2RayFree source:"
-            echo "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/sub"
-          } > result.txt
+          python3 - <<'PY'
+          import json
+          import yaml
 
-      - name: Save source information
+          with open("alive_nodes.json", "r", encoding="utf-8") as f:
+              alive = json.load(f)
+
+          delays = {
+              item["name"]: item["delay"]
+              for item in alive
+          }
+
+          with open("clash.yaml", "r", encoding="utf-8") as f:
+              data = yaml.safe_load(f)
+
+          data["proxies"] = sorted(
+              data.get("proxies", []),
+              key=lambda x: delays.get(x.get("name"), 999999)
+          )
+
+          with open("clash.yaml", "w", encoding="utf-8") as f:
+              yaml.safe_dump(
+                  data,
+                  f,
+                  allow_unicode=True,
+                  sort_keys=False,
+                  default_flow_style=False
+              )
+          PY
+
+      - name: Validate output
         run: |
-          {
-            echo "V2RayFree"
-            echo "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/sub"
-            echo
-            echo "Updated:"
-            date -u '+%Y-%m-%d %H:%M:%S UTC'
-          } > output/source.txt
+          python3 - <<'PY'
+          import yaml
 
-      - name: Commit changes
+          with open("clash.yaml", "r", encoding="utf-8") as f:
+              data = yaml.safe_load(f)
+
+          proxies = data.get("proxies", [])
+
+          if not proxies:
+              raise SystemExit("最终配置没有可用节点")
+
+          print("最终节点数量:", len(proxies))
+          print("Clash YAML 格式检查通过")
+          PY
+
+      - name: Show result
+        run: |
+          echo "=============================="
+          echo "最终可用节点数量:"
+          python3 - <<'PY'
+          import yaml
+
+          with open("clash.yaml", "r", encoding="utf-8") as f:
+              data = yaml.safe_load(f)
+
+          print(len(data.get("proxies", [])))
+          PY
+          echo "=============================="
+
+      - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add \
-            nodes_all.txt \
-            alive_nodes.txt \
-            result.txt \
-            nodes.txt \
-            base64.txt \
-            clash.yaml \
-            output/source.txt
+          git add clash.yaml
 
           if git diff --cached --quiet; then
-            echo "没有新的变化"
+            echo "没有变化，不提交"
           else
-            git commit -m "Update V2RayFree nodes"
+            git commit -m "Update tested Clash nodes"
             git push
           fi
+
+      - name: Cleanup
+        if: always()
+        run: |
+          if [ -f mihomo.pid ]; then
+            kill "$(cat mihomo.pid)" 2>/dev/null || true
+          fi
+```
