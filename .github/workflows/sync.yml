@@ -22,266 +22,128 @@ jobs:
           sudo apt-get install -y curl jq python3 python3-pip wget
           pip3 install --break-system-packages pyyaml requests
 
-      - name: Install sing-box
-        run: |
-          VERSION=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest | jq -r '.tag_name')
-          VERSION=${VERSION#v}
-
-          wget -q "https://github.com/SagerNet/sing-box/releases/download/v${VERSION}/sing-box-${VERSION}-linux-amd64.tar.gz" -O sing-box.tar.gz
-
-          tar -xzf sing-box.tar.gz
-
-          sudo install "sing-box-${VERSION}-linux-amd64/sing-box" /usr/local/bin/sing-box
-
-          sing-box version
-
       - name: Prepare files
         run: |
           mkdir -p output
-
           touch nodes_all.txt
           touch alive_nodes.txt
           touch result.txt
           touch nodes.txt
           touch base64.txt
 
-      - name: Download latest ClashFree
+      - name: Download V2RayFree source
+        run: |
+          curl -L \
+            --max-time 120 \
+            --retry 3 \
+            --retry-delay 5 \
+            --silent \
+            --show-error \
+            -A "Mozilla/5.0" \
+            "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/sub" \
+            -o v2rayfree_sub.txt
+
+          echo "V2RayFree source downloaded"
+
+          echo "文件大小:"
+          wc -c v2rayfree_sub.txt
+
+          echo "前几行:"
+          head -n 5 v2rayfree_sub.txt || true
+
+      - name: Decode V2RayFree subscription
         run: |
           python3 <<'PY'
-          import requests
-          import re
-          import sys
-
-          API_URL = "https://api.github.com/repos/free-nodes/clashfree/contents"
-
-          headers = {
-              "Accept": "application/vnd.github+json",
-              "User-Agent": "My-V2Ray-Nodes"
-          }
-
-          response = requests.get(
-              API_URL,
-              headers=headers,
-              timeout=30
-          )
-
-          response.raise_for_status()
-
-          files = response.json()
-
-          pattern = re.compile(r"^clash\d{8}\.ya?ml$")
-
-          candidates = []
-
-          for item in files:
-              name = item.get("name", "")
-
-              if pattern.match(name):
-                  candidates.append(name)
-
-          if not candidates:
-              print("ERROR: 没有找到 ClashFree 日期 YAML 文件")
-              sys.exit(1)
-
-          candidates.sort(reverse=True)
-
-          latest = candidates[0]
-
-          print("ClashFree 最新文件:", latest)
-
-          download_url = (
-              "https://raw.githubusercontent.com/"
-              "free-nodes/clashfree/main/"
-              + latest
-          )
-
-          print("下载地址:", download_url)
-
-          data = requests.get(
-              download_url,
-              headers={
-                  "User-Agent": "My-V2Ray-Nodes"
-              },
-              timeout=120
-          )
-
-          data.raise_for_status()
-
-          with open(
-              "clashfree.yml",
-              "wb"
-          ) as f:
-              f.write(data.content)
-
-          print(
-              "ClashFree 下载完成:",
-              len(data.content),
-              "bytes"
-          )
-          PY
-
-      - name: Extract ClashFree proxies
-        run: |
-          python3 <<'PY'
-          import yaml
-          import sys
-
-          with open(
-              "clashfree.yml",
-              "r",
-              encoding="utf-8"
-          ) as f:
-              data = yaml.safe_load(f) or {}
-
-          proxies = data.get("proxies", [])
-
-          if not isinstance(proxies, list):
-              print("ERROR: ClashFree 文件没有有效 proxies")
-              sys.exit(1)
-
-          clean = []
-
-          for proxy in proxies:
-              if not isinstance(proxy, dict):
-                  continue
-
-              if not proxy.get("type"):
-                  continue
-
-              if not proxy.get("server"):
-                  continue
-
-              if not proxy.get("port"):
-                  continue
-
-              clean.append(proxy)
-
-          with open(
-              "clashfree_nodes.yml",
-              "w",
-              encoding="utf-8"
-          ) as f:
-              yaml.safe_dump(
-                  {
-                      "proxies": clean
-                  },
-                  f,
-                  allow_unicode=True,
-                  sort_keys=False
-              )
-
-          print(
-              "ClashFree 有效节点:",
-              len(clean)
-          )
-          PY
-
-      - name: Convert ClashFree nodes
-        run: |
-          python3 <<'PY'
-          import yaml
           import base64
+          import re
 
-          with open(
-              "clashfree_nodes.yml",
-              "r",
-              encoding="utf-8"
-          ) as f:
-              data = yaml.safe_load(f) or {}
+          INPUT = "v2rayfree_sub.txt"
+          OUTPUT = "v2rayfree_nodes.txt"
 
-          proxies = data.get("proxies", [])
-
-          output = []
-
-          for proxy in proxies:
-              name = str(
-                  proxy.get(
-                      "name",
-                      "ClashFree"
-                  )
-              )
-
-              ptype = str(
-                  proxy.get(
-                      "type",
-                      ""
-                  )
-              ).lower()
-
-              server = proxy.get("server")
-              port = proxy.get("port")
-
-              if not server or not port:
-                  continue
-
-              if ptype in (
-                  "ss",
-                  "shadowsocks"
-              ):
-                  cipher = proxy.get("cipher")
-                  password = proxy.get("password")
-
-                  if cipher and password:
-                      output.append(
-                          f"ss://{cipher}:{password}@{server}:{port}#{name}"
-                      )
-
-              elif ptype == "trojan":
-                  password = proxy.get("password")
-
-                  if password:
-                      output.append(
-                          f"trojan://{password}@{server}:{port}#{name}"
-                      )
-
-              elif ptype == "vmess":
-                  uuid = proxy.get("uuid")
-
-                  if uuid:
-                      output.append(
-                          f"vmess://{uuid}@{server}:{port}#{name}"
-                      )
-
-              elif ptype in (
-                  "http",
-                  "socks5"
-              ):
-                  output.append(
-                      f"{ptype}://{server}:{port}#{name}"
-                  )
-
-          output = list(
-              dict.fromkeys(output)
+          protocols = (
+              "vmess://",
+              "vless://",
+              "trojan://",
+              "ss://",
+              "ssr://",
+              "hysteria://",
+              "hysteria2://",
+              "hy2://",
+              "tuic://",
+              "socks5://",
+              "http://",
+              "https://"
           )
 
+          with open(INPUT, "rb") as f:
+              raw = f.read()
+
+          text = raw.decode("utf-8", errors="ignore").strip()
+
+          nodes = []
+
+          # 先尝试直接读取协议节点
+          for line in text.splitlines():
+              line = line.strip()
+
+              if not line:
+                  continue
+
+              if line.startswith(protocols):
+                  nodes.append(line)
+
+          # 如果没有直接节点，则尝试 Base64 解码
+          if not nodes:
+              compact = re.sub(r"\s+", "", text)
+
+              try:
+                  padded = compact + "=" * (-len(compact) % 4)
+
+                  decoded = base64.b64decode(
+                      padded,
+                      validate=False
+                  ).decode(
+                      "utf-8",
+                      errors="ignore"
+                  )
+
+                  for line in decoded.splitlines():
+                      line = line.strip()
+
+                      if line.startswith(protocols):
+                          nodes.append(line)
+
+              except Exception as e:
+                  print("Base64 解码失败:", e)
+
+          # 去重
+          nodes = list(dict.fromkeys(nodes))
+
           with open(
-              "clashfree_nodes.txt",
+              OUTPUT,
               "w",
               encoding="utf-8"
           ) as f:
-              f.write(
-                  "\n".join(output)
-              )
+              f.write("\n".join(nodes))
 
-          print(
-              "ClashFree 转换节点:",
-              len(output)
-          )
+          print("V2RayFree 节点数量:", len(nodes))
+
+          if not nodes:
+              print("WARNING: 没有提取到节点")
           PY
 
-      - name: Merge node sources
+      - name: Merge additional sources
         run: |
-          cat clashfree_nodes.txt >> nodes_all.txt
+          cat v2rayfree_nodes.txt >> nodes_all.txt
 
           if [ -f data/links.txt ]; then
-
             while IFS= read -r url; do
 
               if [ -z "$url" ]; then
                 continue
               fi
 
-              echo "读取订阅:"
+              echo "读取额外订阅:"
               echo "$url"
 
               curl -L \
@@ -295,11 +157,8 @@ jobs:
               echo "" >> nodes_all.txt
 
             done < data/links.txt
-
           else
-
             echo "没有找到 data/links.txt"
-
           fi
 
           sed -i 's/\r$//' nodes_all.txt
@@ -345,32 +204,29 @@ jobs:
           ) as f:
 
               for line in f:
-
                   line = line.strip()
 
                   if not line:
                       continue
 
+                  # 直接节点
                   if line.startswith(protocols):
                       result.append(line)
                       continue
 
+                  # Base64 订阅
                   try:
-
-                      padded = (
-                          line
-                          + "=" * (-len(line) % 4)
-                      )
+                      padded = line + "=" * (-len(line) % 4)
 
                       decoded = base64.b64decode(
-                          padded
+                          padded,
+                          validate=False
                       ).decode(
                           "utf-8",
                           errors="ignore"
                       )
 
                       for item in decoded.splitlines():
-
                           item = item.strip()
 
                           if item.startswith(protocols):
@@ -379,23 +235,17 @@ jobs:
                   except Exception:
                       pass
 
-          result = list(
-              dict.fromkeys(result)
-          )
+          # 去重
+          result = list(dict.fromkeys(result))
 
           with open(
               "nodes.txt",
               "w",
               encoding="utf-8"
           ) as f:
-              f.write(
-                  "\n".join(result)
-              )
+              f.write("\n".join(result))
 
-          print(
-              "标准节点数量:",
-              len(result)
-          )
+          print("标准节点数量:", len(result))
           PY
 
       - name: Prepare alive nodes
@@ -409,84 +259,268 @@ jobs:
         run: |
           python3 <<'PY'
           import yaml
+          import base64
+          import urllib.parse
+          import json
+
+          INPUT = "nodes.txt"
+          OUTPUT = "clash.yaml"
+
+          proxies = []
 
           with open(
-              "clashfree.yml",
+              INPUT,
               "r",
-              encoding="utf-8"
+              encoding="utf-8",
+              errors="ignore"
           ) as f:
-              source = yaml.safe_load(f) or {}
 
-          proxies = source.get(
-              "proxies",
-              []
-          )
+              for index, line in enumerate(f, 1):
 
-          if not isinstance(
-              proxies,
-              list
-          ):
-              proxies = []
+                  line = line.strip()
 
+                  if not line:
+                      continue
+
+                  try:
+
+                      # ==========================
+                      # VMESS
+                      # ==========================
+                      if line.startswith("vmess://"):
+
+                          raw = line[8:]
+                          padded = raw + "=" * (-len(raw) % 4)
+
+                          decoded = base64.b64decode(
+                              padded
+                          ).decode(
+                              "utf-8",
+                              errors="ignore"
+                          )
+
+                          data = json.loads(decoded)
+
+                          server = data.get("add")
+                          port = int(data.get("port", 443))
+                          uuid = data.get("id")
+
+                          if not server or not uuid:
+                              continue
+
+                          proxy = {
+                              "name": data.get(
+                                  "ps",
+                                  f"VMess-{index}"
+                              ),
+                              "type": "vmess",
+                              "server": server,
+                              "port": port,
+                              "uuid": uuid,
+                              "alterId": int(
+                                  data.get("aid", 0)
+                              ),
+                              "cipher": "auto"
+                          }
+
+                          net = data.get("net", "tcp")
+
+                          if net:
+                              proxy["network"] = net
+
+                          if data.get("tls") == "tls":
+                              proxy["tls"] = True
+
+                          if data.get("sni"):
+                              proxy["servername"] = data["sni"]
+
+                          proxies.append(proxy)
+
+                      # ==========================
+                      # VLESS
+                      # ==========================
+                      elif line.startswith("vless://"):
+
+                          parsed = urllib.parse.urlparse(line)
+
+                          uuid = parsed.username
+                          server = parsed.hostname
+                          port = parsed.port
+
+                          if not uuid or not server or not port:
+                              continue
+
+                          params = urllib.parse.parse_qs(
+                              parsed.query
+                          )
+
+                          name = urllib.parse.unquote(
+                              parsed.fragment
+                          ) or f"VLESS-{index}"
+
+                          proxy = {
+                              "name": name,
+                              "type": "vless",
+                              "server": server,
+                              "port": port,
+                              "uuid": uuid
+                          }
+
+                          if params.get("security", [""])[0] == "tls":
+                              proxy["tls"] = True
+
+                          if params.get("sni"):
+                              proxy["servername"] = params["sni"][0]
+
+                          if params.get("type"):
+                              proxy["network"] = params["type"][0]
+
+                          proxies.append(proxy)
+
+                      # ==========================
+                      # TROJAN
+                      # ==========================
+                      elif line.startswith("trojan://"):
+
+                          parsed = urllib.parse.urlparse(line)
+
+                          password = parsed.username
+                          server = parsed.hostname
+                          port = parsed.port
+
+                          if not password or not server or not port:
+                              continue
+
+                          params = urllib.parse.parse_qs(
+                              parsed.query
+                          )
+
+                          name = urllib.parse.unquote(
+                              parsed.fragment
+                          ) or f"Trojan-{index}"
+
+                          proxy = {
+                              "name": name,
+                              "type": "trojan",
+                              "server": server,
+                              "port": port,
+                              "password": password
+                          }
+
+                          if params.get("sni"):
+                              proxy["sni"] = params["sni"][0]
+
+                          proxies.append(proxy)
+
+                      # ==========================
+                      # SOCKS5
+                      # ==========================
+                      elif line.startswith("socks5://"):
+
+                          parsed = urllib.parse.urlparse(line)
+
+                          server = parsed.hostname
+                          port = parsed.port
+
+                          if not server or not port:
+                              continue
+
+                          name = urllib.parse.unquote(
+                              parsed.fragment
+                          ) or f"SOCKS5-{index}"
+
+                          proxy = {
+                              "name": name,
+                              "type": "socks5",
+                              "server": server,
+                              "port": port
+                          }
+
+                          if parsed.username:
+                              proxy["username"] = parsed.username
+
+                          if parsed.password:
+                              proxy["password"] = parsed.password
+
+                          proxies.append(proxy)
+
+                      # ==========================
+                      # HTTP
+                      # ==========================
+                      elif line.startswith("http://"):
+
+                          parsed = urllib.parse.urlparse(line)
+
+                          server = parsed.hostname
+                          port = parsed.port
+
+                          if not server or not port:
+                              continue
+
+                          name = urllib.parse.unquote(
+                              parsed.fragment
+                          ) or f"HTTP-{index}"
+
+                          proxy = {
+                              "name": name,
+                              "type": "http",
+                              "server": server,
+                              "port": port
+                          }
+
+                          if parsed.username:
+                              proxy["username"] = parsed.username
+
+                          if parsed.password:
+                              proxy["password"] = parsed.password
+
+                          proxies.append(proxy)
+
+                  except Exception as e:
+                      print(
+                          f"跳过节点 {index}:",
+                          str(e)
+                      )
+
+          # 去重
           clean = []
-
           seen = set()
 
           for proxy in proxies:
 
-              if not isinstance(
-                  proxy,
-                  dict
-              ):
-                  continue
-
-              server = proxy.get("server")
-              port = proxy.get("port")
-              ptype = proxy.get("type")
-
-              if not server:
-                  continue
-
-              if not port:
-                  continue
-
-              if not ptype:
-                  continue
-
               key = (
-                  str(ptype),
-                  str(server),
-                  str(port),
-                  str(proxy.get("uuid", "")),
-                  str(proxy.get("password", "")),
-                  str(proxy.get("cipher", ""))
+                  proxy.get("type"),
+                  proxy.get("server"),
+                  proxy.get("port"),
+                  proxy.get("uuid"),
+                  proxy.get("password")
               )
 
               if key in seen:
                   continue
 
               seen.add(key)
-
               clean.append(proxy)
 
-          names = []
+          names = [
+              str(proxy["name"])
+              for proxy in clean
+              if proxy.get("name")
+          ]
 
-          for proxy in clean:
+          # 防止名称重复
+          unique_names = []
+          seen_names = set()
 
-              name = proxy.get("name")
-
-              if name:
-                  names.append(
-                      str(name)
-                  )
+          for name in names:
+              if name not in seen_names:
+                  seen_names.add(name)
+                  unique_names.append(name)
 
           config = {
               "mixed-port": 7890,
-
               "allow-lan": False,
-
               "mode": "rule",
-
               "log-level": "info",
 
               "proxies": clean,
@@ -494,27 +528,19 @@ jobs:
               "proxy-groups": [
                   {
                       "name": "🚀 节点选择",
-
                       "type": "select",
-
                       "proxies": [
                           "♻️ 自动选择",
                           "DIRECT"
-                      ] + names
+                      ] + unique_names
                   },
-
                   {
                       "name": "♻️ 自动选择",
-
                       "type": "url-test",
-
                       "url": "http://www.gstatic.com/generate_204",
-
                       "interval": 300,
-
                       "tolerance": 50,
-
-                      "proxies": names
+                      "proxies": unique_names
                   }
               ],
 
@@ -524,7 +550,7 @@ jobs:
           }
 
           with open(
-              "clash.yaml",
+              OUTPUT,
               "w",
               encoding="utf-8"
           ) as f:
@@ -557,15 +583,15 @@ jobs:
             echo "Total nodes:"
             wc -l < nodes.txt
             echo
-            echo "ClashFree source:"
-            echo "https://github.com/free-nodes/clashfree"
+            echo "V2RayFree source:"
+            echo "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/sub"
           } > result.txt
 
       - name: Save source information
         run: |
           {
-            echo "ClashFree"
-            echo "https://github.com/free-nodes/clashfree"
+            echo "V2RayFree"
+            echo "https://raw.githubusercontent.com/free-nodes/v2rayfree/main/sub"
             echo
             echo "Updated:"
             date -u '+%Y-%m-%d %H:%M:%S UTC'
@@ -588,6 +614,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "没有新的变化"
           else
-            git commit -m "Auto update nodes"
+            git commit -m "Update V2RayFree nodes"
             git push
           fi
