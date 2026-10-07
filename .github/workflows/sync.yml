@@ -1,4 +1,4 @@
-name: XrayVIP V2Ray to Clash Mi
+name: V2Ray Ultimate Node Sync
 
 on:
   workflow_dispatch:
@@ -32,9 +32,12 @@ jobs:
             | head -n 1)
 
           if [ -z "$URL" ] || [ "$URL" = "null" ]; then
-            echo "无法找到 Mihomo"
+            echo "无法找到 Mihomo Linux amd64 compatible 版本"
             exit 1
           fi
+
+          echo "下载 Mihomo:"
+          echo "$URL"
 
           curl -fL "$URL" -o mihomo.gz
           gunzip -f mihomo.gz
@@ -42,9 +45,12 @@ jobs:
 
           ./mihomo -v
 
-      - name: Download XrayVIP V2Ray subscription
+      - name: Download V2Ray subscriptions
+        shell: bash
         run: |
           set -e
+
+          echo "下载 XrayVIP..."
 
           curl -fL \
             --retry 5 \
@@ -52,14 +58,29 @@ jobs:
             --connect-timeout 20 \
             --max-time 120 \
             "https://www.xrayvip.com/free.txt" \
-            -o source.txt
+            -o source1.txt
 
-          test -s source.txt
+          echo "下载 ZRFME..."
 
-          echo "源文件大小:"
-          wc -c source.txt
+          curl -fL \
+            --retry 5 \
+            --retry-delay 2 \
+            --connect-timeout 20 \
+            --max-time 120 \
+            "https://d.zrfme.com/vless-base64" \
+            -o source2.txt
 
-      - name: Convert V2Ray subscription to Clash
+          test -s source1.txt
+          test -s source2.txt
+
+          echo "XrayVIP 文件大小:"
+          wc -c source1.txt
+
+          echo "ZRFME 文件大小:"
+          wc -c source2.txt
+
+      - name: Convert V2Ray to Clash
+        shell: bash
         run: |
           python3 <<'PY'
           import base64
@@ -69,45 +90,75 @@ jobs:
           import yaml
           from pathlib import Path
 
-          text = Path("source.txt").read_text(encoding="utf-8", errors="ignore").strip()
+          texts = []
 
-          def b64decode_text(s):
-              s = re.sub(r"\s+", "", s)
+          for filename in ("source1.txt", "source2.txt"):
+              path = Path(filename)
 
-              for decoder in (
-                  lambda x: base64.b64decode(x + "=" * (-len(x) % 4)),
-                  lambda x: base64.urlsafe_b64decode(x + "=" * (-len(x) % 4))
-              ):
+              if not path.exists():
+                  continue
+
+              text = path.read_text(
+                  encoding="utf-8",
+                  errors="ignore"
+              ).strip()
+
+              if text:
+                  texts.append(text)
+
+          if not texts:
+              raise SystemExit("两个订阅都没有内容")
+
+          print("读取订阅数量:", len(texts))
+
+          def b64decode_text(value):
+              value = re.sub(r"\s+", "", value)
+
+              candidates = [
+                  value,
+                  value.replace("-", "+").replace("_", "/")
+              ]
+
+              for item in candidates:
                   try:
-                      result = decoder(s).decode("utf-8", errors="ignore").strip()
-                      if result:
+                      item += "=" * (-len(item) % 4)
+
+                      result = base64.b64decode(
+                          item,
+                          validate=False
+                      ).decode(
+                          "utf-8",
+                          errors="ignore"
+                      ).strip()
+
+                      if "://" in result:
                           return result
+
                   except Exception:
                       pass
 
               return ""
 
-          decoded = b64decode_text(text)
+          links = []
 
-          if "://" in decoded:
-              content = decoded
-          else:
-              content = text
+          for text in texts:
+              decoded = b64decode_text(text)
 
-          lines = []
+              content = decoded if "://" in decoded else text
 
-          for line in content.splitlines():
-              line = line.strip()
-              if not line:
-                  continue
+              for line in content.splitlines():
+                  line = line.strip()
 
-              if "://" in line:
-                  lines.append(line)
+                  if not line:
+                      continue
 
-          if not lines:
+                  if "://" in line:
+                      links.append(line)
+
+          print("解析到链接数量:", len(links))
+
+          if not links:
               raise SystemExit("没有解析到任何 V2Ray 节点")
-
-          print("解析到节点链接:", len(lines))
 
           proxies = []
           used_names = set()
@@ -116,119 +167,172 @@ jobs:
               name = str(name or "").strip()
 
               if not name:
-                  name = "Node"
+                  name = f"Node {len(proxies) + 1}"
 
-              name = name.replace("\n", " ").replace("\r", " ")
+              name = (
+                  name
+                  .replace("\n", " ")
+                  .replace("\r", " ")
+                  .strip()
+              )
 
               if name not in used_names:
                   used_names.add(name)
                   return name
 
-              i = 2
+              number = 2
 
-              while f"{name} {i}" in used_names:
-                  i += 1
+              while f"{name} {number}" in used_names:
+                  number += 1
 
-              final = f"{name} {i}"
-              used_names.add(final)
-              return final
+              final_name = f"{name} {number}"
 
-          def to_int(v, default=0):
+              used_names.add(final_name)
+
+              return final_name
+
+          def add_proxy(proxy):
+              if not proxy:
+                  return
+
+              proxy["name"] = unique_name(
+                  proxy.get("name")
+              )
+
+              proxies.append(proxy)
+
+          def to_int(value, default=0):
               try:
-                  return int(v)
+                  return int(value)
               except Exception:
                   return default
 
-          def add_proxy(p):
-              if not p:
-                  return
-
-              if "name" not in p:
-                  p["name"] = f"Node {len(proxies) + 1}"
-
-              p["name"] = unique_name(p["name"])
-              proxies.append(p)
-
           def parse_vmess(link):
-              raw = link[len("vmess://"):].strip()
-
               try:
+                  raw = link[len("vmess://"):].strip()
+
                   raw += "=" * (-len(raw) % 4)
-                  obj = json.loads(base64.b64decode(raw).decode("utf-8"))
+
+                  obj = json.loads(
+                      base64.b64decode(raw).decode(
+                          "utf-8",
+                          errors="ignore"
+                      )
+                  )
               except Exception:
                   return None
 
-              name = obj.get("ps") or obj.get("remark") or "VMess"
+              server = obj.get("add")
+              port = to_int(obj.get("port"))
+              uuid = obj.get("id")
 
-              p = {
-                  "name": name,
+              if not server or not port or not uuid:
+                  return None
+
+              proxy = {
+                  "name": (
+                      obj.get("ps")
+                      or obj.get("remark")
+                      or "VMess"
+                  ),
                   "type": "vmess",
-                  "server": obj.get("add"),
-                  "port": to_int(obj.get("port")),
-                  "uuid": obj.get("id"),
-                  "alterId": to_int(obj.get("aid"), 0),
-                  "cipher": obj.get("scy") or "auto",
+                  "server": server,
+                  "port": port,
+                  "uuid": uuid,
+                  "alterId": to_int(
+                      obj.get("aid"),
+                      0
+                  ),
+                  "cipher": (
+                      obj.get("scy")
+                      or "auto"
+                  ),
                   "udp": True
               }
 
-              if not p["server"] or not p["port"] or not p["uuid"]:
-                  return None
+              tls = str(
+                  obj.get("tls", "")
+              ).lower()
 
-              if str(obj.get("tls", "")).lower() == "tls":
-                  p["tls"] = True
+              if tls == "tls":
+                  proxy["tls"] = True
 
-              net = obj.get("net", "")
+              network = obj.get("net", "")
 
-              if net == "ws":
-                  p["network"] = "ws"
+              if network == "ws":
+                  proxy["network"] = "ws"
 
-                  ws = {
-                      "path": obj.get("path") or "/",
+                  ws_opts = {
+                      "path": (
+                          obj.get("path")
+                          or "/"
+                      ),
                       "headers": {}
                   }
 
                   host = obj.get("host")
 
                   if host:
-                      ws["headers"]["Host"] = host
+                      ws_opts["headers"]["Host"] = host
 
-                  p["ws-opts"] = ws
+                  proxy["ws-opts"] = ws_opts
 
-              elif net == "grpc":
-                  p["network"] = "grpc"
+              elif network == "grpc":
+                  proxy["network"] = "grpc"
 
-                  service = obj.get("path") or obj.get("serviceName") or ""
-
-                  p["grpc-opts"] = {
-                      "grpc-service-name": service
+                  proxy["grpc-opts"] = {
+                      "grpc-service-name": (
+                          obj.get("path")
+                          or obj.get("serviceName")
+                          or ""
+                      )
                   }
 
-              elif net == "h2":
-                  p["network"] = "h2"
+              elif network == "h2":
+                  proxy["network"] = "h2"
 
-                  p["h2-opts"] = {
-                      "path": obj.get("path") or "/"
+                  proxy["h2-opts"] = {
+                      "path": (
+                          obj.get("path")
+                          or "/"
+                      )
                   }
 
-              return p
+              return proxy
 
           def parse_vless(link):
               try:
-                  u = urllib.parse.urlsplit(link)
-                  q = urllib.parse.parse_qs(u.query)
+                  url = urllib.parse.urlsplit(link)
+
+                  query = urllib.parse.parse_qs(
+                      url.query
+                  )
+
               except Exception:
                   return None
 
-              uuid = urllib.parse.unquote(u.username or "")
-              server = u.hostname
-              port = u.port
+              uuid = urllib.parse.unquote(
+                  url.username or ""
+              )
+
+              server = url.hostname
+
+              try:
+                  port = url.port
+              except Exception:
+                  port = None
 
               if not uuid or not server or not port:
                   return None
 
-              name = urllib.parse.unquote(u.fragment or "") or "VLESS"
+              name = urllib.parse.unquote(
+                  url.fragment or ""
+              )
 
-              p = {
+              if not name:
+                  name = "VLESS"
+
+              proxy = {
                   "name": name,
                   "type": "vless",
                   "server": server,
@@ -237,183 +341,306 @@ jobs:
                   "udp": True
               }
 
-              encryption = q.get("encryption", ["none"])[0]
+              encryption = query.get(
+                  "encryption",
+                  ["none"]
+              )[0]
 
               if encryption:
-                  p["encryption"] = encryption
+                  proxy["encryption"] = encryption
 
-              flow = q.get("flow", [""])[0]
+              flow = query.get(
+                  "flow",
+                  [""]
+              )[0]
 
               if flow:
-                  p["flow"] = flow
+                  proxy["flow"] = flow
 
-              security = q.get("security", [""])[0]
+              security = query.get(
+                  "security",
+                  [""]
+              )[0]
 
-              if security in ("tls", "reality"):
-                  p["tls"] = True
+              if security in (
+                  "tls",
+                  "reality"
+              ):
+                  proxy["tls"] = True
 
-              sni = q.get("sni", [""])[0]
+              sni = query.get(
+                  "sni",
+                  [""]
+              )[0]
 
               if sni:
-                  p["servername"] = sni
+                  proxy["servername"] = sni
 
-              fp = q.get("fp", [""])[0]
+              fingerprint = query.get(
+                  "fp",
+                  [""]
+              )[0]
 
-              if fp:
-                  p["client-fingerprint"] = fp
+              if fingerprint:
+                  proxy[
+                      "client-fingerprint"
+                  ] = fingerprint
 
               if security == "reality":
-                  public_key = q.get("pbk", [""])[0]
-                  short_id = q.get("sid", [""])[0]
+                  public_key = query.get(
+                      "pbk",
+                      [""]
+                  )[0]
+
+                  short_id = query.get(
+                      "sid",
+                      [""]
+                  )[0]
 
                   reality = {}
 
                   if public_key:
-                      reality["public-key"] = public_key
+                      reality[
+                          "public-key"
+                      ] = public_key
 
                   if short_id:
-                      reality["short-id"] = short_id
+                      reality[
+                          "short-id"
+                      ] = short_id
 
                   if reality:
-                      p["reality-opts"] = reality
+                      proxy[
+                          "reality-opts"
+                      ] = reality
 
-              network = q.get("type", ["tcp"])[0]
+              network = query.get(
+                  "type",
+                  ["tcp"]
+              )[0]
 
               if network == "ws":
-                  p["network"] = "ws"
+                  proxy["network"] = "ws"
 
-                  ws = {
-                      "path": q.get("path", ["/"])[0],
+                  ws_opts = {
+                      "path": query.get(
+                          "path",
+                          ["/"]
+                      )[0],
                       "headers": {}
                   }
 
-                  host = q.get("host", [""])[0]
+                  host = query.get(
+                      "host",
+                      [""]
+                  )[0]
 
                   if host:
-                      ws["headers"]["Host"] = host
+                      ws_opts[
+                          "headers"
+                      ]["Host"] = host
 
-                  p["ws-opts"] = ws
+                  proxy[
+                      "ws-opts"
+                  ] = ws_opts
 
               elif network == "grpc":
-                  p["network"] = "grpc"
+                  proxy["network"] = "grpc"
 
-                  p["grpc-opts"] = {
-                      "grpc-service-name": q.get("serviceName", [""])[0]
+                  proxy[
+                      "grpc-opts"
+                  ] = {
+                      "grpc-service-name": query.get(
+                          "serviceName",
+                          [""]
+                      )[0]
                   }
 
               elif network == "h2":
-                  p["network"] = "h2"
+                  proxy["network"] = "h2"
 
-                  p["h2-opts"] = {
-                      "path": q.get("path", ["/"])[0]
+                  proxy[
+                      "h2-opts"
+                  ] = {
+                      "path": query.get(
+                          "path",
+                          ["/"]
+                      )[0]
                   }
 
-              return p
+              return proxy
 
           def parse_trojan(link):
               try:
-                  u = urllib.parse.urlsplit(link)
-                  q = urllib.parse.parse_qs(u.query)
+                  url = urllib.parse.urlsplit(link)
+
+                  query = urllib.parse.parse_qs(
+                      url.query
+                  )
+
               except Exception:
                   return None
 
-              password = urllib.parse.unquote(u.username or "")
+              password = urllib.parse.unquote(
+                  url.username or ""
+              )
 
-              if not password or not u.hostname or not u.port:
+              if (
+                  not password
+                  or not url.hostname
+                  or not url.port
+              ):
                   return None
 
-              name = urllib.parse.unquote(u.fragment or "") or "Trojan"
+              name = urllib.parse.unquote(
+                  url.fragment or ""
+              )
 
-              p = {
+              if not name:
+                  name = "Trojan"
+
+              proxy = {
                   "name": name,
                   "type": "trojan",
-                  "server": u.hostname,
-                  "port": u.port,
+                  "server": url.hostname,
+                  "port": url.port,
                   "password": password,
                   "udp": True
               }
 
-              sni = q.get("sni", [""])[0]
+              sni = query.get(
+                  "sni",
+                  [""]
+              )[0]
 
               if sni:
-                  p["sni"] = sni
+                  proxy["sni"] = sni
 
-              network = q.get("type", ["tcp"])[0]
+              network = query.get(
+                  "type",
+                  ["tcp"]
+              )[0]
 
               if network == "ws":
-                  p["network"] = "ws"
+                  proxy["network"] = "ws"
 
-                  ws = {
-                      "path": q.get("path", ["/"])[0],
+                  ws_opts = {
+                      "path": query.get(
+                          "path",
+                          ["/"]
+                      )[0],
                       "headers": {}
                   }
 
-                  host = q.get("host", [""])[0]
+                  host = query.get(
+                      "host",
+                      [""]
+                  )[0]
 
                   if host:
-                      ws["headers"]["Host"] = host
+                      ws_opts[
+                          "headers"
+                      ]["Host"] = host
 
-                  p["ws-opts"] = ws
+                  proxy[
+                      "ws-opts"
+                  ] = ws_opts
 
-              return p
+              return proxy
 
           def parse_ss(link):
               try:
-                  u = urllib.parse.urlsplit(link)
+                  url = urllib.parse.urlsplit(
+                      link
+                  )
               except Exception:
                   return None
 
-              if not u.hostname or not u.port:
+              if not url.hostname or not url.port:
                   return None
 
-              user = u.username or ""
-
-              try:
-                  user = urllib.parse.unquote(user)
-              except Exception:
-                  pass
+              user = urllib.parse.unquote(
+                  url.username or ""
+              )
 
               if ":" not in user:
                   try:
                       user = base64.urlsafe_b64decode(
-                          user + "=" * (-len(user) % 4)
-                      ).decode("utf-8")
+                          user
+                          + "=" * (
+                              -len(user) % 4
+                          )
+                      ).decode(
+                          "utf-8"
+                      )
                   except Exception:
                       return None
 
-              method, password = user.split(":", 1)
+              try:
+                  method, password = user.split(
+                      ":",
+                      1
+                  )
+              except Exception:
+                  return None
 
-              name = urllib.parse.unquote(u.fragment or "") or "SS"
+              name = urllib.parse.unquote(
+                  url.fragment or ""
+              )
+
+              if not name:
+                  name = "SS"
 
               return {
                   "name": name,
                   "type": "ss",
-                  "server": u.hostname,
-                  "port": u.port,
+                  "server": url.hostname,
+                  "port": url.port,
                   "cipher": method,
                   "password": password,
                   "udp": True
               }
 
-          for link in lines:
+          for link in links:
               try:
-                  if link.startswith("vmess://"):
-                      add_proxy(parse_vmess(link))
+                  if link.startswith(
+                      "vmess://"
+                  ):
+                      add_proxy(
+                          parse_vmess(link)
+                      )
 
-                  elif link.startswith("vless://"):
-                      add_proxy(parse_vless(link))
+                  elif link.startswith(
+                      "vless://"
+                  ):
+                      add_proxy(
+                          parse_vless(link)
+                      )
 
-                  elif link.startswith("trojan://"):
-                      add_proxy(parse_trojan(link))
+                  elif link.startswith(
+                      "trojan://"
+                  ):
+                      add_proxy(
+                          parse_trojan(link)
+                      )
 
-                  elif link.startswith("ss://"):
-                      add_proxy(parse_ss(link))
+                  elif link.startswith(
+                      "ss://"
+                  ):
+                      add_proxy(
+                          parse_ss(link)
+                      )
 
               except Exception as e:
-                  print("跳过节点:", str(e))
+                  print(
+                      "跳过节点:",
+                      str(e)
+                  )
 
           if not proxies:
-              raise SystemExit("没有成功转换任何 Clash 节点")
+              raise SystemExit(
+                  "没有成功转换任何节点"
+              )
 
           config = {
               "mixed-port": 7890,
@@ -444,7 +671,10 @@ jobs:
                       "proxies": [
                           "⚡ 自动选择",
                           "DIRECT"
-                      ] + [p["name"] for p in proxies]
+                      ] + [
+                          p["name"]
+                          for p in proxies
+                      ]
                   },
                   {
                       "name": "⚡ 自动选择",
@@ -452,7 +682,10 @@ jobs:
                       "url": "https://www.gstatic.com/generate_204",
                       "interval": 300,
                       "tolerance": 50,
-                      "proxies": [p["name"] for p in proxies]
+                      "proxies": [
+                          p["name"]
+                          for p in proxies
+                      ]
                   }
               ],
 
@@ -467,7 +700,11 @@ jobs:
               ]
           }
 
-          with open("clash.yaml", "w", encoding="utf-8") as f:
+          with open(
+              "clash.yaml",
+              "w",
+              encoding="utf-8"
+          ) as f:
               yaml.safe_dump(
                   config,
                   f,
@@ -477,9 +714,9 @@ jobs:
               )
 
           print("=" * 60)
-          print("转换成功")
+          print("转换完成")
           print("节点数量:", len(proxies))
-          print("节点名称已自动去重")
+          print("节点名称自动去重")
           print("=" * 60)
           PY
 
@@ -489,51 +726,118 @@ jobs:
           import yaml
           from collections import Counter
 
-          with open("clash.yaml", "r", encoding="utf-8") as f:
+          with open(
+              "clash.yaml",
+              "r",
+              encoding="utf-8"
+          ) as f:
               data = yaml.safe_load(f)
 
-          proxies = data.get("proxies", [])
+          proxies = data.get(
+              "proxies",
+              []
+          )
 
-          names = [p.get("name") for p in proxies]
+          names = [
+              p.get("name")
+              for p in proxies
+          ]
 
           duplicates = [
               name
-              for name, count in Counter(names).items()
+              for name, count in Counter(
+                  names
+              ).items()
               if count > 1
           ]
 
           if duplicates:
-              print("发现重复节点:")
+              print("重复节点:")
+
               for name in duplicates:
                   print(name)
 
-              raise SystemExit("节点名称重复，停止发布")
+              raise SystemExit(
+                  "节点名称重复"
+              )
 
-          print("节点名称检查通过")
-          print("节点数量:", len(proxies))
+          print(
+              "节点名称检查通过"
+          )
+
+          print(
+              "节点数量:",
+              len(proxies)
+          )
           PY
 
       - name: Prepare Mihomo test config
         run: |
-          cp clash.yaml test.yaml
+          python3 <<'PY'
+          import yaml
 
-          nohup ./mihomo -d . -f test.yaml > mihomo.log 2>&1 &
+          with open(
+              "clash.yaml",
+              "r",
+              encoding="utf-8"
+          ) as f:
+              data = yaml.safe_load(f)
+
+          data[
+              "external-controller"
+          ] = "127.0.0.1:9090"
+
+          data["secret"] = ""
+
+          with open(
+              "test.yaml",
+              "w",
+              encoding="utf-8"
+          ) as f:
+              yaml.safe_dump(
+                  data,
+                  f,
+                  allow_unicode=True,
+                  sort_keys=False,
+                  default_flow_style=False
+              )
+          PY
+
+          echo "启动 Mihomo..."
+
+          nohup ./mihomo \
+            -d . \
+            -f test.yaml \
+            > mihomo.log 2>&1 &
+
           echo $! > mihomo.pid
 
           echo "等待 Mihomo 启动..."
 
           for i in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:9090/version >/dev/null 2>&1; then
-              echo "Mihomo 启动成功"
+            if curl -fsS \
+              http://127.0.0.1:9090/version \
+              >/dev/null 2>&1; then
+
+              echo "Mihomo API 启动成功"
               break
             fi
 
             sleep 1
           done
 
-          if ! curl -fsS http://127.0.0.1:9090/version >/dev/null 2>&1; then
-            echo "Mihomo 启动失败"
+          if ! curl -fsS \
+            http://127.0.0.1:9090/version \
+            >/dev/null 2>&1; then
+
+            echo "Mihomo API 启动失败"
+
+            echo "================ Mihomo 日志 ================"
+
             cat mihomo.log
+
+            echo "=============================================="
+
             exit 1
           fi
 
@@ -548,59 +852,115 @@ jobs:
           from pathlib import Path
 
           API = "http://127.0.0.1:9090"
-          TEST_URL = "https://www.gstatic.com/generate_204"
+
+          TEST_URL = (
+              "https://www.gstatic.com/"
+              "generate_204"
+          )
+
           TIMEOUT = 5000
 
-          with open("clash.yaml", "r", encoding="utf-8") as f:
+          with open(
+              "clash.yaml",
+              "r",
+              encoding="utf-8"
+          ) as f:
               config = yaml.safe_load(f)
 
-          proxies = config.get("proxies", [])
+          proxies = config.get(
+              "proxies",
+              []
+          )
 
-          print(f"开始测试 {len(proxies)} 个节点")
+          print(
+              f"开始测试 {len(proxies)} 个节点"
+          )
+
           print("=" * 70)
 
           alive = []
           dead = []
 
-          for index, proxy in enumerate(proxies, 1):
-              name = str(proxy.get("name", "")).strip()
+          for index, proxy in enumerate(
+              proxies,
+              1
+          ):
+              name = str(
+                  proxy.get(
+                      "name",
+                      ""
+                  )
+              ).strip()
 
               if not name:
                   continue
 
-              encoded_name = urllib.parse.quote(name, safe="")
+              encoded_name = (
+                  urllib.parse.quote(
+                      name,
+                      safe=""
+                  )
+              )
 
               query = (
                   "?url="
-                  + urllib.parse.quote(TEST_URL, safe="")
+                  + urllib.parse.quote(
+                      TEST_URL,
+                      safe=""
+                  )
                   + "&timeout="
                   + str(TIMEOUT)
                   + "&expected=204"
               )
 
-              url = f"{API}/proxies/{encoded_name}/delay{query}"
+              url = (
+                  f"{API}/proxies/"
+                  f"{encoded_name}/delay"
+                  f"{query}"
+              )
 
               try:
-                  with urllib.request.urlopen(url, timeout=8) as r:
-                      result = json.loads(r.read().decode())
+                  with urllib.request.urlopen(
+                      url,
+                      timeout=8
+                  ) as response:
 
-                  delay = int(result.get("delay", 0))
+                      result = json.loads(
+                          response.read()
+                          .decode()
+                      )
+
+                  delay = int(
+                      result.get(
+                          "delay",
+                          0
+                      )
+                  )
 
                   if delay > 0:
-                      alive.append((name, delay))
+                      alive.append(
+                          (
+                              name,
+                              delay
+                          )
+                      )
+
                       print(
                           f"[{index}/{len(proxies)}] "
                           f"OK {delay:>5} ms  {name}"
                       )
+
                   else:
                       dead.append(name)
+
                       print(
                           f"[{index}/{len(proxies)}] "
                           f"TIMEOUT       {name}"
                       )
 
-              except Exception:
+              except Exception as e:
                   dead.append(name)
+
                   print(
                       f"[{index}/{len(proxies)}] "
                       f"FAILED        {name}"
@@ -609,10 +969,20 @@ jobs:
               time.sleep(0.05)
 
           print("=" * 70)
-          print("可用节点:", len(alive))
-          print("无效节点:", len(dead))
 
-          Path("alive_nodes.json").write_text(
+          print(
+              "可用节点:",
+              len(alive)
+          )
+
+          print(
+              "无效节点:",
+              len(dead)
+          )
+
+          Path(
+              "alive_nodes.json"
+          ).write_text(
               json.dumps(
                   [
                       {
@@ -628,7 +998,9 @@ jobs:
           )
 
           if not alive:
-              raise SystemExit("没有任何节点通过测试")
+              raise SystemExit(
+                  "没有任何节点通过测试"
+              )
           PY
 
       - name: Remove invalid nodes and sort
@@ -637,7 +1009,11 @@ jobs:
           import json
           import yaml
 
-          with open("alive_nodes.json", "r", encoding="utf-8") as f:
+          with open(
+              "alive_nodes.json",
+              "r",
+              encoding="utf-8"
+          ) as f:
               alive = json.load(f)
 
           delays = {
@@ -645,47 +1021,67 @@ jobs:
               for item in alive
           }
 
-          with open("clash.yaml", "r", encoding="utf-8") as f:
+          with open(
+              "clash.yaml",
+              "r",
+              encoding="utf-8"
+          ) as f:
               data = yaml.safe_load(f)
 
-          original = data.get("proxies", [])
+          original = data.get(
+              "proxies",
+              []
+          )
 
           data["proxies"] = [
-              p
-              for p in original
-              if p.get("name") in delays
+              proxy
+              for proxy in original
+              if proxy.get("name") in delays
           ]
 
           data["proxies"] = sorted(
               data["proxies"],
-              key=lambda p: delays.get(
-                  p.get("name"),
-                  999999
-              )
+              key=lambda proxy:
+                  delays.get(
+                      proxy.get("name"),
+                      999999
+                  )
           )
 
-          alive_names = {
-              p["name"]
-              for p in data["proxies"]
-          }
+          for group in data.get(
+              "proxy-groups",
+              []
+          ):
+              if group.get(
+                  "name"
+              ) == "🚀 节点选择":
 
-          for group in data.get("proxy-groups", []):
-              if group.get("name") == "🚀 节点选择":
                   group["proxies"] = [
                       "⚡ 自动选择",
                       "DIRECT"
                   ] + [
-                      p["name"]
-                      for p in data["proxies"]
+                      proxy["name"]
+                      for proxy in data[
+                          "proxies"
+                      ]
                   ]
 
-              elif group.get("name") == "⚡ 自动选择":
+              elif group.get(
+                  "name"
+              ) == "⚡ 自动选择":
+
                   group["proxies"] = [
-                      p["name"]
-                      for p in data["proxies"]
+                      proxy["name"]
+                      for proxy in data[
+                          "proxies"
+                      ]
                   ]
 
-          with open("clash.yaml", "w", encoding="utf-8") as f:
+          with open(
+              "clash.yaml",
+              "w",
+              encoding="utf-8"
+          ) as f:
               yaml.safe_dump(
                   data,
                   f,
@@ -694,9 +1090,21 @@ jobs:
                   default_flow_style=False
               )
 
-          print("原始节点:", len(original))
-          print("可用节点:", len(data["proxies"]))
-          print("已删除无效节点:", len(original) - len(data["proxies"]))
+          print(
+              "原始节点:",
+              len(original)
+          )
+
+          print(
+              "可用节点:",
+              len(data["proxies"])
+          )
+
+          print(
+              "删除无效节点:",
+              len(original)
+              - len(data["proxies"])
+          )
           PY
 
       - name: Final validation
@@ -705,49 +1113,107 @@ jobs:
           import yaml
           from collections import Counter
 
-          with open("clash.yaml", "r", encoding="utf-8") as f:
+          with open(
+              "clash.yaml",
+              "r",
+              encoding="utf-8"
+          ) as f:
               data = yaml.safe_load(f)
 
-          proxies = data.get("proxies", [])
+          proxies = data.get(
+              "proxies",
+              []
+          )
 
           if not proxies:
-              raise SystemExit("最终配置没有节点")
+              raise SystemExit(
+                  "最终配置没有可用节点"
+              )
 
           names = [
-              p.get("name")
-              for p in proxies
+              proxy.get("name")
+              for proxy in proxies
           ]
 
           duplicates = [
               name
-              for name, count in Counter(names).items()
+              for name, count in Counter(
+                  names
+              ).items()
               if count > 1
           ]
 
           if duplicates:
               raise SystemExit(
-                  "仍然存在重复节点: "
+                  "存在重复节点: "
                   + ", ".join(duplicates)
               )
 
-          print("================================")
-          print("Clash YAML 检查通过")
-          print("最终可用节点:", len(proxies))
-          print("重复节点: 0")
-          print("================================")
+          print(
+              "================================"
+          )
+
+          print(
+              "Clash YAML 检查通过"
+          )
+
+          print(
+              "最终可用节点:",
+              len(proxies)
+          )
+
+          print(
+              "重复节点: 0"
+          )
+
+          print(
+              "================================"
+          )
           PY
+
+      - name: Show result
+        run: |
+          echo "=============================="
+
+          python3 <<'PY'
+          import yaml
+
+          with open(
+              "clash.yaml",
+              "r",
+              encoding="utf-8"
+          ) as f:
+              data = yaml.safe_load(f)
+
+          print(
+              "最终可用节点:",
+              len(
+                  data.get(
+                      "proxies",
+                      []
+                  )
+              )
+          )
+          PY
+
+          echo "=============================="
 
       - name: Commit and push
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name \
+            "github-actions[bot]"
+
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add clash.yaml
 
           if git diff --cached --quiet; then
             echo "没有变化，不提交"
           else
-            git commit -m "Update tested Clash nodes"
+            git commit \
+              -m "Update tested Clash nodes"
+
             git push
           fi
 
@@ -755,5 +1221,6 @@ jobs:
         if: always()
         run: |
           if [ -f mihomo.pid ]; then
-            kill "$(cat mihomo.pid)" 2>/dev/null || true
+            kill "$(cat mihomo.pid)" \
+              2>/dev/null || true
           fi
