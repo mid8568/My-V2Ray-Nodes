@@ -13,68 +13,6 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: UN【机场推荐：https://a9a.xyz】48
-  type: vless
-  server: cf.130519.xyz
-  port: 443
-  uuid: 9784bb19-3833-43ad-83b0-27ef8fc04ef2
-  udp: true
-  encryption: none
-  tls: true
-  servername: 20664.pages.dev
-  client-fingerprint: random
-  network: ws
-  ws-opts:
-    path: /?ed=2048
-    headers:
-      Host: 20664.pages.dev
-- name: 🇫🇷FR_1|2.8MB/s
-  type: ss
-  server: 15.237.53.180
-  port: 443
-  cipher: aes-256-cfb
-  password: amazonskr05
-  udp: true
-- name: NL【机场推荐：https://a9a.xyz】13
-  type: vless
-  server: 157.228.150.34
-  port: 443
-  uuid: df53b6c2-8005-475c-9eb9-74e1be785dc8
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: addons.mozilla.org
-  client-fingerprint: randomized
-  reality-opts:
-    public-key: NOw-idkk3OCn-N0IRS93leujH4ik-E749O2T5BYJQ0M
-    short-id: 3cef317b
-- name: 🇺🇸US_19|1.7MB/s
-  type: vless
-  server: 172.66.1.43
-  port: 443
-  uuid: 489f1717-d3c7-4940-ad68-bdbdbab857f4
-  udp: true
-  encryption: none
-  tls: true
-  servername: x.m-90.xyz
-  client-fingerprint: chrome
-  network: ws
-  ws-opts:
-    path: /t.me/TEAMNETGRATISCOL
-    headers:
-      Host: x.m-90.xyz
-- name: GB【机场推荐：https://a9a.xyz】11
-  type: vless
-  server: s1243.sspcccdn.xyz
-  port: 10829
-  uuid: 30e52776-55ac-3cb4-8d36-e2910f07e2c3
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: u695098ueb8953b4s861.gogocs.xyz
-  client-fingerprint: chrome
 - name: UN【机场推荐：https://a9a.xyz】47
   type: vless
   server: tyxyrytyro-51255165170-direct.araghchy.com
@@ -86,21 +24,19 @@ proxies:
   tls: true
   servername: tyxyrytyro-51255165170-direct.araghchy.com
   client-fingerprint: chrome
-- name: 🇺🇸US_16|1022KB/s
+- name: 🇩🇪DE_8|1.5MB/s
   type: vless
-  server: 181.36.229.212
-  port: 443
-  uuid: 489f1717-d3c7-4940-ad68-bdbdbab857f4
+  server: de20.bexait.ir
+  port: 2434
+  uuid: 661f6c6a-ad36-487b-88cf-88cbf005e47e
   udp: true
   encryption: none
   tls: true
-  servername: x.m-90.xyz
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /t.me/TEAMNETGRATISCOL
-    headers:
-      Host: x.m-90.xyz
+  servername: icloud.com
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: yzCvRpbQ-cRePaJAuQkw42_xEf-R860gFsQwoPki2E0
+    short-id: 9de041877612a718
 - name: FI【机场推荐：https://a9a.xyz】9
   type: vless
   server: 157.228.128.59
@@ -115,13 +51,6 @@ proxies:
   reality-opts:
     public-key: QnxkyscHouhaLDJHT47beyenVd4LHi62yfJIeRV01Ws
     short-id: 06e00e7c
-- name: 🇩🇪DE_2|3.6MB/s
-  type: ss
-  server: 3.67.197.81
-  port: 443
-  cipher: aes-256-cfb
-  password: amazonskr05
-  udp: true
 - name: US【机场推荐：https://a9a.xyz】4
   type: vless
   server: tk1.high-speed-test-56424.me
@@ -136,34 +65,17 @@ proxies:
   reality-opts:
     public-key: p8VhFzvFOBAhWAEAeWmwDxT3xBSRsGYixqi0qnLFnBM
     short-id: 21270a66
-- name: UN【机场推荐：https://a9a.xyz】64
-  type: vmess
-  server: cdn.sfacg.uk
-  port: 2083
-  uuid: ac251237-576f-40c8-a543-554960c958b1
-  alterId: 0
-  cipher: auto
+- name: 🇯🇵JP_1|5.6MB/s
+  type: trojan
+  server: jp3.998998.best
+  port: 443
+  password: 5504eaa8-1395-402f-8e0e-75ecd762e627
   udp: true
-  tls: true
+  sni: nat11.outsidemyheart.space
   network: ws
   ws-opts:
-    path: /or3
-    headers:
-      Host: or3.sfacg.uk
-- name: DE【机场推荐：https://a9a.xyz】7
-  type: vless
-  server: 177.1.187.251
-  port: 443
-  uuid: 318c935d-c195-41d3-99ad-9bbcfdab3386
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: de2.srv.vbuste.ru
-  client-fingerprint: randomized
-  reality-opts:
-    public-key: 0-or5ogGhYbBgsVSrSC2Fhxyp2BN97Y9pqIdg61Qd08
-    short-id: 4be4110078ebed4a
+    path: /w4e5yh0p945y3?ed=2560
+    headers: {}
 - name: US【机场推荐：https://a9a.xyz】34
   type: vless
   server: 8.47.69.0
@@ -178,60 +90,44 @@ proxies:
     path: /api/voip/updates/static/fr2035
     headers:
       Host: fr.api-music-fa.com
-- name: NL【机场推荐：https://a9a.xyz】10
+- name: UN【机场推荐：https://a9a.xyz】62
   type: vless
-  server: 157.228.160.166
-  port: 443
-  uuid: df53b6c2-8005-475c-9eb9-74e1be785dc8
+  server: 172.64.229.129
+  port: 2052
+  uuid: 5744e593-1cc8-48fa-b8ca-57cd494fe35b
   udp: true
   encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: addons.mozilla.org
-  client-fingerprint: randomized
-  reality-opts:
-    public-key: NOw-idkk3OCn-N0IRS93leujH4ik-E749O2T5BYJQ0M
-    short-id: 3cef317b
+  network: ws
+  ws-opts:
+    path: /rain1226
+    headers:
+      Host: eu02.123450908.xyz
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - UN【机场推荐：https://a9a.xyz】48
-  - 🇫🇷FR_1|2.8MB/s
-  - NL【机场推荐：https://a9a.xyz】13
-  - 🇺🇸US_19|1.7MB/s
-  - GB【机场推荐：https://a9a.xyz】11
   - UN【机场推荐：https://a9a.xyz】47
-  - 🇺🇸US_16|1022KB/s
+  - 🇩🇪DE_8|1.5MB/s
   - FI【机场推荐：https://a9a.xyz】9
-  - 🇩🇪DE_2|3.6MB/s
   - US【机场推荐：https://a9a.xyz】4
-  - UN【机场推荐：https://a9a.xyz】64
-  - DE【机场推荐：https://a9a.xyz】7
+  - 🇯🇵JP_1|5.6MB/s
   - US【机场推荐：https://a9a.xyz】34
-  - NL【机场推荐：https://a9a.xyz】10
+  - UN【机场推荐：https://a9a.xyz】62
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - UN【机场推荐：https://a9a.xyz】48
-  - 🇫🇷FR_1|2.8MB/s
-  - NL【机场推荐：https://a9a.xyz】13
-  - 🇺🇸US_19|1.7MB/s
-  - GB【机场推荐：https://a9a.xyz】11
   - UN【机场推荐：https://a9a.xyz】47
-  - 🇺🇸US_16|1022KB/s
+  - 🇩🇪DE_8|1.5MB/s
   - FI【机场推荐：https://a9a.xyz】9
-  - 🇩🇪DE_2|3.6MB/s
   - US【机场推荐：https://a9a.xyz】4
-  - UN【机场推荐：https://a9a.xyz】64
-  - DE【机场推荐：https://a9a.xyz】7
+  - 🇯🇵JP_1|5.6MB/s
   - US【机场推荐：https://a9a.xyz】34
-  - NL【机场推荐：https://a9a.xyz】10
+  - UN【机场推荐：https://a9a.xyz】62
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
