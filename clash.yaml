@@ -13,35 +13,49 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: UN【机场推荐：https://a9a.xyz】48
+- name: 🇫🇮FI_1|1.0MB/s
   type: vless
-  server: miki.moumou207.dpdns.org
-  port: 2096
-  uuid: cb79ddc4-ec21-4077-a2c9-f5035d680a10
+  server: 122.8.45.3
+  port: 8443
+  uuid: 8ff8938c-49b6-b22f-a934-b55e91154ca3
   udp: true
   encryption: none
   tls: true
-  servername: mIKi.MoumOu207.dPdNs.Org
+  servername: www.hp.com
   client-fingerprint: chrome
-  network: ws
-  ws-opts:
-    path: /eyJqdW5rIjoiblNzWDl5VnRkRmF5R05mIiwicHJvdG9jb2wiOiJ2bCIsIm1vZGUiOiJwcm94eWlwIiwicGFuZWxJUHMiOlsiNDUuOC4xMTQuOTkiXX0=
-    headers:
-      Host: mIKi.MoumOu207.dPdNs.Org
-- name: SG【机场推荐：https://a9a.xyz】7
-  type: trojan
-  server: musical-mouse.rooster465.autos
-  port: 443
-  password: UX82473651
-  udp: true
-  sni: musical-mouse.rooster465.autos
-- name: UN【机场推荐：https://a9a.xyz】50
+  reality-opts:
+    public-key: QzFNQqkvBnDKIyjXUHJQe9jruaw9G5AV44vDC-qvnlo
+  network: grpc
+  grpc-opts:
+    grpc-service-name: TunService
+- name: NL【机场推荐：https://a9a.xyz】16
   type: vless
-  server: test.keoplentuio.xyz
-  port: 2053
-  uuid: 9ef61079-6f7d-4911-9608-943da85d8e6f
+  server: 157.228.160.166
+  port: 443
+  uuid: df53b6c2-8005-475c-9eb9-74e1be785dc8
   udp: true
   encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: addons.mozilla.org
+  client-fingerprint: randomized
+  reality-opts:
+    public-key: NOw-idkk3OCn-N0IRS93leujH4ik-E749O2T5BYJQ0M
+    short-id: 3cef317b
+- name: 🇳🇱NL_11|1.9MB/s
+  type: vless
+  server: netherlands01.azotvpn.xyz
+  port: 443
+  uuid: 5a96c1fc-f167-44b9-9020-8f6867537d14
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: netherlands01.azotvpn.xyz
+  client-fingerprint: random
+  reality-opts:
+    public-key: mVHfqglm6n5NqynpakJT_CfD3rBQfx_UBabYCtJaJi0
+    short-id: da15595a494f902c
 - name: FI【机场推荐：https://a9a.xyz】14
   type: vless
   server: 157.228.128.59
@@ -56,26 +70,83 @@ proxies:
   reality-opts:
     public-key: QnxkyscHouhaLDJHT47beyenVd4LHi62yfJIeRV01Ws
     short-id: 06e00e7c
+- name: SG【机场推荐：https://a9a.xyz】7
+  type: trojan
+  server: musical-mouse.rooster465.autos
+  port: 443
+  password: UX82473651
+  udp: true
+  sni: musical-mouse.rooster465.autos
+- name: US【机场推荐：https://a9a.xyz】8
+  type: vless
+  server: de2.srv.vbuste.ru
+  port: 443
+  uuid: 318c935d-c195-41d3-99ad-9bbcfdab3386
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: de2.srv.vbuste.ru
+  client-fingerprint: randomized
+  reality-opts:
+    public-key: 0-or5ogGhYbBgsVSrSC2Fhxyp2BN97Y9pqIdg61Qd08
+    short-id: 4be4110078ebed4a
+- name: DE【机场推荐：https://a9a.xyz】17
+  type: vless
+  server: 177.1.187.251
+  port: 443
+  uuid: 318c935d-c195-41d3-99ad-9bbcfdab3386
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: de2.srv.vbuste.ru
+  client-fingerprint: randomized
+  reality-opts:
+    public-key: 0-or5ogGhYbBgsVSrSC2Fhxyp2BN97Y9pqIdg61Qd08
+    short-id: 4be4110078ebed4a
+- name: NL【机场推荐：https://a9a.xyz】15
+  type: vless
+  server: 157.228.150.34
+  port: 443
+  uuid: df53b6c2-8005-475c-9eb9-74e1be785dc8
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: addons.mozilla.org
+  client-fingerprint: randomized
+  reality-opts:
+    public-key: NOw-idkk3OCn-N0IRS93leujH4ik-E749O2T5BYJQ0M
+    short-id: 3cef317b
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - UN【机场推荐：https://a9a.xyz】48
-  - SG【机场推荐：https://a9a.xyz】7
-  - UN【机场推荐：https://a9a.xyz】50
+  - 🇫🇮FI_1|1.0MB/s
+  - NL【机场推荐：https://a9a.xyz】16
+  - 🇳🇱NL_11|1.9MB/s
   - FI【机场推荐：https://a9a.xyz】14
+  - SG【机场推荐：https://a9a.xyz】7
+  - US【机场推荐：https://a9a.xyz】8
+  - DE【机场推荐：https://a9a.xyz】17
+  - NL【机场推荐：https://a9a.xyz】15
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - UN【机场推荐：https://a9a.xyz】48
-  - SG【机场推荐：https://a9a.xyz】7
-  - UN【机场推荐：https://a9a.xyz】50
+  - 🇫🇮FI_1|1.0MB/s
+  - NL【机场推荐：https://a9a.xyz】16
+  - 🇳🇱NL_11|1.9MB/s
   - FI【机场推荐：https://a9a.xyz】14
+  - SG【机场推荐：https://a9a.xyz】7
+  - US【机场推荐：https://a9a.xyz】8
+  - DE【机场推荐：https://a9a.xyz】17
+  - NL【机场推荐：https://a9a.xyz】15
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
