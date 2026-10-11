@@ -13,7 +13,21 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: 🇳🇱NL_9|1.9MB/s
+- name: CA【机场推荐：https://a9a.xyz】31
+  type: vless
+  server: 188.114.96.9
+  port: 443
+  uuid: 2e305ebe-f6e6-4689-b32f-cd04ab5ff541
+  udp: true
+  encryption: none
+  tls: true
+  servername: IdB8ONMVbntuYT5t7t6cEJfw8vLrb.paGEs.DeV
+  network: ws
+  ws-opts:
+    path: /vl/9yvcoLdzdOXLUYfH7r5gwJhu1CHrjfp=chrome
+    headers:
+      Host: idb8onmvbntuyt5t7t6cejfw8vlrb.pages.dev
+- name: 🇳🇱NL_10|1022KB/s
   type: vless
   server: nl-1-6.unturned-rust-dead.lol
   port: 443
@@ -28,305 +42,227 @@ proxies:
   network: grpc
   grpc-opts:
     grpc-service-name: nl-grpc
-- name: 🇯🇵JP_1|3.8MB/s
-  type: ss
-  server: ruot.ayucloudservices.nl
-  port: 22073
-  cipher: aes-256-gcm
-  password: bd962c9a-d6f2-4561-bd80-34206c4d5279
-  udp: true
-- name: 🇳🇱NL_10|3.2MB/s
-  type: ss
-  server: ruot.ayucloudservices.nl
-  port: 35034
-  cipher: aes-128-gcm
-  password: 2581cebb-e452-4ee3-8849-3cd358bf9394
-  udp: true
-- name: KR【机场推荐：https://a9a.xyz】21
-  type: ss
-  server: 43.155.223.71
-  port: 8388
-  cipher: aes-256-gcm
-  password: UsIv5aKJabiqnYtY8IfWd6FfgjzrJlfZ
-  udp: true
-- name: 🇦🇹AT_2|1.9MB/s
+- name: 🇳🇱NL_2|1.2MB/s
   type: vless
-  server: 80.87.194.253
-  port: 2096
-  uuid: f13b36ac-3765-4458-8a4d-08575038c463
-  udp: true
-  encryption: none
-  tls: true
-  servername: id.vk.com
-  client-fingerprint: random
-  reality-opts:
-    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-  network: grpc
-  grpc-opts:
-    grpc-service-name: vless-grpc-reality
-- name: 🇳🇱NL_1|2.9MB/s
-  type: vless
-  server: 45.82.56.253
+  server: 188.253.26.216
   port: 443
-  uuid: 616c7b3b-41f4-4038-88c6-d6fedd0ae4a7
+  uuid: ee18d188-14cc-417e-beb1-70e4add6d023
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: nd-2.ardesnode.ru
+  servername: nl3.nztvpn.com
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: noszGxmy754-TNyz9eM8EyHiaCRF2T4cu3El6GKb6n0
+    short-id: 0da7e14db353e7d0
+- name: 🇫🇷FR_2|2.0MB/s
+  type: vless
+  server: 7q4eiwcseu-193708596-direct.rahbarii.com
+  port: 443
+  uuid: 7q4eiwcseu
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: 7q4eiwcseu-193708596-direct.rahbarii.com
+  client-fingerprint: chrome
+- name: 🇳🇱NL_12|3.2MB/s
+  type: vless
+  server: 89.125.100.59
+  port: 443
+  uuid: 86096188-0ece-41af-922d-792c5f96c3ad
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: anime.caloribro.uno
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: BzXQPqKb1waqaBR4b2GGyE6VWX4LGd9iCOkyuMc8IGs
+    short-id: 14aa9b370c30c55d
+- name: SE【机场推荐：https://a9a.xyz】35
+  type: vless
+  server: 2.26.55.163
+  port: 443
+  uuid: 621bcb9e-7df5-427b-a9d4-6e87223c8bca
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: specific3.kandnet.com
+  client-fingerprint: random
+  reality-opts:
+    public-key: 0eWdILjmoRVSJFDMiQskgkKG2Fc4TEMZ3XEPJ8ez9Hw
+- name: GB【机场推荐：https://a9a.xyz】13
+  type: vless
+  server: milo.rubinaz.xyz
+  port: 8080
+  uuid: 6bceb548-d9b6-461f-8e37-a5a7fbcdc2c8
+  udp: true
+  encryption: none
+- name: 🇳🇱NL_3|2.7MB/s
+  type: vless
+  server: c20s5.portablesubmarines.com
+  port: 443
+  uuid: 85fe968d-fbb5-40dc-8422-30635eccb149
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: portal.citygrainla.com
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: BlSccfT5tvDIOS7v9VaPd0ulUNhUdvlMjGiNzDNDUHE
+    short-id: 051f20c2344a2dfd
+- name: 🇩🇪DE_6|2.3MB/s
+  type: vless
+  server: 188.225.32.76
+  port: 443
+  uuid: 12e95f93-443c-0002-9a2a-5b318b9124cf
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
   client-fingerprint: firefox
   reality-opts:
-    public-key: PKlt_5ASsz137EvA9SKSadtjEv1k_U7VRtoelKCgADs
-    short-id: 9ea74b83f4993ca9
-- name: NL【机场推荐：https://a9a.xyz】15
+    public-key: V-wRiXvhBx01utmXJbrThJ_DE4tNJfK6mnzo9EB3fVA
+- name: MD【机场推荐：https://a9a.xyz】16
   type: vless
-  server: nd-2.ardesnode.ru
+  server: 194.180.191.249
   port: 443
-  uuid: 616c7b3b-41f4-4038-88c6-d6fedd0ae4a7
+  uuid: 817b61c8-9bf0-4365-8a52-e43dfad274a6
+  udp: true
+  encryption: none
+  tls: true
+  servername: shin-ra.ccwu.cc
+  client-fingerprint: unsafe
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: shin-ra.ccwu.cc
+- name: 🇦🇺AU_1|1.3MB/s
+  type: vless
+  server: 117.55.194.110
+  port: 709
+  uuid: 524dd22d-9f8c-4cc4-9e12-f427f497dff4
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: nd-2.ardesnode.ru
-  client-fingerprint: random
+  servername: www.kayak.com
+  client-fingerprint: firefox
   reality-opts:
-    public-key: PKlt_5ASsz137EvA9SKSadtjEv1k_U7VRtoelKCgADs
-    short-id: 9ea74b83f4993ca9
-- name: 🇫🇮FI_2|1.8MB/s
+    public-key: YQGxuBmerdc9w64ESEpkvU7BzpqPTmQ_YhVSYypnEnU
+    short-id: 42b7393d3e94e4c7
+- name: DE【机场推荐：https://a9a.xyz】12
   type: vless
-  server: ss.ll0ll.vip
-  port: 2096
-  uuid: f13b36ac-3765-4458-8a4d-08575038c463
-  udp: true
-  encryption: none
-  tls: true
-  servername: id.vk.com
-  client-fingerprint: random
-  reality-opts:
-    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-  network: grpc
-  grpc-opts:
-    grpc-service-name: vless-grpc-reality
-- name: 🇵🇱PL_2|1.6MB/s
-  type: vless
-  server: pl-1-1.unturned-rust-dead.lol
+  server: 177.1.187.251
   port: 443
-  uuid: c6e3c24c-ce20-4ad5-8c8c-68cb05890ea8
+  uuid: 318c935d-c195-41d3-99ad-9bbcfdab3386
   udp: true
   encryption: none
+  flow: xtls-rprx-vision
   tls: true
-  servername: pl-1-1.unturned-rust-dead.lol
-  client-fingerprint: random
+  servername: de2.srv.vbuste.ru
+  client-fingerprint: randomized
   reality-opts:
-    public-key: gS0qvWKumWcOVoAgf8SHt6Sm3tqpBw07c5sA_Clb1hg
-- name: PL【机场推荐：https://a9a.xyz】24
+    public-key: 0-or5ogGhYbBgsVSrSC2Fhxyp2BN97Y9pqIdg61Qd08
+    short-id: 4be4110078ebed4a
+- name: 节点日期：2026-10-11
   type: vless
-  server: pl3.richforever.ru
+  server: 13.143.137.206
   port: 8443
-  uuid: 7918e6f6-df8f-4a20-9c1d-59dbd1f22770
+  uuid: 9ebf4fda-7395-4800-b42f-b2dda649880a
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: pl3.richforever.ru
-  client-fingerprint: firefox
+  servername: ya.ru
+  client-fingerprint: chrome
   reality-opts:
-    public-key: lQcmwpXJsT5tdh9mQhcsDyiDNFe0nAVLvSc_5WnfqSY
-- name: 🇷🇺RU_1|1.5MB/s
+    public-key: 1MLoHw7RVkGefh7XUyuGg4ndxwv4vDU9en-f9JxpXRQ
+    short-id: d2061bb1
+- name: US【机场推荐：https://a9a.xyz】3
   type: vless
-  server: 31.59.210.26
-  port: 2088
-  uuid: 5413edfb-08d6-4fba-b51c-809c04feb127
-  udp: true
-  encryption: none
-  tls: true
-  servername: www.yandex.ru
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: Eq3c19Y0WGB1APWMADQB-oxCvZFSVFAQxG5L6b8EkUg
-    short-id: b1ad165f903c62fe
-  network: grpc
-  grpc-opts:
-    grpc-service-name: astracat
-- name: RU【机场推荐：https://a9a.xyz】14
-  type: vless
-  server: 87.242.95.77
-  port: 7444
-  uuid: edd934cd-f925-44ff-b849-037d99db458d
+  server: de2.srv.vbuste.ru
+  port: 443
+  uuid: 318c935d-c195-41d3-99ad-9bbcfdab3386
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: novosrv.raw-srv.org
-  client-fingerprint: random
+  servername: de2.srv.vbuste.ru
+  client-fingerprint: chrome
   reality-opts:
-    public-key: PZajgWT2dtEu0Avc2QWiZELK9wDQW9p9vvcckfQBfCE
-    short-id: 632cd48001bdb09a
-- name: 🇩🇪DE_1|1.8MB/s
+    public-key: 0-or5ogGhYbBgsVSrSC2Fhxyp2BN97Y9pqIdg61Qd08
+    short-id: 4be4110078ebed4a
+- name: US【机场推荐：https://a9a.xyz】37
   type: vless
-  server: 188.114.99.0
-  port: 8880
-  uuid: 3ee10440-225e-4cbc-83ed-3c80b90bcb07
-  udp: true
-  encryption: mlkem768x25519plus.native.0rtt.BheP3zTPlA3cijplJnfrJSIp9rYlrGqnqEOnYD-wA20
-  network: ws
-  ws-opts:
-    path: /notls
-    headers:
-      Host: ovh-gr1.mahkhorshidi.ir
-- name: 🇩🇪DE_11|1.6MB/s
-  type: vless
-  server: spb.ai-boost.tech
+  server: 179.254.166.40
   port: 443
-  uuid: e2599b64-2eaa-4b81-b2bc-738605ecfeec
-  udp: true
-  encryption: none
-  tls: true
-  servername: spb.ai-boost.tech
-  client-fingerprint: random
-  network: ws
-  ws-opts:
-    path: /bKGK1ZI0PzpQz3OeEeq1
-    headers:
-      Host: spb.ai-boost.tech
-- name: RU【机场推荐：https://a9a.xyz】16
-  type: vless
-  server: drive.korroh.com
-  port: 443
-  uuid: ec6f8131-7a5d-4117-9627-6fb2b39ae0da
-  udp: true
-  encryption: none
-  tls: true
-  servername: drive.korroh.com
-  client-fingerprint: chrome
-  network: ws
-  ws-opts:
-    path: /remote.php/dav/89f7661a0011ce46
-    headers:
-      Host: drive.korroh.com
-- name: RU【机场推荐：https://a9a.xyz】22
-  type: vless
-  server: cloud.korroh.com
-  port: 443
-  uuid: ec6f8131-7a5d-4117-9627-6fb2b39ae0da
-  udp: true
-  encryption: none
-  tls: true
-  servername: cloud.korroh.com
-  client-fingerprint: chrome
-  network: ws
-  ws-opts:
-    path: /remote.php/dav/89f7661a0011ce46
-    headers:
-      Host: cloud.korroh.com
-- name: 🇫🇮FI_1|1.0MB/s
-  type: vless
-  server: cloud.korroh.com
-  port: 443
-  uuid: ec6f8131-7a5d-4117-9627-6fb2b39ae0da
-  udp: true
-  encryption: none
-  tls: true
-  servername: cloud.korroh.com
-  client-fingerprint: chrome
-  network: ws
-  ws-opts:
-    path: /remote.php/dav/89f7661a0011ce46
-    headers:
-      Host: cloud.korroh.com
-- name: HK【机场推荐：https://a9a.xyz】26
-  type: vless
-  server: apinbxs.mate-fox.com
-  port: 41563
-  uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
+  uuid: 318c935d-c195-41d3-99ad-9bbcfdab3386
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: iosapps.itunes.apple.com
-  client-fingerprint: ios
-  reality-opts:
-    public-key: HrcXRHtsitc_AVlN-_8fZuRgaP-Mqa_9JJotI9OnkVc
-    short-id: 25c79e5856c7
-- name: US【机场推荐：https://a9a.xyz】12
-  type: vless
-  server: 86153507-1976-48f1-ac86-e8ab274470a8.fly.dev
-  port: 443
-  uuid: 0b3c3f4f-843a-5b0a-98fe-132c88fbefc0
-  udp: true
-  encryption: none
-  tls: true
-  servername: 86153507-1976-48f1-ac86-e8ab274470a8.fly.dev
-  network: ws
-  ws-opts:
-    path: /ws/0b3c3f4f-843a-5b0a-98fe-132c88fbefc0
-    headers: {}
-- name: FI【机场推荐：https://a9a.xyz】5
-  type: vless
-  server: 157.228.128.59
-  port: 443
-  uuid: df53b6c2-8005-475c-9eb9-74e1be785dc8
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: addons.mozilla.org
+  servername: de2.srv.vbuste.ru
   client-fingerprint: chrome
   reality-opts:
-    public-key: QnxkyscHouhaLDJHT47beyenVd4LHi62yfJIeRV01Ws
-    short-id: 06e00e7c
+    public-key: 0-or5ogGhYbBgsVSrSC2Fhxyp2BN97Y9pqIdg61Qd08
+    short-id: 4be4110078ebed4a
+- name: DE【机场推荐：https://a9a.xyz】9
+  type: vless
+  server: test.keoplentuio.xyz
+  port: 2053
+  uuid: 9ef61079-6f7d-4911-9608-943da85d8e6f
+  udp: true
+  encryption: none
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - 🇳🇱NL_9|1.9MB/s
-  - 🇯🇵JP_1|3.8MB/s
-  - 🇳🇱NL_10|3.2MB/s
-  - KR【机场推荐：https://a9a.xyz】21
-  - 🇦🇹AT_2|1.9MB/s
-  - 🇳🇱NL_1|2.9MB/s
-  - NL【机场推荐：https://a9a.xyz】15
-  - 🇫🇮FI_2|1.8MB/s
-  - 🇵🇱PL_2|1.6MB/s
-  - PL【机场推荐：https://a9a.xyz】24
-  - 🇷🇺RU_1|1.5MB/s
-  - RU【机场推荐：https://a9a.xyz】14
-  - 🇩🇪DE_1|1.8MB/s
-  - 🇩🇪DE_11|1.6MB/s
-  - RU【机场推荐：https://a9a.xyz】16
-  - RU【机场推荐：https://a9a.xyz】22
-  - 🇫🇮FI_1|1.0MB/s
-  - HK【机场推荐：https://a9a.xyz】26
-  - US【机场推荐：https://a9a.xyz】12
-  - FI【机场推荐：https://a9a.xyz】5
+  - CA【机场推荐：https://a9a.xyz】31
+  - 🇳🇱NL_10|1022KB/s
+  - 🇳🇱NL_2|1.2MB/s
+  - 🇫🇷FR_2|2.0MB/s
+  - 🇳🇱NL_12|3.2MB/s
+  - SE【机场推荐：https://a9a.xyz】35
+  - GB【机场推荐：https://a9a.xyz】13
+  - 🇳🇱NL_3|2.7MB/s
+  - 🇩🇪DE_6|2.3MB/s
+  - MD【机场推荐：https://a9a.xyz】16
+  - 🇦🇺AU_1|1.3MB/s
+  - DE【机场推荐：https://a9a.xyz】12
+  - 节点日期：2026-10-11
+  - US【机场推荐：https://a9a.xyz】3
+  - US【机场推荐：https://a9a.xyz】37
+  - DE【机场推荐：https://a9a.xyz】9
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇳🇱NL_9|1.9MB/s
-  - 🇯🇵JP_1|3.8MB/s
-  - 🇳🇱NL_10|3.2MB/s
-  - KR【机场推荐：https://a9a.xyz】21
-  - 🇦🇹AT_2|1.9MB/s
-  - 🇳🇱NL_1|2.9MB/s
-  - NL【机场推荐：https://a9a.xyz】15
-  - 🇫🇮FI_2|1.8MB/s
-  - 🇵🇱PL_2|1.6MB/s
-  - PL【机场推荐：https://a9a.xyz】24
-  - 🇷🇺RU_1|1.5MB/s
-  - RU【机场推荐：https://a9a.xyz】14
-  - 🇩🇪DE_1|1.8MB/s
-  - 🇩🇪DE_11|1.6MB/s
-  - RU【机场推荐：https://a9a.xyz】16
-  - RU【机场推荐：https://a9a.xyz】22
-  - 🇫🇮FI_1|1.0MB/s
-  - HK【机场推荐：https://a9a.xyz】26
-  - US【机场推荐：https://a9a.xyz】12
-  - FI【机场推荐：https://a9a.xyz】5
+  - CA【机场推荐：https://a9a.xyz】31
+  - 🇳🇱NL_10|1022KB/s
+  - 🇳🇱NL_2|1.2MB/s
+  - 🇫🇷FR_2|2.0MB/s
+  - 🇳🇱NL_12|3.2MB/s
+  - SE【机场推荐：https://a9a.xyz】35
+  - GB【机场推荐：https://a9a.xyz】13
+  - 🇳🇱NL_3|2.7MB/s
+  - 🇩🇪DE_6|2.3MB/s
+  - MD【机场推荐：https://a9a.xyz】16
+  - 🇦🇺AU_1|1.3MB/s
+  - DE【机场推荐：https://a9a.xyz】12
+  - 节点日期：2026-10-11
+  - US【机场推荐：https://a9a.xyz】3
+  - US【机场推荐：https://a9a.xyz】37
+  - DE【机场推荐：https://a9a.xyz】9
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
