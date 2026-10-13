@@ -13,144 +13,6 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: CA【机场推荐：https://a9a.xyz】3
-  type: vless
-  server: epam.com
-  port: 443
-  uuid: e53eacb6-cd30-4964-a57c-febcb5151b98
-  udp: true
-  encryption: none
-  tls: true
-  servername: wallweb-4r0.pages.dev
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: wallweb-4r0.pages.dev
-- name: CA【机场推荐：https://a9a.xyz】12
-  type: vless
-  server: 172.64.88.168
-  port: 8880
-  uuid: 2e55e846-7737-4c07-af67-191e2727513c
-  udp: true
-  encryption: none
-  network: ws
-  ws-opts:
-    path: /pyip=ProxyIP.US.CMLiussss.net
-    headers:
-      Host: weathered-sunset-be54.407-d9d.workers.dev
-- name: PL【机场推荐：https://a9a.xyz】13
-  type: vless
-  server: pl-1-1.unturned-rust-dead.lol
-  port: 443
-  uuid: c6e3c24c-ce20-4ad5-8c8c-68cb05890ea8
-  udp: true
-  encryption: none
-  tls: true
-  servername: pl-1-1.unturned-rust-dead.lol
-  client-fingerprint: random
-  reality-opts:
-    public-key: gS0qvWKumWcOVoAgf8SHt6Sm3tqpBw07c5sA_Clb1hg
-- name: 🇳🇱NL_9|1.5MB/s
-  type: vless
-  server: 103.137.250.68
-  port: 443
-  uuid: b0a100ee-c397-43f2-bdae-2adfb7a0d4e5
-  udp: true
-  encryption: none
-  tls: true
-  servername: rnxq-1lpi3m.linmeisoft.com
-  client-fingerprint: edge
-  network: ws
-  ws-opts:
-    path: /b0a100ee-c397-43f2-bdae-2adfb7a0d4e5
-    headers:
-      Host: rnxq-1lpi3m.linmeisoft.com
-- name: 🇫🇮FI_3|2.2MB/s
-  type: vless
-  server: fi-p1.h1cloud.net
-  port: 25633
-  uuid: ec572cf0-1337-4c51-b4ec-ff2f538c1f4c
-  udp: true
-  encryption: none
-  tls: true
-  servername: www.icloud.com
-  client-fingerprint: random
-  reality-opts:
-    public-key: YLIRYJ8UkT0nSSgxJr7YckNuXnokVyEs2G6thNyx1GE
-    short-id: 200811f031ae7463
-- name: 🇫🇮FI_1|2.7MB/s
-  type: vless
-  server: 2.26.89.14
-  port: 443
-  uuid: 0cf8e402-e801-4aeb-9b7a-00a933f9f1c1
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: assets-ms-33.ecom-ai-solutions.com
-  client-fingerprint: random
-  reality-opts:
-    public-key: fyG6EMB247gGPXLK1YqvbWd_Q9fnoMWkbmGfG1BRJUE
-    short-id: c90408131c6d00b0
-- name: 🇳🇱NL_10|1.1MB/s
-  type: vless
-  server: 141.133.174.59
-  port: 443
-  uuid: b0a100ee-c397-43f2-bdae-2adfb7a0d4e5
-  udp: true
-  encryption: none
-  tls: true
-  servername: rnxq-1lpi3m.linmeisoft.com
-  client-fingerprint: ios
-  network: ws
-  ws-opts:
-    path: /b0a100ee-c397-43f2-bdae-2adfb7a0d4e5
-    headers:
-      Host: rnxq-1lpi3m.linmeisoft.com
-- name: 🇵🇱PL_3|3.2MB/s
-  type: vless
-  server: 87.242.127.113
-  port: 4510
-  uuid: c3db7657-88ce-42a6-b998-1e0364b277ac
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: 9c99da.usecache.net
-  client-fingerprint: random
-  reality-opts:
-    public-key: hkvjyE8WMKHvdGfMta7PAIGz6HAv2WiXvWvAQmsE_DM
-    short-id: 2d0c188798bae174
-- name: CA【机场推荐：https://a9a.xyz】11
-  type: vless
-  server: 162.159.128.96
-  port: 443
-  uuid: f90e2825-6433-46b0-91a2-971f335b887a
-  udp: true
-  encryption: none
-  tls: true
-  servername: ws-japan-ga-01.xyy123.bid
-  client-fingerprint: chrome
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: ws-japan-ga-01.xyy123.bid
-- name: RU【机场推荐：https://a9a.xyz】9
-  type: vless
-  server: 2.26.89.14
-  port: 443
-  uuid: 0cf8e402-e801-4aeb-9b7a-00a933f9f1c1
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: assets-ms-33.ecom-ai-solutions.com
-  client-fingerprint: random
-  reality-opts:
-    public-key: fyG6EMB247gGPXLK1YqvbWd_Q9fnoMWkbmGfG1BRJUE
-    short-id: c90408131c6d00b0
 - name: NL【机场推荐：https://a9a.xyz】15
   type: vless
   server: 157.228.150.34
@@ -165,72 +27,52 @@ proxies:
   reality-opts:
     public-key: NOw-idkk3OCn-N0IRS93leujH4ik-E749O2T5BYJQ0M
     short-id: 3cef317b
-- name: RU【机场推荐：https://a9a.xyz】5
-  type: vmess
-  server: renderer-stream-2-114.mirra.now
-  port: 443
-  uuid: 8ffa41d4-e6b5-4af5-a8a9-69e26bec75f5
-  alterId: 0
-  cipher: auto
-  udp: true
-  tls: true
-  network: ws
-  ws-opts:
-    path: /api/v1/gpu-stream/socket
-    headers:
-      Host: renderer-stream-2-114.mirra.now
-- name: DE【机场推荐：https://a9a.xyz】14
+- name: FI【机场推荐：https://a9a.xyz】7
   type: vless
-  server: 177.1.187.251
+  server: 157.228.128.59
   port: 443
-  uuid: 318c935d-c195-41d3-99ad-9bbcfdab3386
+  uuid: df53b6c2-8005-475c-9eb9-74e1be785dc8
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: de2.srv.vbuste.ru
+  servername: addons.mozilla.org
   client-fingerprint: randomized
   reality-opts:
-    public-key: 0-or5ogGhYbBgsVSrSC2Fhxyp2BN97Y9pqIdg61Qd08
-    short-id: 4be4110078ebed4a
+    public-key: QnxkyscHouhaLDJHT47beyenVd4LHi62yfJIeRV01Ws
+    short-id: 06e00e7c
+- name: RU【机场推荐：https://a9a.xyz】9
+  type: vless
+  server: 2.26.89.14
+  port: 443
+  uuid: 0cf8e402-e801-4aeb-9b7a-00a933f9f1c1
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: assets-ms-33.ecom-ai-solutions.com
+  client-fingerprint: random
+  reality-opts:
+    public-key: fyG6EMB247gGPXLK1YqvbWd_Q9fnoMWkbmGfG1BRJUE
+    short-id: c90408131c6d00b0
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - CA【机场推荐：https://a9a.xyz】3
-  - CA【机场推荐：https://a9a.xyz】12
-  - PL【机场推荐：https://a9a.xyz】13
-  - 🇳🇱NL_9|1.5MB/s
-  - 🇫🇮FI_3|2.2MB/s
-  - 🇫🇮FI_1|2.7MB/s
-  - 🇳🇱NL_10|1.1MB/s
-  - 🇵🇱PL_3|3.2MB/s
-  - CA【机场推荐：https://a9a.xyz】11
-  - RU【机场推荐：https://a9a.xyz】9
   - NL【机场推荐：https://a9a.xyz】15
-  - RU【机场推荐：https://a9a.xyz】5
-  - DE【机场推荐：https://a9a.xyz】14
+  - FI【机场推荐：https://a9a.xyz】7
+  - RU【机场推荐：https://a9a.xyz】9
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - CA【机场推荐：https://a9a.xyz】3
-  - CA【机场推荐：https://a9a.xyz】12
-  - PL【机场推荐：https://a9a.xyz】13
-  - 🇳🇱NL_9|1.5MB/s
-  - 🇫🇮FI_3|2.2MB/s
-  - 🇫🇮FI_1|2.7MB/s
-  - 🇳🇱NL_10|1.1MB/s
-  - 🇵🇱PL_3|3.2MB/s
-  - CA【机场推荐：https://a9a.xyz】11
-  - RU【机场推荐：https://a9a.xyz】9
   - NL【机场推荐：https://a9a.xyz】15
-  - RU【机场推荐：https://a9a.xyz】5
-  - DE【机场推荐：https://a9a.xyz】14
+  - FI【机场推荐：https://a9a.xyz】7
+  - RU【机场推荐：https://a9a.xyz】9
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
