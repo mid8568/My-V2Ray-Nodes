@@ -27,6 +27,19 @@ proxies:
   reality-opts:
     public-key: NOw-idkk3OCn-N0IRS93leujH4ik-E749O2T5BYJQ0M
     short-id: 3cef317b
+- name: 🇩🇪DE_12|2.1MB/s
+  type: vless
+  server: de15.h1cloud.net
+  port: 25411
+  uuid: 440b5558-e701-4c6f-8de2-d24dcf1ebbe6
+  udp: true
+  encryption: none
+  tls: true
+  servername: www.cloudflare.com
+  client-fingerprint: firefox
+  reality-opts:
+    public-key: RqsWrGnYezKx24RfUMarjbnO-YanbeU5519Z1qQ4_Gk
+    short-id: 1d35e2801ba51023
 - name: FI【机场推荐：https://a9a.xyz】7
   type: vless
   server: 157.228.128.59
@@ -41,6 +54,54 @@ proxies:
   reality-opts:
     public-key: QnxkyscHouhaLDJHT47beyenVd4LHi62yfJIeRV01Ws
     short-id: 06e00e7c
+- name: 🇳🇱NL_8|2.2MB/s
+  type: vless
+  server: 5.42.117.160
+  port: 1443
+  uuid: 2db2d74d-f653-459c-818e-22a294e24175
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: www.apple.com
+  client-fingerprint: firefox
+  reality-opts:
+    public-key: ngTZPxjdNEZ9l-_62155NaUx4LmkjW7vVVWplrkqSlE
+- name: 🇴🇲OM_1|3.4MB/s
+  type: ss
+  server: ruot.ayucloudservices.nl
+  port: 35016
+  cipher: aes-128-gcm
+  password: 9c51ca33-a332-4de5-8677-5624e940097c
+  udp: true
+- name: 🇫🇮FI_1|2.4MB/s
+  type: vless
+  server: freefl.aiage.work
+  port: 443
+  uuid: 6338c01a-310e-42c3-bf4f-2a20e161054b
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: freefl.aiage.work
+  client-fingerprint: firefox
+  reality-opts:
+    public-key: EqN5QtvWGccdkmL5ZNVDBRxRhWgr6g_vr3ABT8Q2dW4
+    short-id: ff0ddf949624ef2a
+- name: DE【机场推荐：https://a9a.xyz】14
+  type: vless
+  server: 177.1.187.251
+  port: 443
+  uuid: 318c935d-c195-41d3-99ad-9bbcfdab3386
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: de2.srv.vbuste.ru
+  client-fingerprint: randomized
+  reality-opts:
+    public-key: 0-or5ogGhYbBgsVSrSC2Fhxyp2BN97Y9pqIdg61Qd08
+    short-id: 4be4110078ebed4a
 - name: RU【机场推荐：https://a9a.xyz】9
   type: vless
   server: 2.26.89.14
@@ -62,7 +123,12 @@ proxy-groups:
   - ⚡ 自动选择
   - DIRECT
   - NL【机场推荐：https://a9a.xyz】15
+  - 🇩🇪DE_12|2.1MB/s
   - FI【机场推荐：https://a9a.xyz】7
+  - 🇳🇱NL_8|2.2MB/s
+  - 🇴🇲OM_1|3.4MB/s
+  - 🇫🇮FI_1|2.4MB/s
+  - DE【机场推荐：https://a9a.xyz】14
   - RU【机场推荐：https://a9a.xyz】9
 - name: ⚡ 自动选择
   type: url-test
@@ -71,7 +137,12 @@ proxy-groups:
   tolerance: 50
   proxies:
   - NL【机场推荐：https://a9a.xyz】15
+  - 🇩🇪DE_12|2.1MB/s
   - FI【机场推荐：https://a9a.xyz】7
+  - 🇳🇱NL_8|2.2MB/s
+  - 🇴🇲OM_1|3.4MB/s
+  - 🇫🇮FI_1|2.4MB/s
+  - DE【机场推荐：https://a9a.xyz】14
   - RU【机场推荐：https://a9a.xyz】9
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
