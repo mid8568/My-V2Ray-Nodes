@@ -13,63 +13,43 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: 🇩🇪DE_1|1.1MB/s
+- name: 🇸🇬SG_2|2.3MB/s
   type: vless
-  server: 152.53.186.202
+  server: 88.216.191.10
   port: 443
-  uuid: 5538eaaa-ac3d-4414-a1f5-280212949ed9
+  uuid: 244d9eab-3311-40c7-b47f-4968dc3088a6
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: deinfo.chaosnetwork.app
+  servername: si1.lazeroe.com
   client-fingerprint: firefox
-- name: 🇸🇬SG_2|1.9MB/s
-  type: vless
-  server: sg4.oh-node.com
+  reality-opts:
+    public-key: drl7nndYdfzZY1aQ0eUAWmNV0nsHig2uDnu9siy9biQ
+    short-id: 868419504747f6de
+- name: 🇨🇦CA_1|1.9MB/s
+  type: ss
+  server: 15.175.213.130
   port: 443
-  uuid: 7cfd34ae-edad-4cc5-9d6f-066f7add7829
+  cipher: aes-256-cfb
+  password: amazonskr05
   udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.changiairport.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: I2PQq5bidT2RjVCJt2r-eSVpLNY61quSYgS2dseomF8
-    short-id: 1dd8558159ecd0
-- name: 节点日期：2026-10-15
-  type: vless
-  server: 3696b38bsg.murphyweb.sbs
-  port: 32134
-  uuid: 5b01dc2d-6892-49b8-8289-3f73a32e00e4
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: buylite.music.apple.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: OdTELUjAUKO_qr-O-uihaAZJAhA8GyIWVI6CpozVCU4
-    short-id: 6c6c7c97
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - 🇩🇪DE_1|1.1MB/s
-  - 🇸🇬SG_2|1.9MB/s
-  - 节点日期：2026-10-15
+  - 🇸🇬SG_2|2.3MB/s
+  - 🇨🇦CA_1|1.9MB/s
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇩🇪DE_1|1.1MB/s
-  - 🇸🇬SG_2|1.9MB/s
-  - 节点日期：2026-10-15
+  - 🇸🇬SG_2|2.3MB/s
+  - 🇨🇦CA_1|1.9MB/s
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
