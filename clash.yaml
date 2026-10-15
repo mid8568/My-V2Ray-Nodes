@@ -13,118 +13,52 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: 🇬🇧GB_7|2.0MB/s
+- name: 🇸🇬SG_1|4.1MB/s
   type: vless
-  server: 146.70.104.235
+  server: cf.090227.xyz
   port: 443
-  uuid: 698922a2-1ca5-4bfb-92fb-0aa7e779ce21
+  uuid: 9784bb19-3833-43ad-83b0-27ef8fc04ef2
   udp: true
   encryption: none
-  flow: xtls-rprx-vision
   tls: true
-  servername: www.datadoghq.com
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: FcvI0ncjwII1n6tnWQ6nLWuwRpk8hdYoYzYCi1sbhjY
-    short-id: 1c3ce7aa488b3e50
-- name: 🇫🇷FR_3|1.2MB/s
-  type: vless
-  server: 46.226.166.208
-  port: 14430
-  uuid: af827fd0-6381-426f-bc5e-dcd9a7baeaac
-  udp: true
-  encryption: none
+  servername: 20664.pages.dev
+  client-fingerprint: chrome
   network: ws
   ws-opts:
-    path: /vless
-    headers: {}
-- name: 🇩🇪DE_9|2.9MB/s
-  type: vmess
-  server: hgky2opr5Fr3nKjG.v.3dns.vip
+    path: /?ed=2048fp=random
+    headers:
+      Host: 20664.pages.dev
+- name: 🇳🇱NL_6|2.0MB/s
+  type: vless
+  server: 150.129.10.133
   port: 443
-  uuid: 545a503ba94849b38105e6a0fbc493e8
-  alterId: 0
-  cipher: auto
-  udp: true
-  tls: true
-  network: ws
-  ws-opts:
-    path: /ws-vmess
-    headers:
-      Host: hgky2opr5Fr3nKjG.v.3dns.vip
-- name: 🇳🇱NL_1|2.8MB/s
-  type: vless
-  server: mog.keyblack.site
-  port: 8444
-  uuid: ef8c7169-87fc-49ad-be91-1f3984ab446d
+  uuid: f310a861-cca2-4f6f-8db2-30102fccd0ae
   udp: true
   encryption: none
-  flow: xtls-rprx-vision
   tls: true
-  servername: www.cloudflare.com
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: DQGwrxOgoiyBDrbdFUofP88FGtxHDA2duzNXKkyxaig
-    short-id: 6ba85179e30d4fc2
-- name: 🇩🇪DE_1|1.3MB/s
+  servername: media-origin.lovkisport.blog
+  client-fingerprint: chrome
+  network: grpc
+  grpc-opts:
+    grpc-service-name: grpc
+- name: 🇳🇱NL_7|1.8MB/s
   type: vless
-  server: 193.188.21.253
-  port: 14430
-  uuid: 57f7772d-f5d6-4d8f-992d-5fa5e0d6da55
-  udp: true
-  encryption: none
-  servername: 193.188.21.253
-  network: ws
-  ws-opts:
-    path: /vless
-    headers:
-      Host: 193.188.21.253
-- name: 🇰🇷KR_1|2.1MB/s
-  type: vmess
-  server: zwRcf79GExd13VGH.v.3dns.vip
+  server: media-origin.lovkisport.blog
   port: 443
-  uuid: ad8685f2-5d17-411e-855c-1cc2ed5144a9
-  alterId: 0
-  cipher: auto
-  udp: true
-  tls: true
-  network: ws
-  ws-opts:
-    path: /ws-vmess
-    headers:
-      Host: zwRcf79GExd13VGH.v.3dns.vip
-- name: 🇵🇱PL_3|3.0MB/s
-  type: vless
-  server: 91.196.163.140
-  port: 10444
-  uuid: e86a3662-9b31-4d59-bc80-9e8644749b95
+  uuid: f310a861-cca2-4f6f-8db2-30102fccd0ae
   udp: true
   encryption: none
-  flow: xtls-rprx-vision
   tls: true
-  servername: video.yandex.ru
-  client-fingerprint: safari
-  reality-opts:
-    public-key: 0oTkcqwLTUNLnSOP-VUWErmy6usAIg-biBE6ioZO-Vo
-    short-id: 8debcf36f1cc69ff
-- name: 🇵🇱PL_1|1.1MB/s
-  type: vless
-  server: 91.196.163.140
-  port: 14430
-  uuid: e86a3662-9b31-4d59-bc80-9e8644749b95
-  udp: true
-  encryption: none
-  servername: 91.196.163.140
-  network: ws
-  ws-opts:
-    path: /vless
-    headers:
-      Host: 91.196.163.140
-- name: 🇺🇸US_9|1.8MB/s
+  servername: media-origin.lovkisport.blog
+  client-fingerprint: chrome
+  network: grpc
+  grpc-opts:
+    grpc-service-name: grpc
+- name: 🇺🇸US_2|1.2MB/s
   type: vless
   server: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
   port: 443
-  uuid: fe15a643-4c5e-e133-f560-3b79074162da
+  uuid: 996d5cc2-defd-b038-4728-6a450d1c373a
   udp: true
   encryption: none
   tls: true
@@ -132,64 +66,128 @@ proxies:
   client-fingerprint: chrome
   network: ws
   ws-opts:
-    path: /ws/fe15a643-4c5e-e133-f560-3b79074162da
+    path: /ws/996d5cc2-defd-b038-4728-6a450d1c373a
     headers:
       Host: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
-- name: 🇸🇪SE_1|1.9MB/s
+- name: 🇩🇪DE_5|2.0MB/s
   type: vless
-  server: 5.178.109.174
-  port: 14430
-  uuid: 80de563a-cac8-40ea-8cb0-4cb082dd92f9
+  server: b.a.eternalping4.ir
+  port: 503
+  uuid: 31729c96-4631-4133-a73c-8a472c222dec
   udp: true
   encryption: none
-  servername: 5.178.109.174
+  flow: xtls-rprx-vision
+  tls: true
+  servername: redirector.gvt1.com
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: cOSh1LkwAcwlj5AeUq3j9hJvSI0eTlRy6r0xMEA7mgQ
+    short-id: cf7982e83eabbdc9
+- name: 🇫🇷FR_4|2.7MB/s
+  type: vless
+  server: 140.248.186.45
+  port: 443
+  uuid: XpnTeam-6
+  udp: true
+  encryption: none
+  tls: true
+  servername: ssl.fastly.com
+  client-fingerprint: chrome
   network: ws
   ws-opts:
-    path: /vless
+    path: /
     headers:
-      Host: 5.178.109.174
-- name: 🇵🇱PL_2|2.1MB/s
+      Host: Appxdn.global.ssl.fastly.net
+- name: 🇫🇷FR_2|3.2MB/s
   type: vless
-  server: 45.137.43.168
-  port: 10443
-  uuid: b4cc503a-c352-4775-85ad-fc982086884a
+  server: 199.232.78.160
+  port: 443
+  uuid: XpnTeam-5
   udp: true
   encryption: none
-  servername: 45.137.43.168
+  tls: true
+  servername: ssl.fastly.com
+  client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: Appxdn.global.ssl.fastly.net
+- name: 🇳🇱NL_1|2.5MB/s
+  type: vless
+  server: nl5.hap-plus.ru
+  port: 8443
+  uuid: 05d7a479-a099-40cf-aecf-41aa934767b0
+  udp: true
+  encryption: none
+  tls: true
+  servername: nl5.hap-plus.ru
+  client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /api/v1/events
+    headers:
+      Host: nl5.hap-plus.ru
+- name: 节点日期：2026-10-15
+  type: vless
+  server: 3696b38bsg.murphyweb.sbs
+  port: 32134
+  uuid: 5b01dc2d-6892-49b8-8289-3f73a32e00e4
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: buylite.music.apple.com
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: OdTELUjAUKO_qr-O-uihaAZJAhA8GyIWVI6CpozVCU4
+    short-id: 6c6c7c97
+- name: 🇭🇰HK_1|3.2MB/s
+  type: vless
+  server: hk03.ccdn3.work
+  port: 798
+  uuid: fc12fb20-4380-11ec-8c97-d707e267af0b
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: i1.hdslb.com
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: czEoNozTky8HvZ2j4Tnkr6c9L-rAhsdoaBvEz1vjAkU
+    short-id: 6aa9279c1fbab9c9
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - 🇬🇧GB_7|2.0MB/s
-  - 🇫🇷FR_3|1.2MB/s
-  - 🇩🇪DE_9|2.9MB/s
-  - 🇳🇱NL_1|2.8MB/s
-  - 🇩🇪DE_1|1.3MB/s
-  - 🇰🇷KR_1|2.1MB/s
-  - 🇵🇱PL_3|3.0MB/s
-  - 🇵🇱PL_1|1.1MB/s
-  - 🇺🇸US_9|1.8MB/s
-  - 🇸🇪SE_1|1.9MB/s
-  - 🇵🇱PL_2|2.1MB/s
+  - 🇸🇬SG_1|4.1MB/s
+  - 🇳🇱NL_6|2.0MB/s
+  - 🇳🇱NL_7|1.8MB/s
+  - 🇺🇸US_2|1.2MB/s
+  - 🇩🇪DE_5|2.0MB/s
+  - 🇫🇷FR_4|2.7MB/s
+  - 🇫🇷FR_2|3.2MB/s
+  - 🇳🇱NL_1|2.5MB/s
+  - 节点日期：2026-10-15
+  - 🇭🇰HK_1|3.2MB/s
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇬🇧GB_7|2.0MB/s
-  - 🇫🇷FR_3|1.2MB/s
-  - 🇩🇪DE_9|2.9MB/s
-  - 🇳🇱NL_1|2.8MB/s
-  - 🇩🇪DE_1|1.3MB/s
-  - 🇰🇷KR_1|2.1MB/s
-  - 🇵🇱PL_3|3.0MB/s
-  - 🇵🇱PL_1|1.1MB/s
-  - 🇺🇸US_9|1.8MB/s
-  - 🇸🇪SE_1|1.9MB/s
-  - 🇵🇱PL_2|2.1MB/s
+  - 🇸🇬SG_1|4.1MB/s
+  - 🇳🇱NL_6|2.0MB/s
+  - 🇳🇱NL_7|1.8MB/s
+  - 🇺🇸US_2|1.2MB/s
+  - 🇩🇪DE_5|2.0MB/s
+  - 🇫🇷FR_4|2.7MB/s
+  - 🇫🇷FR_2|3.2MB/s
+  - 🇳🇱NL_1|2.5MB/s
+  - 节点日期：2026-10-15
+  - 🇭🇰HK_1|3.2MB/s
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
