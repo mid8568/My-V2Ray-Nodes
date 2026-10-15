@@ -13,121 +13,31 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: 🇸🇬SG_1|4.1MB/s
+- name: 🇩🇪DE_1|1.1MB/s
   type: vless
-  server: cf.090227.xyz
+  server: 152.53.186.202
   port: 443
-  uuid: 9784bb19-3833-43ad-83b0-27ef8fc04ef2
-  udp: true
-  encryption: none
-  tls: true
-  servername: 20664.pages.dev
-  client-fingerprint: chrome
-  network: ws
-  ws-opts:
-    path: /?ed=2048fp=random
-    headers:
-      Host: 20664.pages.dev
-- name: 🇳🇱NL_6|2.0MB/s
-  type: vless
-  server: 150.129.10.133
-  port: 443
-  uuid: f310a861-cca2-4f6f-8db2-30102fccd0ae
-  udp: true
-  encryption: none
-  tls: true
-  servername: media-origin.lovkisport.blog
-  client-fingerprint: chrome
-  network: grpc
-  grpc-opts:
-    grpc-service-name: grpc
-- name: 🇳🇱NL_7|1.8MB/s
-  type: vless
-  server: media-origin.lovkisport.blog
-  port: 443
-  uuid: f310a861-cca2-4f6f-8db2-30102fccd0ae
-  udp: true
-  encryption: none
-  tls: true
-  servername: media-origin.lovkisport.blog
-  client-fingerprint: chrome
-  network: grpc
-  grpc-opts:
-    grpc-service-name: grpc
-- name: 🇺🇸US_2|1.2MB/s
-  type: vless
-  server: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
-  port: 443
-  uuid: 996d5cc2-defd-b038-4728-6a450d1c373a
-  udp: true
-  encryption: none
-  tls: true
-  servername: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
-  client-fingerprint: chrome
-  network: ws
-  ws-opts:
-    path: /ws/996d5cc2-defd-b038-4728-6a450d1c373a
-    headers:
-      Host: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
-- name: 🇩🇪DE_5|2.0MB/s
-  type: vless
-  server: b.a.eternalping4.ir
-  port: 503
-  uuid: 31729c96-4631-4133-a73c-8a472c222dec
+  uuid: 5538eaaa-ac3d-4414-a1f5-280212949ed9
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: redirector.gvt1.com
+  servername: deinfo.chaosnetwork.app
+  client-fingerprint: firefox
+- name: 🇸🇬SG_2|1.9MB/s
+  type: vless
+  server: sg4.oh-node.com
+  port: 443
+  uuid: 7cfd34ae-edad-4cc5-9d6f-066f7add7829
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: www.changiairport.com
   client-fingerprint: chrome
   reality-opts:
-    public-key: cOSh1LkwAcwlj5AeUq3j9hJvSI0eTlRy6r0xMEA7mgQ
-    short-id: cf7982e83eabbdc9
-- name: 🇫🇷FR_4|2.7MB/s
-  type: vless
-  server: 140.248.186.45
-  port: 443
-  uuid: XpnTeam-6
-  udp: true
-  encryption: none
-  tls: true
-  servername: ssl.fastly.com
-  client-fingerprint: chrome
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: Appxdn.global.ssl.fastly.net
-- name: 🇫🇷FR_2|3.2MB/s
-  type: vless
-  server: 199.232.78.160
-  port: 443
-  uuid: XpnTeam-5
-  udp: true
-  encryption: none
-  tls: true
-  servername: ssl.fastly.com
-  client-fingerprint: chrome
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: Appxdn.global.ssl.fastly.net
-- name: 🇳🇱NL_1|2.5MB/s
-  type: vless
-  server: nl5.hap-plus.ru
-  port: 8443
-  uuid: 05d7a479-a099-40cf-aecf-41aa934767b0
-  udp: true
-  encryption: none
-  tls: true
-  servername: nl5.hap-plus.ru
-  client-fingerprint: chrome
-  network: ws
-  ws-opts:
-    path: /api/v1/events
-    headers:
-      Host: nl5.hap-plus.ru
+    public-key: I2PQq5bidT2RjVCJt2r-eSVpLNY61quSYgS2dseomF8
+    short-id: 1dd8558159ecd0
 - name: 节点日期：2026-10-15
   type: vless
   server: 3696b38bsg.murphyweb.sbs
@@ -142,52 +52,24 @@ proxies:
   reality-opts:
     public-key: OdTELUjAUKO_qr-O-uihaAZJAhA8GyIWVI6CpozVCU4
     short-id: 6c6c7c97
-- name: 🇭🇰HK_1|3.2MB/s
-  type: vless
-  server: hk03.ccdn3.work
-  port: 798
-  uuid: fc12fb20-4380-11ec-8c97-d707e267af0b
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: i1.hdslb.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: czEoNozTky8HvZ2j4Tnkr6c9L-rAhsdoaBvEz1vjAkU
-    short-id: 6aa9279c1fbab9c9
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - 🇸🇬SG_1|4.1MB/s
-  - 🇳🇱NL_6|2.0MB/s
-  - 🇳🇱NL_7|1.8MB/s
-  - 🇺🇸US_2|1.2MB/s
-  - 🇩🇪DE_5|2.0MB/s
-  - 🇫🇷FR_4|2.7MB/s
-  - 🇫🇷FR_2|3.2MB/s
-  - 🇳🇱NL_1|2.5MB/s
+  - 🇩🇪DE_1|1.1MB/s
+  - 🇸🇬SG_2|1.9MB/s
   - 节点日期：2026-10-15
-  - 🇭🇰HK_1|3.2MB/s
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇸🇬SG_1|4.1MB/s
-  - 🇳🇱NL_6|2.0MB/s
-  - 🇳🇱NL_7|1.8MB/s
-  - 🇺🇸US_2|1.2MB/s
-  - 🇩🇪DE_5|2.0MB/s
-  - 🇫🇷FR_4|2.7MB/s
-  - 🇫🇷FR_2|3.2MB/s
-  - 🇳🇱NL_1|2.5MB/s
+  - 🇩🇪DE_1|1.1MB/s
+  - 🇸🇬SG_2|1.9MB/s
   - 节点日期：2026-10-15
-  - 🇭🇰HK_1|3.2MB/s
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
