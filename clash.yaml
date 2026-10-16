@@ -13,19 +13,14 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: US【机场推荐：https://a9a.xyz】8
+- name: US【机场推荐：https://a9a.xyz】5
   type: vless
   server: 45.138.100.248
-  port: 14430
+  port: 10443
   uuid: ae908ff5-f749-402c-af25-e6e9aef4d6bb
   udp: true
   encryption: none
   servername: 45.138.100.248
-  network: ws
-  ws-opts:
-    path: /vless
-    headers:
-      Host: 45.138.100.248
 - name: CA【机场推荐：https://a9a.xyz】10
   type: vmess
   server: 172.66.203.67
@@ -61,56 +56,124 @@ proxies:
   reality-opts:
     public-key: 0oTkcqwLTUNLnSOP-VUWErmy6usAIg-biBE6ioZO-Vo
     short-id: 8debcf36f1cc69ff
-- name: US【机场推荐：https://a9a.xyz】22
+- name: 🇫🇮FI_1|2.7MB/s
   type: vless
-  server: 66.241.125.96
+  server: 152.233.71.81
   port: 443
-  uuid: 996d5cc2-defd-b038-4728-6a450d1c373a
-  udp: true
-  encryption: none
-  tls: true
-  servername: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
-  client-fingerprint: random
-  network: ws
-  ws-opts:
-    path: /ws/996d5cc2-defd-b038-4728-6a450d1c373a
-    headers:
-      Host: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
-- name: 节点日期：2026-10-16
-  type: vless
-  server: 5.253.29.254
-  port: 14430
-  uuid: c7c27192-60a5-4ce1-b613-95270d82309d
-  udp: true
-  encryption: none
-  servername: 5.253.29.254
-  network: ws
-  ws-opts:
-    path: /vless
-    headers:
-      Host: 5.253.29.254
-- name: JP【机场推荐：https://a9a.xyz】17
-  type: vless
-  server: 38.180.201.12
-  port: 9443
-  uuid: fe0721ac-c577-4938-b7ca-8ab5f43bb8da
+  uuid: 741809be-e44e-000b-b411-bf66f0ae3860
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: www.amazon.com
+  servername: brointelengence.com
   client-fingerprint: random
   reality-opts:
-    public-key: 0hIFPaEn4RdFib8_eP8HYxMywR5izEwM3JA2W1Zo8U4
-    short-id: b390142456517acc
-- name: US【机场推荐：https://a9a.xyz】5
+    public-key: 6VMgXXhZdJCiOG05EyK_zTHh00kpFGrZJeZIEPgqhjY
+    short-id: 1c3e8241a8743df9
+- name: 🇳🇱NL_1|2.7MB/s
   type: vless
-  server: 45.138.100.248
-  port: 10443
-  uuid: ae908ff5-f749-402c-af25-e6e9aef4d6bb
+  server: 2.27.21.85
+  port: 443
+  uuid: e625f8ef-f935-4c7d-a259-0f154b6842fd
   udp: true
   encryption: none
-  servername: 45.138.100.248
+  flow: xtls-rprx-vision
+  tls: true
+  servername: seal-nl1.bypassme.online
+  client-fingerprint: firefox
+  reality-opts:
+    public-key: jQC3Kmmbu-CfUKlQaeuSn4I8dbqAZhpgihZhWu1SvBk
+    short-id: 6b69118a7847c4c3
+- name: 🇸🇬SG_5|2.3MB/s
+  type: vless
+  server: 104.17.117.137
+  port: 443
+  uuid: b8d8a5b0-867f-4491-b4e4-30edc04bb10e
+  udp: true
+  encryption: none
+  tls: true
+  servername: u.srilankangrill.online
+  client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: u.srilankangrill.online
+- name: 🇸🇬SG_3|2.2MB/s
+  type: vless
+  server: 104.16.10.198
+  port: 443
+  uuid: b8d8a5b0-867f-4491-b4e4-30edc04bb10e
+  udp: true
+  encryption: none
+  tls: true
+  servername: u.srilankangrill.online
+  client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: u.srilankangrill.online
+- name: 🇸🇬SG_7|1.7MB/s
+  type: vless
+  server: 104.16.10.199
+  port: 443
+  uuid: b8d8a5b0-867f-4491-b4e4-30edc04bb10e
+  udp: true
+  encryption: none
+  tls: true
+  servername: u.srilankangrill.online
+  client-fingerprint: unsafe
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: u.srilankangrill.online
+- name: 🇸🇬SG_6|2.3MB/s
+  type: vless
+  server: 104.21.60.109
+  port: 443
+  uuid: b8d8a5b0-867f-4491-b4e4-30edc04bb10e
+  udp: true
+  encryption: none
+  tls: true
+  servername: u.srilankangrill.online
+  client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: u.srilankangrill.online
+- name: 🇸🇬SG_2|2.2MB/s
+  type: vless
+  server: 104.16.10.10
+  port: 443
+  uuid: b8d8a5b0-867f-4491-b4e4-30edc04bb10e
+  udp: true
+  encryption: none
+  tls: true
+  servername: u.srilankangrill.online
+  client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: u.srilankangrill.online
+- name: 🇸🇬SG_4|2.6MB/s
+  type: vless
+  server: 104.16.10.104
+  port: 443
+  uuid: b8d8a5b0-867f-4491-b4e4-30edc04bb10e
+  udp: true
+  encryption: none
+  tls: true
+  servername: u.srilankangrill.online
+  client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: u.srilankangrill.online
 - name: SG【机场推荐：https://a9a.xyz】20
   type: vless
   server: 147.93.173.45
@@ -125,20 +188,48 @@ proxies:
   reality-opts:
     public-key: 0oTkcqwLTUNLnSOP-VUWErmy6usAIg-biBE6ioZO-Vo
     short-id: 8debcf36f1cc69ff
-- name: FR【机场推荐：https://a9a.xyz】25
+- name: 🇸🇬SG_1|1.1MB/s
   type: vless
-  server: 138.124.70.41
-  port: 14430
-  uuid: 6cc745e3-4eb9-46c8-a4a1-85dee7b87edc
+  server: 141.193.213.20
+  port: 8443
+  uuid: 29c3dd6b-b164-40ca-a0d5-f06aca52a8b2
   udp: true
   encryption: none
-  servername: 138.124.70.41
+  tls: true
+  servername: u.srilankangrill.online
   client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: u.srilankangrill.online
+- name: 🇫🇮FI_3|1.0MB/s
+  type: vless
+  server: 31.76.227.60
+  port: 443
+  uuid: 05c8eabe-96af-4db2-bb2f-a24fa84344ba
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: assets-mi-29.spbstudentlife.com
+  client-fingerprint: randomized
+  reality-opts:
+    public-key: CcMEJ-JOS4clB3gXbc6wXgzkiJQbyNpKY90I8B6AqyU
+    short-id: 4c188683e2c14a3c
+- name: DE【机场推荐：https://a9a.xyz】13
+  type: vless
+  server: 77.221.157.213
+  port: 14430
+  uuid: 1d006ad5-1de1-4520-a5f4-875dae1b0a5d
+  udp: true
+  encryption: none
+  servername: 77.221.157.213
   network: ws
   ws-opts:
     path: /vless
     headers:
-      Host: 138.124.70.41
+      Host: 77.221.157.213
 - name: HK【机场推荐：https://a9a.xyz】19
   type: vless
   server: 103.41.7.43
@@ -153,57 +244,67 @@ proxies:
   reality-opts:
     public-key: Ub1ffFeVtG2zd_t001wgmuhojSAxvaVwuo_pAapScBA
     short-id: be61aab9c7ffd106
-- name: US【机场推荐：https://a9a.xyz】11
+- name: US【机场推荐：https://a9a.xyz】8
   type: vless
-  server: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
-  port: 443
-  uuid: 996d5cc2-defd-b038-4728-6a450d1c373a
+  server: 45.138.100.248
+  port: 14430
+  uuid: ae908ff5-f749-402c-af25-e6e9aef4d6bb
   udp: true
   encryption: none
-  tls: true
-  servername: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
-  client-fingerprint: chrome
+  servername: 45.138.100.248
   network: ws
   ws-opts:
-    path: /ws/996d5cc2-defd-b038-4728-6a450d1c373a
+    path: /vless
     headers:
-      Host: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
+      Host: 45.138.100.248
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - US【机场推荐：https://a9a.xyz】8
+  - US【机场推荐：https://a9a.xyz】5
   - CA【机场推荐：https://a9a.xyz】10
   - NL【机场推荐：https://a9a.xyz】1
   - GB【机场推荐：https://a9a.xyz】14
-  - US【机场推荐：https://a9a.xyz】22
-  - 节点日期：2026-10-16
-  - JP【机场推荐：https://a9a.xyz】17
-  - US【机场推荐：https://a9a.xyz】5
+  - 🇫🇮FI_1|2.7MB/s
+  - 🇳🇱NL_1|2.7MB/s
+  - 🇸🇬SG_5|2.3MB/s
+  - 🇸🇬SG_3|2.2MB/s
+  - 🇸🇬SG_7|1.7MB/s
+  - 🇸🇬SG_6|2.3MB/s
+  - 🇸🇬SG_2|2.2MB/s
+  - 🇸🇬SG_4|2.6MB/s
   - SG【机场推荐：https://a9a.xyz】20
-  - FR【机场推荐：https://a9a.xyz】25
+  - 🇸🇬SG_1|1.1MB/s
+  - 🇫🇮FI_3|1.0MB/s
+  - DE【机场推荐：https://a9a.xyz】13
   - HK【机场推荐：https://a9a.xyz】19
-  - US【机场推荐：https://a9a.xyz】11
+  - US【机场推荐：https://a9a.xyz】8
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - US【机场推荐：https://a9a.xyz】8
+  - US【机场推荐：https://a9a.xyz】5
   - CA【机场推荐：https://a9a.xyz】10
   - NL【机场推荐：https://a9a.xyz】1
   - GB【机场推荐：https://a9a.xyz】14
-  - US【机场推荐：https://a9a.xyz】22
-  - 节点日期：2026-10-16
-  - JP【机场推荐：https://a9a.xyz】17
-  - US【机场推荐：https://a9a.xyz】5
+  - 🇫🇮FI_1|2.7MB/s
+  - 🇳🇱NL_1|2.7MB/s
+  - 🇸🇬SG_5|2.3MB/s
+  - 🇸🇬SG_3|2.2MB/s
+  - 🇸🇬SG_7|1.7MB/s
+  - 🇸🇬SG_6|2.3MB/s
+  - 🇸🇬SG_2|2.2MB/s
+  - 🇸🇬SG_4|2.6MB/s
   - SG【机场推荐：https://a9a.xyz】20
-  - FR【机场推荐：https://a9a.xyz】25
+  - 🇸🇬SG_1|1.1MB/s
+  - 🇫🇮FI_3|1.0MB/s
+  - DE【机场推荐：https://a9a.xyz】13
   - HK【机场推荐：https://a9a.xyz】19
-  - US【机场推荐：https://a9a.xyz】11
+  - US【机场推荐：https://a9a.xyz】8
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
