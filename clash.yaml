@@ -13,6 +13,19 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
+- name: US【机场推荐：https://a9a.xyz】8
+  type: vless
+  server: 45.138.100.248
+  port: 14430
+  uuid: ae908ff5-f749-402c-af25-e6e9aef4d6bb
+  udp: true
+  encryption: none
+  servername: 45.138.100.248
+  network: ws
+  ws-opts:
+    path: /vless
+    headers:
+      Host: 45.138.100.248
 - name: CA【机场推荐：https://a9a.xyz】10
   type: vmess
   server: 172.66.203.67
@@ -34,77 +47,20 @@ proxies:
   cipher: chacha20-ietf-poly1305
   password: oZIoA69Q8yhcQV8ka3Pa3A
   udp: true
-- name: JP【机场推荐：https://a9a.xyz】17
+- name: GB【机场推荐：https://a9a.xyz】14
   type: vless
-  server: 38.180.201.12
-  port: 9443
-  uuid: fe0721ac-c577-4938-b7ca-8ab5f43bb8da
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.amazon.com
-  client-fingerprint: random
-  reality-opts:
-    public-key: 0hIFPaEn4RdFib8_eP8HYxMywR5izEwM3JA2W1Zo8U4
-    short-id: b390142456517acc
-- name: 🇦🇹AT_3|1.6MB/s
-  type: vless
-  server: api.mediapereval.cc
-  port: 443
-  uuid: 082f5694-9019-4110-b67b-8125dbb9bab8
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: api.mediapereval.cc
-  client-fingerprint: qq
-  reality-opts:
-    public-key: r5WB5FnSCt4eeBC1FJMfkWHbzsMuabo0Rc6wuAhlZUs
-    short-id: a8
-- name: SG【机场推荐：https://a9a.xyz】20
-  type: vless
-  server: 147.93.173.45
+  server: 138.124.125.193
   port: 10444
-  uuid: 75c5f51b-d548-4eab-a26e-aa10fc3dbc7b
+  uuid: e57ce64d-5a1a-4a90-96df-9e1bd3ad26e4
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: video.yandex.ru
+  servername: ads.x5.ru
   client-fingerprint: safari
   reality-opts:
     public-key: 0oTkcqwLTUNLnSOP-VUWErmy6usAIg-biBE6ioZO-Vo
     short-id: 8debcf36f1cc69ff
-- name: US【机场推荐：https://a9a.xyz】11
-  type: vless
-  server: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
-  port: 443
-  uuid: 996d5cc2-defd-b038-4728-6a450d1c373a
-  udp: true
-  encryption: none
-  tls: true
-  servername: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
-  client-fingerprint: chrome
-  network: ws
-  ws-opts:
-    path: /ws/996d5cc2-defd-b038-4728-6a450d1c373a
-    headers:
-      Host: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
-- name: 🇫🇮FI_1|1.6MB/s
-  type: vless
-  server: 31.76.227.60
-  port: 443
-  uuid: 05c8eabe-96af-4db2-bb2f-a24fa84344ba
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: assets-mi-29.spbstudentlife.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: CcMEJ-JOS4clB3gXbc6wXgzkiJQbyNpKY90I8B6AqyU
-    short-id: 4c188683e2c14a3c
 - name: US【机场推荐：https://a9a.xyz】22
   type: vless
   server: 66.241.125.96
@@ -120,6 +76,69 @@ proxies:
     path: /ws/996d5cc2-defd-b038-4728-6a450d1c373a
     headers:
       Host: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
+- name: 节点日期：2026-10-16
+  type: vless
+  server: 5.253.29.254
+  port: 14430
+  uuid: c7c27192-60a5-4ce1-b613-95270d82309d
+  udp: true
+  encryption: none
+  servername: 5.253.29.254
+  network: ws
+  ws-opts:
+    path: /vless
+    headers:
+      Host: 5.253.29.254
+- name: JP【机场推荐：https://a9a.xyz】17
+  type: vless
+  server: 38.180.201.12
+  port: 9443
+  uuid: fe0721ac-c577-4938-b7ca-8ab5f43bb8da
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: www.amazon.com
+  client-fingerprint: random
+  reality-opts:
+    public-key: 0hIFPaEn4RdFib8_eP8HYxMywR5izEwM3JA2W1Zo8U4
+    short-id: b390142456517acc
+- name: US【机场推荐：https://a9a.xyz】5
+  type: vless
+  server: 45.138.100.248
+  port: 10443
+  uuid: ae908ff5-f749-402c-af25-e6e9aef4d6bb
+  udp: true
+  encryption: none
+  servername: 45.138.100.248
+- name: SG【机场推荐：https://a9a.xyz】20
+  type: vless
+  server: 147.93.173.45
+  port: 10444
+  uuid: 75c5f51b-d548-4eab-a26e-aa10fc3dbc7b
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: video.yandex.ru
+  client-fingerprint: safari
+  reality-opts:
+    public-key: 0oTkcqwLTUNLnSOP-VUWErmy6usAIg-biBE6ioZO-Vo
+    short-id: 8debcf36f1cc69ff
+- name: FR【机场推荐：https://a9a.xyz】25
+  type: vless
+  server: 138.124.70.41
+  port: 14430
+  uuid: 6cc745e3-4eb9-46c8-a4a1-85dee7b87edc
+  udp: true
+  encryption: none
+  servername: 138.124.70.41
+  client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /vless
+    headers:
+      Host: 138.124.70.41
 - name: HK【机场推荐：https://a9a.xyz】19
   type: vless
   server: 103.41.7.43
@@ -134,67 +153,57 @@ proxies:
   reality-opts:
     public-key: Ub1ffFeVtG2zd_t001wgmuhojSAxvaVwuo_pAapScBA
     short-id: be61aab9c7ffd106
-- name: GB【机场推荐：https://a9a.xyz】14
+- name: US【机场推荐：https://a9a.xyz】11
   type: vless
-  server: 138.124.125.193
-  port: 10444
-  uuid: e57ce64d-5a1a-4a90-96df-9e1bd3ad26e4
+  server: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
+  port: 443
+  uuid: 996d5cc2-defd-b038-4728-6a450d1c373a
   udp: true
   encryption: none
-  flow: xtls-rprx-vision
   tls: true
-  servername: ads.x5.ru
-  client-fingerprint: safari
-  reality-opts:
-    public-key: 0oTkcqwLTUNLnSOP-VUWErmy6usAIg-biBE6ioZO-Vo
-    short-id: 8debcf36f1cc69ff
-- name: DE【机场推荐：https://a9a.xyz】13
-  type: vless
-  server: 77.221.157.213
-  port: 14430
-  uuid: 1d006ad5-1de1-4520-a5f4-875dae1b0a5d
-  udp: true
-  encryption: none
-  servername: 77.221.157.213
+  servername: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
+  client-fingerprint: chrome
   network: ws
   ws-opts:
-    path: /vless
+    path: /ws/996d5cc2-defd-b038-4728-6a450d1c373a
     headers:
-      Host: 77.221.157.213
+      Host: 04b51566-9333-492b-b680-8f80752411f9.fly.dev
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
+  - US【机场推荐：https://a9a.xyz】8
   - CA【机场推荐：https://a9a.xyz】10
   - NL【机场推荐：https://a9a.xyz】1
-  - JP【机场推荐：https://a9a.xyz】17
-  - 🇦🇹AT_3|1.6MB/s
-  - SG【机场推荐：https://a9a.xyz】20
-  - US【机场推荐：https://a9a.xyz】11
-  - 🇫🇮FI_1|1.6MB/s
-  - US【机场推荐：https://a9a.xyz】22
-  - HK【机场推荐：https://a9a.xyz】19
   - GB【机场推荐：https://a9a.xyz】14
-  - DE【机场推荐：https://a9a.xyz】13
+  - US【机场推荐：https://a9a.xyz】22
+  - 节点日期：2026-10-16
+  - JP【机场推荐：https://a9a.xyz】17
+  - US【机场推荐：https://a9a.xyz】5
+  - SG【机场推荐：https://a9a.xyz】20
+  - FR【机场推荐：https://a9a.xyz】25
+  - HK【机场推荐：https://a9a.xyz】19
+  - US【机场推荐：https://a9a.xyz】11
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
+  - US【机场推荐：https://a9a.xyz】8
   - CA【机场推荐：https://a9a.xyz】10
   - NL【机场推荐：https://a9a.xyz】1
-  - JP【机场推荐：https://a9a.xyz】17
-  - 🇦🇹AT_3|1.6MB/s
-  - SG【机场推荐：https://a9a.xyz】20
-  - US【机场推荐：https://a9a.xyz】11
-  - 🇫🇮FI_1|1.6MB/s
-  - US【机场推荐：https://a9a.xyz】22
-  - HK【机场推荐：https://a9a.xyz】19
   - GB【机场推荐：https://a9a.xyz】14
-  - DE【机场推荐：https://a9a.xyz】13
+  - US【机场推荐：https://a9a.xyz】22
+  - 节点日期：2026-10-16
+  - JP【机场推荐：https://a9a.xyz】17
+  - US【机场推荐：https://a9a.xyz】5
+  - SG【机场推荐：https://a9a.xyz】20
+  - FR【机场推荐：https://a9a.xyz】25
+  - HK【机场推荐：https://a9a.xyz】19
+  - US【机场推荐：https://a9a.xyz】11
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
