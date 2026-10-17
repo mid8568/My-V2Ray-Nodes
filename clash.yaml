@@ -13,18 +13,22 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: US【机场推荐：https://a9a.xyz】34
+- name: 🇺🇸US_19|2.3MB/s
   type: vless
-  server: 198.98.48.110
+  server: grimness-backlogs.cdn-content.com
   port: 443
-  uuid: 30e52776-55ac-3cb4-8d36-e2910f07e2c3
+  uuid: 85ab5d03-5d67-4a95-b1f5-3f1f62d64625
   udp: true
   encryption: none
-  flow: xtls-rprx-vision-udp443
   tls: true
-  servername: u695098u8fad5a44s552.gogocs.xyz
+  servername: grimness-backlogs.cdn-content.com
   client-fingerprint: chrome
-- name: FI【机场推荐：https://a9a.xyz】3
+  network: ws
+  ws-opts:
+    path: /ws
+    headers:
+      Host: grimness-backlogs.cdn-content.com
+- name: 🇫🇮FI_1|2.3MB/s
   type: vless
   server: 152.233.71.81
   port: 443
@@ -34,106 +38,106 @@ proxies:
   flow: xtls-rprx-vision
   tls: true
   servername: brointelengence.com
-  client-fingerprint: random
+  client-fingerprint: chrome
   reality-opts:
     public-key: 6VMgXXhZdJCiOG05EyK_zTHh00kpFGrZJeZIEPgqhjY
     short-id: 1c3e8241a8743df9
-- name: HU【机场推荐：https://a9a.xyz】5
+- name: 🇫🇮FI_3|3.9MB/s
   type: vless
-  server: hu1.aiage.work
+  server: 152.233.71.81
   port: 443
-  uuid: 6338c01a-310e-42c3-bf4f-2a20e161054b
+  uuid: 741809be-e44e-000b-b411-bf66f0ae3860
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: hu1.aiage.work
+  servername: brointelengence.com
   client-fingerprint: chrome
   reality-opts:
-    public-key: mPzNFHO4pZMzFviRkIhRd7xDUz4dMHyI-flZLOrgDVg
-    short-id: f8379ce795f2e5ed
-- name: JP【机场推荐：https://a9a.xyz】7
+    public-key: 6VMgXXhZdJCiOG05EyK_zTHh00kpFGrZJeZIEPgqhjY
+    short-id: 1c3e8241a8743df9
+- name: 🇵🇱PL_3|3.4MB/s
   type: vless
-  server: funagfrdfs.alixxplay.com
-  port: 56656
-  uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
+  server: 189.74.116.18
+  port: 443
+  uuid: 082f5694-9019-4110-b67b-8125dbb9bab8
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: cdn-dynmedia-1.microsoft.com
-  client-fingerprint: ios
+  servername: api.mediapolyana.cc
+  client-fingerprint: firefox
   reality-opts:
-    public-key: QFM3jTzb5n-E9L2cfFo6GHqioGmIkjmG60l8wXA4IXc
-    short-id: aae6d935
-- name: SG【机场推荐：https://a9a.xyz】14
+    public-key: r5WB5FnSCt4eeBC1FJMfkWHbzsMuabo0Rc6wuAhlZUs
+    short-id: a8
+- name: 🇵🇱PL_1|2.1MB/s
   type: vless
-  server: funagfrdfs.alixxplay.com
-  port: 34379
-  uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
+  server: api.mediapolyana.cc
+  port: 443
+  uuid: 082f5694-9019-4110-b67b-8125dbb9bab8
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: us1p1.xn--ghq880n3na965a.com
+  servername: api.mediapolyana.cc
+  client-fingerprint: edge
+  reality-opts:
+    public-key: r5WB5FnSCt4eeBC1FJMfkWHbzsMuabo0Rc6wuAhlZUs
+    short-id: a8
+- name: 🇦🇹AT_1|2.9MB/s
+  type: vless
+  server: 189.74.115.16
+  port: 443
+  uuid: 082f5694-9019-4110-b67b-8125dbb9bab8
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: api.mediakaskad.cc
+  client-fingerprint: firefox
+  reality-opts:
+    public-key: r5WB5FnSCt4eeBC1FJMfkWHbzsMuabo0Rc6wuAhlZUs
+    short-id: a8
+- name: 🇫🇮FI_2|1.4MB/s
+  type: vless
+  server: 31.76.227.60
+  port: 443
+  uuid: 05c8eabe-96af-4db2-bb2f-a24fa84344ba
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: assets-mi-29.spbstudentlife.com
   client-fingerprint: chrome
   reality-opts:
-    public-key: KfOrtENkHAXDFlsCluw6fv62Q-WuJXCKI98XZihtemA
-    short-id: e51285e3
-- name: SG【机场推荐：https://a9a.xyz】8
-  type: vless
-  server: funagfrdfs.alixxplay.com
-  port: 35544
-  uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: iosapps.itunes.apple.com
-  client-fingerprint: ios
-  reality-opts:
-    public-key: HrcXRHtsitc_AVlN-_8fZuRgaP-Mqa_9JJotI9OnkVc
-    short-id: 25c79e5856c7
-- name: HK【机场推荐：https://a9a.xyz】17
-  type: vless
-  server: 103.41.7.43
-  port: 2062
-  uuid: d83592a3-a94f-4f7e-b105-b3deedde2a7a
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.apple.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: Ub1ffFeVtG2zd_t001wgmuhojSAxvaVwuo_pAapScBA
-    short-id: be61aab9c7ffd106
+    public-key: CcMEJ-JOS4clB3gXbc6wXgzkiJQbyNpKY90I8B6AqyU
+    short-id: 4c188683e2c14a3c
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - US【机场推荐：https://a9a.xyz】34
-  - FI【机场推荐：https://a9a.xyz】3
-  - HU【机场推荐：https://a9a.xyz】5
-  - JP【机场推荐：https://a9a.xyz】7
-  - SG【机场推荐：https://a9a.xyz】14
-  - SG【机场推荐：https://a9a.xyz】8
-  - HK【机场推荐：https://a9a.xyz】17
+  - 🇺🇸US_19|2.3MB/s
+  - 🇫🇮FI_1|2.3MB/s
+  - 🇫🇮FI_3|3.9MB/s
+  - 🇵🇱PL_3|3.4MB/s
+  - 🇵🇱PL_1|2.1MB/s
+  - 🇦🇹AT_1|2.9MB/s
+  - 🇫🇮FI_2|1.4MB/s
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - US【机场推荐：https://a9a.xyz】34
-  - FI【机场推荐：https://a9a.xyz】3
-  - HU【机场推荐：https://a9a.xyz】5
-  - JP【机场推荐：https://a9a.xyz】7
-  - SG【机场推荐：https://a9a.xyz】14
-  - SG【机场推荐：https://a9a.xyz】8
-  - HK【机场推荐：https://a9a.xyz】17
+  - 🇺🇸US_19|2.3MB/s
+  - 🇫🇮FI_1|2.3MB/s
+  - 🇫🇮FI_3|3.9MB/s
+  - 🇵🇱PL_3|3.4MB/s
+  - 🇵🇱PL_1|2.1MB/s
+  - 🇦🇹AT_1|2.9MB/s
+  - 🇫🇮FI_2|1.4MB/s
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
