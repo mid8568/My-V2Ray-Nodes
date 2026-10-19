@@ -13,34 +13,44 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: SG【机场推荐：https://a9a.xyz】36
+- name: 🇳🇱NL_12|3.6MB/s
   type: vless
-  server: ofve43bx.zf-all.9999231.xyz
-  port: 1003
-  uuid: a7c5d30b-ce9b-4e34-b5cb-66f8308790ef
+  server: s-lili-nl6.outdoor-fishing.org
+  port: 8443
+  uuid: 7c941273-b86f-4037-b63b-58db91130342
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: thtrjhtyjjfd.weebly.com
+  servername: s-lili-nl6.outdoor-fishing.org
   client-fingerprint: chrome
-  reality-opts:
-    public-key: VNxeZH2-AUjHiZ3NpQpG54DN-0WFk9Rej1s9Zu_IYQk
-    short-id: 661613a7
+- name: 🇳🇱NL_13|2.0MB/s
+  type: vless
+  server: star-nl7.open-fields.org
+  port: 8443
+  uuid: 7c941273-b86f-4037-b63b-58db91130342
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: star-nl7.open-fields.org
+  client-fingerprint: chrome
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - SG【机场推荐：https://a9a.xyz】36
+  - 🇳🇱NL_12|3.6MB/s
+  - 🇳🇱NL_13|2.0MB/s
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - SG【机场推荐：https://a9a.xyz】36
+  - 🇳🇱NL_12|3.6MB/s
+  - 🇳🇱NL_13|2.0MB/s
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
