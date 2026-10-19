@@ -13,84 +13,34 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: GB【机场推荐：https://a9a.xyz】41
+- name: SG【机场推荐：https://a9a.xyz】36
   type: vless
-  server: 35.178.165.98
-  port: 22224
-  uuid: e4514801-0d5a-42ba-869f-39bd605aef9e
-  udp: true
-  encryption: none
-- name: GB【机场推荐：https://a9a.xyz】39
-  type: vless
-  server: 35.178.165.98
-  port: 22223
-  uuid: e4514801-0d5a-42ba-869f-39bd605aef9e
-  udp: true
-  encryption: none
-- name: 🇩🇪DE_6|3.0MB/s
-  type: vless
-  server: ge-s-1.pythonmakemigreat.wiki
-  port: 443
-  uuid: f8d52ece-fad4-478d-875d-df6eed3befa7
+  server: ofve43bx.zf-all.9999231.xyz
+  port: 1003
+  uuid: a7c5d30b-ce9b-4e34-b5cb-66f8308790ef
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: ge-s-1.pythonmakemigreat.wiki
+  servername: thtrjhtyjjfd.weebly.com
   client-fingerprint: chrome
   reality-opts:
-    public-key: 5fkwwCKZzMsE6Eb_b3iqluu-1AWIfnYl-p0N3EL9Al8
-    short-id: 2c9a2790ad5900b2
-- name: 🇩🇪DE_5|2.8MB/s
-  type: vless
-  server: ge-s-1.pythonmakemigreat.wiki
-  port: 443
-  uuid: f8d52ece-fad4-478d-875d-df6eed3befa7
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: ge-s-1.pythonmakemigreat.wiki
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: 5fkwwCKZzMsE6Eb_b3iqluu-1AWIfnYl-p0N3EL9Al8
-    short-id: 2c9a2790ad5900b2
-- name: 🇷🇺RU_1|2.8MB/s
-  type: vless
-  server: ru.msk.nurcloud.org
-  port: 443
-  uuid: 1ab9e166-5a54-48b9-a07f-79d1d840ae21
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: ru.msk.nurcloud.org
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: j1p0hmghXQkpoamrREgYJMcK7D_y3I2gxqy9RzjOD2I
-    short-id: d2cf64ff98c7c4ca
+    public-key: VNxeZH2-AUjHiZ3NpQpG54DN-0WFk9Rej1s9Zu_IYQk
+    short-id: 661613a7
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - GB【机场推荐：https://a9a.xyz】41
-  - GB【机场推荐：https://a9a.xyz】39
-  - 🇩🇪DE_6|3.0MB/s
-  - 🇩🇪DE_5|2.8MB/s
-  - 🇷🇺RU_1|2.8MB/s
+  - SG【机场推荐：https://a9a.xyz】36
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - GB【机场推荐：https://a9a.xyz】41
-  - GB【机场推荐：https://a9a.xyz】39
-  - 🇩🇪DE_6|3.0MB/s
-  - 🇩🇪DE_5|2.8MB/s
-  - 🇷🇺RU_1|2.8MB/s
+  - SG【机场推荐：https://a9a.xyz】36
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
