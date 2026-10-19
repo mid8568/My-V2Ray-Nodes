@@ -20,24 +20,16 @@ proxies:
   uuid: e4514801-0d5a-42ba-869f-39bd605aef9e
   udp: true
   encryption: none
-- name: 🇫🇮FI_1|1.8MB/s
+- name: GB【机场推荐：https://a9a.xyz】39
   type: vless
-  server: 109.172.54.135
-  port: 8444
-  uuid: f55e9aba-7b14-4f6f-b59a-d5b3d45c9309
+  server: 35.178.165.98
+  port: 22223
+  uuid: e4514801-0d5a-42ba-869f-39bd605aef9e
   udp: true
   encryption: none
-  tls: true
-  servername: github.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: FWitre1jinQR7qz5HQ0q2Q4Gg9xA9B0SyizCziN7Ch0
-  network: grpc
-  grpc-opts:
-    grpc-service-name: GunService
-- name: 🇩🇪DE_13|1.3MB/s
+- name: 🇩🇪DE_6|3.0MB/s
   type: vless
-  server: 64.188.66.181
+  server: ge-s-1.pythonmakemigreat.wiki
   port: 443
   uuid: f8d52ece-fad4-478d-875d-df6eed3befa7
   udp: true
@@ -49,26 +41,34 @@ proxies:
   reality-opts:
     public-key: 5fkwwCKZzMsE6Eb_b3iqluu-1AWIfnYl-p0N3EL9Al8
     short-id: 2c9a2790ad5900b2
-- name: 🇩🇪DE_2|4.5MB/s
-  type: trojan
-  server: de7.dedushka.top
-  port: 443
-  password: 4_VfP9fKaM-3LpSVvoZuc_WUzLoCdHaA
-  udp: true
-  sni: de7.dedushka.top
-- name: 🇩🇪DE_14|3.8MB/s
+- name: 🇩🇪DE_5|2.8MB/s
   type: vless
-  server: studio.10media.top
+  server: ge-s-1.pythonmakemigreat.wiki
   port: 443
-  uuid: 9cb8d71c-fe06-4402-a591-eaa1f173b890
+  uuid: f8d52ece-fad4-478d-875d-df6eed3befa7
   udp: true
   encryption: none
+  flow: xtls-rprx-vision
   tls: true
-  servername: studio.10media.top
+  servername: ge-s-1.pythonmakemigreat.wiki
   client-fingerprint: chrome
-  network: grpc
-  grpc-opts:
-    grpc-service-name: studiofeed
+  reality-opts:
+    public-key: 5fkwwCKZzMsE6Eb_b3iqluu-1AWIfnYl-p0N3EL9Al8
+    short-id: 2c9a2790ad5900b2
+- name: 🇷🇺RU_1|2.8MB/s
+  type: vless
+  server: ru.msk.nurcloud.org
+  port: 443
+  uuid: 1ab9e166-5a54-48b9-a07f-79d1d840ae21
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: ru.msk.nurcloud.org
+  client-fingerprint: firefox
+  reality-opts:
+    public-key: j1p0hmghXQkpoamrREgYJMcK7D_y3I2gxqy9RzjOD2I
+    short-id: d2cf64ff98c7c4ca
 proxy-groups:
 - name: 🚀 节点选择
   type: select
@@ -76,10 +76,10 @@ proxy-groups:
   - ⚡ 自动选择
   - DIRECT
   - GB【机场推荐：https://a9a.xyz】41
-  - 🇫🇮FI_1|1.8MB/s
-  - 🇩🇪DE_13|1.3MB/s
-  - 🇩🇪DE_2|4.5MB/s
-  - 🇩🇪DE_14|3.8MB/s
+  - GB【机场推荐：https://a9a.xyz】39
+  - 🇩🇪DE_6|3.0MB/s
+  - 🇩🇪DE_5|2.8MB/s
+  - 🇷🇺RU_1|2.8MB/s
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
@@ -87,10 +87,10 @@ proxy-groups:
   tolerance: 50
   proxies:
   - GB【机场推荐：https://a9a.xyz】41
-  - 🇫🇮FI_1|1.8MB/s
-  - 🇩🇪DE_13|1.3MB/s
-  - 🇩🇪DE_2|4.5MB/s
-  - 🇩🇪DE_14|3.8MB/s
+  - GB【机场推荐：https://a9a.xyz】39
+  - 🇩🇪DE_6|3.0MB/s
+  - 🇩🇪DE_5|2.8MB/s
+  - 🇷🇺RU_1|2.8MB/s
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
