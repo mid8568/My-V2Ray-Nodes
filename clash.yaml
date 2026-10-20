@@ -13,32 +13,52 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: 🇺🇸US_3|2.0MB/s
-  type: vless
-  server: 103.169.142.30
-  port: 8880
-  uuid: 6202b230-417c-4d8e-b624-0f71afa9c75d
+- name: 🇺🇸US_22|3.2MB/s
+  type: vmess
+  server: ehdFgXvbD6uZG1nx.v.3dns.vip
+  port: 443
+  uuid: a791985f-a4f9-410e-b2fa-8aca1e2424e1
+  alterId: 0
+  cipher: auto
   udp: true
-  encryption: none
+  tls: true
   network: ws
   ws-opts:
-    path: /
+    path: /ws-vmess
     headers:
-      Host: vms.lifetime38.workers.dev
-- name: 🇩🇪DE_10|2.3MB/s
+      Host: ehdFgXvbD6uZG1nx.v.3dns.vip
+- name: 🇫🇮FI_1|1.5MB/s
   type: vless
-  server: ge-s-1.pythonmakemigreat.wiki
-  port: 443
-  uuid: f8d52ece-fad4-478d-875d-df6eed3befa7
+  server: 2.56.175.179
+  port: 9443
+  uuid: 8179d7cc-82bc-4eae-a97f-5d30c6c2a812
   udp: true
   encryption: none
-  flow: xtls-rprx-vision
   tls: true
-  servername: ge-s-1.pythonmakemigreat.wiki
+  servername: itunes.apple.com
   client-fingerprint: chrome
   reality-opts:
-    public-key: 5fkwwCKZzMsE6Eb_b3iqluu-1AWIfnYl-p0N3EL9Al8
-    short-id: 2c9a2790ad5900b2
+    public-key: 8bhS-nnIN67a292RpJsCPzXQy4CzpzOVLTPn5CiAFyg
+    short-id: 6ba7b810
+  network: grpc
+  grpc-opts:
+    grpc-service-name: grpc
+- name: 🇹🇷TR_1|3.2MB/s
+  type: vless
+  server: 62.133.63.45
+  port: 8444
+  uuid: a346c521-7a7f-452b-9356-a4893feb5982
+  udp: true
+  encryption: none
+  tls: true
+  servername: github.com
+  client-fingerprint: firefox
+  reality-opts:
+    public-key: FWitre1jinQR7qz5HQ0q2Q4Gg9xA9B0SyizCziN7Ch0
+    short-id: 457fab2ac885dbe0
+  network: grpc
+  grpc-opts:
+    grpc-service-name: GunService
 - name: DE【机场推荐：https://a9a.xyz】15
   type: vless
   server: ge-s-1.pythonmakemigreat.wiki
@@ -53,138 +73,117 @@ proxies:
   reality-opts:
     public-key: 5fkwwCKZzMsE6Eb_b3iqluu-1AWIfnYl-p0N3EL9Al8
     short-id: 2c9a2790ad5900b2
-- name: 🇩🇪DE_9|3.0MB/s
+- name: 🇯🇵JP_1|4.9MB/s
   type: vless
-  server: ge-s-1.pythonmakemigreat.wiki
+  server: 216.23.83.153
   port: 443
-  uuid: f8d52ece-fad4-478d-875d-df6eed3befa7
+  uuid: 982edbef-3c5b-486f-baf3-813a1f8ad660
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: ge-s-1.pythonmakemigreat.wiki
+  servername: www.oracle.com
   client-fingerprint: chrome
   reality-opts:
-    public-key: 5fkwwCKZzMsE6Eb_b3iqluu-1AWIfnYl-p0N3EL9Al8
-    short-id: 2c9a2790ad5900b2
-- name: 🇫🇷FR_5|4.1MB/s
-  type: vless
-  server: 88.218.42.101
-  port: 443
-  uuid: 3dced3a1-6510-4c38-afce-df5fea5ba13a
+    public-key: 1ICcfKdmQI8EpyAD4xsyG8tYMQ-D2En-vUzD-GGM6Qc
+    short-id: 6c96
+- name: 🇹🇼TW_1|3.7MB/s
+  type: vmess
+  server: 120.232.202.14
+  port: 8072
+  uuid: f66c5205-ba70-48cf-84f8-25ec49b96acc
+  alterId: 0
+  cipher: auto
   udp: true
-  encryption: none
-  tls: true
-  servername: league-stats.russsport.life
-  client-fingerprint: chrome
-  network: grpc
-  grpc-opts:
-    grpc-service-name: grpc
-- name: CA【机场推荐：https://a9a.xyz】18
-  type: vless
-  server: speedtest.org
-  port: 8443
-  uuid: c3571d81-38bd-44a8-9b75-5af8a125fc42
-  udp: true
-  encryption: none
-  tls: true
-  servername: pbsjv.megalionzone-vexina.sbs
-  client-fingerprint: chrome
   network: ws
   ws-opts:
-    path: /bala
+    path: /3ff53f15-4c9a-45b0-99ad-c8dfa3825d8f
     headers:
-      Host: pbsjv.megalionzone-vexina.sbs
-- name: 🇸🇪SE_3|2.4MB/s
-  type: vless
-  server: se3.h1cloud.net
-  port: 25119
-  uuid: f90b7d43-69e2-4b46-a672-8029bc6796a2
+      Host: tms.dingtalk.com
+- name: 🇺🇸US_26|2.0MB/s
+  type: vmess
+  server: 120.232.202.14
+  port: 8032
+  uuid: 2881d1b1-c6e7-4e2e-a9b6-3a7e3f32d4fb
+  alterId: 0
+  cipher: auto
   udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.samsung.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: szPq4a3cvxfBOmGyg-UJCV3d1Jqjnj7YR3gaxyYtnk4
-    short-id: 10f517
-- name: TW【机场推荐：https://a9a.xyz】23
-  type: vless
-  server: 152.32.167.33
-  port: 443
-  uuid: 91ad30e9-ab06-4b4c-9fb9-1c2aa97d8b3a
+  network: ws
+  ws-opts:
+    path: /3ff53f15-4c9a-45b0-99ad-c8dfa3825d8f
+    headers:
+      Host: tms.dingtalk.com
+- name: 🇺🇸US_27|3.6MB/s
+  type: vmess
+  server: 120.232.202.14
+  port: 8033
+  uuid: f66c5205-ba70-48cf-84f8-25ec49b96acc
+  alterId: 0
+  cipher: auto
   udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.amazon.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: Q8QwBSGN6J-FqgDV1pYNm0VThS_xNRyQ3DPPa9YZ3j4
-    short-id: cff998a4
-- name: 🇳🇱NL_1|1.6MB/s
-  type: vless
-  server: app-sh-185.spbstudentlife.com
-  port: 443
-  uuid: 074690f9-cb30-44f5-84e5-f3ce8fc6cf29
+  network: ws
+  ws-opts:
+    path: /3ff53f15-4c9a-45b0-99ad-c8dfa3825d8f
+    headers:
+      Host: tms.dingtalk.com
+- name: 🇺🇸US_28|1.7MB/s
+  type: vmess
+  server: 120.232.202.14
+  port: 8033
+  uuid: 74499dd9-f4c0-4450-8a4a-e06c8b25b77d
+  alterId: 0
+  cipher: auto
   udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: assets-sh-185.spbstudentlife.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: rM3p4mL72kcpvnxVRYxl5J0zPbxE2U3iZua0F29SHTQ
-    short-id: 8d942904d3e87323
-- name: 🇫🇮FI_2|1.3MB/s
-  type: vless
-  server: 45.133.151.167
-  port: 25481
-  uuid: 68c3d665-b2b5-4ffb-9f37-9f3d8c47324d
+  network: ws
+  ws-opts:
+    path: /3ff53f15-4c9a-45b0-99ad-c8dfa3825d8f
+    headers:
+      Host: tms.dingtalk.com
+- name: 🇺🇸US_23|2.0MB/s
+  type: vmess
+  server: 120.232.202.14
+  port: 8037
+  uuid: 506cf8a1-d80b-4c7c-9c36-449e258e9b25
+  alterId: 0
+  cipher: auto
   udp: true
-  encryption: none
-  tls: true
-  servername: www.bing.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: mhIAHuZIEr2NpdGGSeOxar7VRSgEfVoNwb_G8Y0073E
-    short-id: 3b84fc70657725af
-  network: grpc
-  grpc-opts:
-    grpc-service-name: 8cb5baa18cd7
+  network: ws
+  ws-opts:
+    path: /3ff53f15-4c9a-45b0-99ad-c8dfa3825d8f
+    headers:
+      Host: tms.dingtalk.com
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - 🇺🇸US_3|2.0MB/s
-  - 🇩🇪DE_10|2.3MB/s
+  - 🇺🇸US_22|3.2MB/s
+  - 🇫🇮FI_1|1.5MB/s
+  - 🇹🇷TR_1|3.2MB/s
   - DE【机场推荐：https://a9a.xyz】15
-  - 🇩🇪DE_9|3.0MB/s
-  - 🇫🇷FR_5|4.1MB/s
-  - CA【机场推荐：https://a9a.xyz】18
-  - 🇸🇪SE_3|2.4MB/s
-  - TW【机场推荐：https://a9a.xyz】23
-  - 🇳🇱NL_1|1.6MB/s
-  - 🇫🇮FI_2|1.3MB/s
+  - 🇯🇵JP_1|4.9MB/s
+  - 🇹🇼TW_1|3.7MB/s
+  - 🇺🇸US_26|2.0MB/s
+  - 🇺🇸US_27|3.6MB/s
+  - 🇺🇸US_28|1.7MB/s
+  - 🇺🇸US_23|2.0MB/s
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇺🇸US_3|2.0MB/s
-  - 🇩🇪DE_10|2.3MB/s
+  - 🇺🇸US_22|3.2MB/s
+  - 🇫🇮FI_1|1.5MB/s
+  - 🇹🇷TR_1|3.2MB/s
   - DE【机场推荐：https://a9a.xyz】15
-  - 🇩🇪DE_9|3.0MB/s
-  - 🇫🇷FR_5|4.1MB/s
-  - CA【机场推荐：https://a9a.xyz】18
-  - 🇸🇪SE_3|2.4MB/s
-  - TW【机场推荐：https://a9a.xyz】23
-  - 🇳🇱NL_1|1.6MB/s
-  - 🇫🇮FI_2|1.3MB/s
+  - 🇯🇵JP_1|4.9MB/s
+  - 🇹🇼TW_1|3.7MB/s
+  - 🇺🇸US_26|2.0MB/s
+  - 🇺🇸US_27|3.6MB/s
+  - 🇺🇸US_28|1.7MB/s
+  - 🇺🇸US_23|2.0MB/s
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
