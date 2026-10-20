@@ -13,177 +13,213 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: 🇺🇸US_22|3.2MB/s
-  type: vmess
-  server: ehdFgXvbD6uZG1nx.v.3dns.vip
+- name: UN【机场推荐：https://a9a.xyz】225
+  type: vless
+  server: cf.090227.xyz
   port: 443
-  uuid: a791985f-a4f9-410e-b2fa-8aca1e2424e1
-  alterId: 0
-  cipher: auto
+  uuid: d342d11e-d224-4463-b982-532309285094
   udp: true
+  encryption: none
   tls: true
+  servername: ccc.010304.xyz
   network: ws
   ws-opts:
-    path: /ws-vmess
+    path: /fp=chrome
     headers:
-      Host: ehdFgXvbD6uZG1nx.v.3dns.vip
-- name: 🇫🇮FI_1|1.5MB/s
+      Host: ccc.010304.xyz
+- name: UN【机场推荐：https://a9a.xyz】217
+  type: ss
+  server: 193.151.160.18
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【机场推荐：https://a9a.xyz】211
+  type: ss
+  server: 202.50.253.27
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【机场推荐：https://a9a.xyz】207
+  type: ss
+  server: 202.50.253.90
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: UN【机场推荐：https://a9a.xyz】240
   type: vless
-  server: 2.56.175.179
-  port: 9443
-  uuid: 8179d7cc-82bc-4eae-a97f-5d30c6c2a812
+  server: 178.94.25.73
+  port: 10443
+  uuid: 2dacc738-5720-4824-b8bc-e3db57596ba7
   udp: true
   encryption: none
+  servername: 178.94.25.73
+- name: UN【机场推荐：https://a9a.xyz】239
+  type: vless
+  server: 5.252.179.15
+  port: 443
+  uuid: 0ab273e4-cea6-41d0-bbab-41071d2fc455
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
   tls: true
-  servername: itunes.apple.com
-  client-fingerprint: chrome
+  servername: www.bing.com
+  client-fingerprint: qq
   reality-opts:
-    public-key: 8bhS-nnIN67a292RpJsCPzXQy4CzpzOVLTPn5CiAFyg
-    short-id: 6ba7b810
-  network: grpc
-  grpc-opts:
-    grpc-service-name: grpc
-- name: 🇹🇷TR_1|3.2MB/s
+    public-key: XQB2zIgrhD8AtxgYFM8UiiWYt1sLVBLhMg1M4-sGMAY
+    short-id: 296f27de82dad7ff
+- name: 🇷🇺RU_2|2.5MB/s
   type: vless
-  server: 62.133.63.45
-  port: 8444
-  uuid: a346c521-7a7f-452b-9356-a4893feb5982
+  server: 50.7.157.237
+  port: 443
+  uuid: 258d8fc5-206c-48fd-88df-169dbbe44d3f
   udp: true
   encryption: none
+  flow: xtls-rprx-vision
   tls: true
-  servername: github.com
+  servername: edge-fr.extazy.net
   client-fingerprint: firefox
   reality-opts:
-    public-key: FWitre1jinQR7qz5HQ0q2Q4Gg9xA9B0SyizCziN7Ch0
-    short-id: 457fab2ac885dbe0
+    public-key: ygxQyBcJzlLgpSl3MCRDDiFET4TT-3wxa4GdG1obkCY
+- name: 🇩🇪DE_9|1008KB/s
+  type: vless
+  server: 193.148.253.53
+  port: 25363
+  uuid: 68c3d665-b2b5-4ffb-9f37-9f3d8c47324d
+  udp: true
+  encryption: none
+  tls: true
+  servername: www.chip.de
+  client-fingerprint: safari
+  reality-opts:
+    public-key: shUbIWcBJdXaDzO80KqTU9exgMarUCOiiZ56Dwl7XVU
+    short-id: 7a8e24da4eb2c1b5
   network: grpc
   grpc-opts:
-    grpc-service-name: GunService
-- name: DE【机场推荐：https://a9a.xyz】15
-  type: vless
-  server: ge-s-1.pythonmakemigreat.wiki
+    grpc-service-name: 43f41cd7fee0
+- name: 🇮🇹IT_4|4.3MB/s
+  type: trojan
+  server: it1.dedushka.top
   port: 443
-  uuid: f8d52ece-fad4-478d-875d-df6eed3befa7
+  password: 4_VfP9fKaM-3LpSVvoZuc_WUzLoCdHaA
+  udp: true
+  sni: it1.dedushka.top
+- name: CA【机场推荐：https://a9a.xyz】20
+  type: vless
+  server: shortbig.ir
+  port: 443
+  uuid: ed6c724c-435f-4f83-a781-f57579af320b
+  udp: true
+  encryption: none
+  tls: true
+  servername: alman.5f2vvtqh5syot.info
+  client-fingerprint: unsafe
+  network: ws
+  ws-opts:
+    path: /9d9fdbc18c834cffab4276811501fbae
+    headers:
+      Host: alman.5f2vvtqh5syot.info
+- name: 🇫🇮FI_2|3.8MB/s
+  type: vless
+  server: 144.31.34.146
+  port: 2096
+  uuid: 6e05822a-e9da-4135-a9db-71aa07a944af
+  udp: true
+  encryption: none
+  tls: true
+  servername: fi1.merky.one
+  client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /mky-ws-4f19c8a7
+    headers:
+      Host: fi1.merky.one
+- name: UN【机场推荐：https://a9a.xyz】222
+  type: vless
+  server: us.mediabox12wrr.site
+  port: 8443
+  uuid: 1566a6e1-8181-41ef-894c-6d6d0d482470
+  udp: true
+  encryption: none
+  tls: true
+  servername: us.mediabox12wrr.site
+  client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /dfefc609ed724b3d8647ed29
+    headers:
+      Host: us.mediabox12wrr.site
+- name: UN【机场推荐：https://a9a.xyz】242
+  type: vless
+  server: 104.16.10.2
+  port: 443
+  uuid: 4e4f1f70-5e56-4a76-bb9d-db087f4690c4
+  udp: true
+  encryption: none
+  tls: true
+  servername: jp3.yohototo.top
+  client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /tyxyws
+    headers:
+      Host: jp3.yohototo.top
+- name: 🇳🇱NL_10|1.8MB/s
+  type: vless
+  server: app-sh-185.spbstudentlife.com
+  port: 443
+  uuid: 074690f9-cb30-44f5-84e5-f3ce8fc6cf29
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: ge-s-1.pythonmakemigreat.wiki
-  client-fingerprint: chrome
+  servername: assets-sh-185.spbstudentlife.com
+  client-fingerprint: randomized
   reality-opts:
-    public-key: 5fkwwCKZzMsE6Eb_b3iqluu-1AWIfnYl-p0N3EL9Al8
-    short-id: 2c9a2790ad5900b2
-- name: 🇯🇵JP_1|4.9MB/s
-  type: vless
-  server: 216.23.83.153
-  port: 443
-  uuid: 982edbef-3c5b-486f-baf3-813a1f8ad660
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.oracle.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: 1ICcfKdmQI8EpyAD4xsyG8tYMQ-D2En-vUzD-GGM6Qc
-    short-id: 6c96
-- name: 🇹🇼TW_1|3.7MB/s
-  type: vmess
-  server: 120.232.202.14
-  port: 8072
-  uuid: f66c5205-ba70-48cf-84f8-25ec49b96acc
-  alterId: 0
-  cipher: auto
-  udp: true
-  network: ws
-  ws-opts:
-    path: /3ff53f15-4c9a-45b0-99ad-c8dfa3825d8f
-    headers:
-      Host: tms.dingtalk.com
-- name: 🇺🇸US_26|2.0MB/s
-  type: vmess
-  server: 120.232.202.14
-  port: 8032
-  uuid: 2881d1b1-c6e7-4e2e-a9b6-3a7e3f32d4fb
-  alterId: 0
-  cipher: auto
-  udp: true
-  network: ws
-  ws-opts:
-    path: /3ff53f15-4c9a-45b0-99ad-c8dfa3825d8f
-    headers:
-      Host: tms.dingtalk.com
-- name: 🇺🇸US_27|3.6MB/s
-  type: vmess
-  server: 120.232.202.14
-  port: 8033
-  uuid: f66c5205-ba70-48cf-84f8-25ec49b96acc
-  alterId: 0
-  cipher: auto
-  udp: true
-  network: ws
-  ws-opts:
-    path: /3ff53f15-4c9a-45b0-99ad-c8dfa3825d8f
-    headers:
-      Host: tms.dingtalk.com
-- name: 🇺🇸US_28|1.7MB/s
-  type: vmess
-  server: 120.232.202.14
-  port: 8033
-  uuid: 74499dd9-f4c0-4450-8a4a-e06c8b25b77d
-  alterId: 0
-  cipher: auto
-  udp: true
-  network: ws
-  ws-opts:
-    path: /3ff53f15-4c9a-45b0-99ad-c8dfa3825d8f
-    headers:
-      Host: tms.dingtalk.com
-- name: 🇺🇸US_23|2.0MB/s
-  type: vmess
-  server: 120.232.202.14
-  port: 8037
-  uuid: 506cf8a1-d80b-4c7c-9c36-449e258e9b25
-  alterId: 0
-  cipher: auto
-  udp: true
-  network: ws
-  ws-opts:
-    path: /3ff53f15-4c9a-45b0-99ad-c8dfa3825d8f
-    headers:
-      Host: tms.dingtalk.com
+    public-key: rM3p4mL72kcpvnxVRYxl5J0zPbxE2U3iZua0F29SHTQ
+    short-id: 8d942904d3e87323
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - 🇺🇸US_22|3.2MB/s
-  - 🇫🇮FI_1|1.5MB/s
-  - 🇹🇷TR_1|3.2MB/s
-  - DE【机场推荐：https://a9a.xyz】15
-  - 🇯🇵JP_1|4.9MB/s
-  - 🇹🇼TW_1|3.7MB/s
-  - 🇺🇸US_26|2.0MB/s
-  - 🇺🇸US_27|3.6MB/s
-  - 🇺🇸US_28|1.7MB/s
-  - 🇺🇸US_23|2.0MB/s
+  - UN【机场推荐：https://a9a.xyz】225
+  - UN【机场推荐：https://a9a.xyz】217
+  - IT【机场推荐：https://a9a.xyz】211
+  - IT【机场推荐：https://a9a.xyz】207
+  - UN【机场推荐：https://a9a.xyz】240
+  - UN【机场推荐：https://a9a.xyz】239
+  - 🇷🇺RU_2|2.5MB/s
+  - 🇩🇪DE_9|1008KB/s
+  - 🇮🇹IT_4|4.3MB/s
+  - CA【机场推荐：https://a9a.xyz】20
+  - 🇫🇮FI_2|3.8MB/s
+  - UN【机场推荐：https://a9a.xyz】222
+  - UN【机场推荐：https://a9a.xyz】242
+  - 🇳🇱NL_10|1.8MB/s
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇺🇸US_22|3.2MB/s
-  - 🇫🇮FI_1|1.5MB/s
-  - 🇹🇷TR_1|3.2MB/s
-  - DE【机场推荐：https://a9a.xyz】15
-  - 🇯🇵JP_1|4.9MB/s
-  - 🇹🇼TW_1|3.7MB/s
-  - 🇺🇸US_26|2.0MB/s
-  - 🇺🇸US_27|3.6MB/s
-  - 🇺🇸US_28|1.7MB/s
-  - 🇺🇸US_23|2.0MB/s
+  - UN【机场推荐：https://a9a.xyz】225
+  - UN【机场推荐：https://a9a.xyz】217
+  - IT【机场推荐：https://a9a.xyz】211
+  - IT【机场推荐：https://a9a.xyz】207
+  - UN【机场推荐：https://a9a.xyz】240
+  - UN【机场推荐：https://a9a.xyz】239
+  - 🇷🇺RU_2|2.5MB/s
+  - 🇩🇪DE_9|1008KB/s
+  - 🇮🇹IT_4|4.3MB/s
+  - CA【机场推荐：https://a9a.xyz】20
+  - 🇫🇮FI_2|3.8MB/s
+  - UN【机场推荐：https://a9a.xyz】222
+  - UN【机场推荐：https://a9a.xyz】242
+  - 🇳🇱NL_10|1.8MB/s
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
