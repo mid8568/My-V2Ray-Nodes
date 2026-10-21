@@ -13,18 +13,6 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: 🇺🇸US_5|2.1MB/s
-  type: vless
-  server: 154.197.75.50
-  port: 8880
-  uuid: 6202b230-417c-4d8e-b624-0f71afa9c75d
-  udp: true
-  encryption: none
-  network: ws
-  ws-opts:
-    path: /?ed=2560
-    headers:
-      Host: vms.lifetime37.workers.dev
 - name: UN【机场推荐：https://a9a.xyz】225
   type: vless
   server: cf.090227.xyz
@@ -39,88 +27,9 @@ proxies:
     path: /fp=chrome
     headers:
       Host: ccc.010304.xyz
-- name: 🇺🇸US_4|1.7MB/s
-  type: vless
-  server: 192.65.217.30
-  port: 8880
-  uuid: 6202b230-417c-4d8e-b624-0f71afa9c75d
-  udp: true
-  encryption: none
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: vms.lifetime37.workers.dev
 - name: UN【机场推荐：https://a9a.xyz】217
   type: ss
   server: 193.151.160.18
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇫🇮FI_1|2.0MB/s
-  type: vless
-  server: 2.56.175.179
-  port: 9443
-  uuid: 8179d7cc-82bc-4eae-a97f-5d30c6c2a812
-  udp: true
-  encryption: none
-  tls: true
-  servername: itunes.apple.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: 8bhS-nnIN67a292RpJsCPzXQy4CzpzOVLTPn5CiAFyg
-    short-id: 6ba7b810
-  network: grpc
-  grpc-opts:
-    grpc-service-name: grpc
-- name: 🇳🇱NL_8|1.9MB/s
-  type: vless
-  server: 200.165.231.138
-  port: 8444
-  uuid: a346c521-7a7f-452b-9356-a4893feb5982
-  udp: true
-  encryption: none
-  tls: true
-  servername: github.com
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: FWitre1jinQR7qz5HQ0q2Q4Gg9xA9B0SyizCziN7Ch0
-    short-id: 457fab2ac885dbe0
-  network: grpc
-  grpc-opts:
-    grpc-service-name: GunService
-- name: 🇯🇵JP_2|2.3MB/s
-  type: vless
-  server: speedjapga1.xyy123.win
-  port: 443
-  uuid: 9290643b-1a90-4357-b9b5-b47eacbffc0e
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: amzn.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: Z7B8VKvjAiBH93XEkHFWCVBfK8Mu5HTLtAwfr5LuYlk
-    short-id: 67c9e7da12d2
-- name: 🇮🇹IT_2|1.4MB/s
-  type: ss
-  server: 202.50.253.18
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【机场推荐：https://a9a.xyz】211
-  type: ss
-  server: 202.50.253.27
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【机场推荐：https://a9a.xyz】207
-  type: ss
-  server: 202.50.253.90
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
@@ -139,88 +48,9 @@ proxies:
   reality-opts:
     public-key: XQB2zIgrhD8AtxgYFM8UiiWYt1sLVBLhMg1M4-sGMAY
     short-id: 296f27de82dad7ff
-- name: 🇫🇷FR_3|1.8MB/s
-  type: vless
-  server: 8.6.112.0
-  port: 443
-  uuid: ab4f3e97-27ba-496a-8133-9d7ca285fcba
-  udp: true
-  encryption: none
-  tls: true
-  servername: polshaov.ochmaybrooooo.online
-  client-fingerprint: android
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: polshaov.ochmaybrooooo.online
-- name: 🇩🇪DE_1|3.4MB/s
-  type: vless
-  server: 89.127.210.40
-  port: 443
-  uuid: 4HqptXtMlj8IT2
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: onlycats.photos
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: wYnBI1xzD8pqAN7xyI8OKotC_Eo2Vz-z08fI5suWQFU
-    short-id: 54f1c973
-- name: CA【机场推荐：https://a9a.xyz】20
-  type: vless
-  server: shortbig.ir
-  port: 443
-  uuid: ed6c724c-435f-4f83-a781-f57579af320b
-  udp: true
-  encryption: none
-  tls: true
-  servername: alman.5f2vvtqh5syot.info
-  client-fingerprint: unsafe
-  network: ws
-  ws-opts:
-    path: /9d9fdbc18c834cffab4276811501fbae
-    headers:
-      Host: alman.5f2vvtqh5syot.info
-- name: UN【机场推荐：https://a9a.xyz】242
-  type: vless
-  server: 104.16.10.2
-  port: 443
-  uuid: 4e4f1f70-5e56-4a76-bb9d-db087f4690c4
-  udp: true
-  encryption: none
-  tls: true
-  servername: jp3.yohototo.top
-  client-fingerprint: chrome
-  network: ws
-  ws-opts:
-    path: /tyxyws
-    headers:
-      Host: jp3.yohototo.top
-- name: 🇩🇪DE_5|2.4MB/s
-  type: vless
-  server: dnld.chaqalli.com
-  port: 8180
-  uuid: 560ecca1-7e20-4b41-b4d6-781fb3bc179d
-  udp: true
-  encryption: mlkem768x25519plus.native.0rtt.PdwZJuxIVUGHGbEzz3Q39ZoRqqxfF0lFg22yCLQvaWk
-  network: ws
-  ws-opts:
-    path: /?Telegram---PLANB_NET---PLANB_NET---PLANB_NET---PLANB_NET
-    headers:
-      Host: dnld.chaqalli.com
-- name: UN【机场推荐：https://a9a.xyz】240
-  type: vless
-  server: 178.94.25.73
-  port: 10443
-  uuid: 2dacc738-5720-4824-b8bc-e3db57596ba7
-  udp: true
-  encryption: none
-  servername: 178.94.25.73
-- name: 🇮🇹IT_1|1.4MB/s
+- name: IT【机场推荐：https://a9a.xyz】207
   type: ss
-  server: 202.50.253.27
+  server: 202.50.253.90
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
@@ -231,48 +61,20 @@ proxy-groups:
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - 🇺🇸US_5|2.1MB/s
   - UN【机场推荐：https://a9a.xyz】225
-  - 🇺🇸US_4|1.7MB/s
   - UN【机场推荐：https://a9a.xyz】217
-  - 🇫🇮FI_1|2.0MB/s
-  - 🇳🇱NL_8|1.9MB/s
-  - 🇯🇵JP_2|2.3MB/s
-  - 🇮🇹IT_2|1.4MB/s
-  - IT【机场推荐：https://a9a.xyz】211
-  - IT【机场推荐：https://a9a.xyz】207
   - UN【机场推荐：https://a9a.xyz】239
-  - 🇫🇷FR_3|1.8MB/s
-  - 🇩🇪DE_1|3.4MB/s
-  - CA【机场推荐：https://a9a.xyz】20
-  - UN【机场推荐：https://a9a.xyz】242
-  - 🇩🇪DE_5|2.4MB/s
-  - UN【机场推荐：https://a9a.xyz】240
-  - 🇮🇹IT_1|1.4MB/s
+  - IT【机场推荐：https://a9a.xyz】207
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇺🇸US_5|2.1MB/s
   - UN【机场推荐：https://a9a.xyz】225
-  - 🇺🇸US_4|1.7MB/s
   - UN【机场推荐：https://a9a.xyz】217
-  - 🇫🇮FI_1|2.0MB/s
-  - 🇳🇱NL_8|1.9MB/s
-  - 🇯🇵JP_2|2.3MB/s
-  - 🇮🇹IT_2|1.4MB/s
-  - IT【机场推荐：https://a9a.xyz】211
-  - IT【机场推荐：https://a9a.xyz】207
   - UN【机场推荐：https://a9a.xyz】239
-  - 🇫🇷FR_3|1.8MB/s
-  - 🇩🇪DE_1|3.4MB/s
-  - CA【机场推荐：https://a9a.xyz】20
-  - UN【机场推荐：https://a9a.xyz】242
-  - 🇩🇪DE_5|2.4MB/s
-  - UN【机场推荐：https://a9a.xyz】240
-  - 🇮🇹IT_1|1.4MB/s
+  - IT【机场推荐：https://a9a.xyz】207
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
