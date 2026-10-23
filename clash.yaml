@@ -13,6 +13,13 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
+- name: IT【机场推荐：https://a9a.xyz】17
+  type: ss
+  server: 202.50.253.45
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
 - name: UN【机场推荐：https://a9a.xyz】104
   type: ss
   server: 202.50.253.72
@@ -20,9 +27,16 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: UN【机场推荐：https://a9a.xyz】105
+- name: IT【机场推荐：https://a9a.xyz】15
   type: ss
-  server: 202.50.253.36
+  server: 202.50.253.90
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: UN【机场推荐：https://a9a.xyz】102
+  type: ss
+  server: 202.50.253.63
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
@@ -30,13 +44,6 @@ proxies:
 - name: UN【机场推荐：https://a9a.xyz】83
   type: ss
   server: 202.50.253.27
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【机场推荐：https://a9a.xyz】15
-  type: ss
-  server: 202.50.253.90
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
@@ -55,20 +62,6 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: UN【机场推荐：https://a9a.xyz】103
-  type: ss
-  server: 202.50.253.18
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【机场推荐：https://a9a.xyz】17
-  type: ss
-  server: 202.50.253.45
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
 - name: UN【机场推荐：https://a9a.xyz】81
   type: ss
   server: 202.50.253.81
@@ -76,89 +69,21 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇩🇪DE_6|1.4MB/s
-  type: vless
-  server: 149.33.47.172
-  port: 9443
-  uuid: 82eb8419-59f4-4d3e-9106-d05d22af615c
+- name: UN【机场推荐：https://a9a.xyz】103
+  type: ss
+  server: 202.50.253.18
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.amazon.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: 0hIFPaEn4RdFib8_eP8HYxMywR5izEwM3JA2W1Zo8U4
-    short-id: b390142456517acc
-- name: 🇩🇪DE_1|2.4MB/s
-  type: vless
-  server: 103.91.147.212
-  port: 443
-  uuid: 261160d5-0343-4b85-8c28-3d40dd681559
+- name: UN【机场推荐：https://a9a.xyz】105
+  type: ss
+  server: 202.50.253.36
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: de.ozon.ru
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: 🇳🇱NL_5|1.6MB/s
-  type: vless
-  server: netherlands02.azotvpn.xyz
-  port: 443
-  uuid: a500be68-4ff6-433b-9968-472be69fab14
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: netherlands02.azotvpn.xyz
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: ui9MLRYZIz7S6_1E4fZgoamwTypfQAMwJ1olxGcWomE
-    short-id: fc70174007a393b4
-- name: 🇳🇱NL_10|1.8MB/s
-  type: vless
-  server: 77.239.110.89
-  port: 443
-  uuid: a500be68-4ff6-433b-9968-472be69fab14
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: netherlands02.azotvpn.xyz
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: ui9MLRYZIz7S6_1E4fZgoamwTypfQAMwJ1olxGcWomE
-    short-id: fc70174007a393b4
-- name: 🇪🇪EE_5|2.2MB/s
-  type: vless
-  server: l415ng0o.himoy.space
-  port: 443
-  uuid: 5131b5e9-2c3c-44a0-8f18-0641f3f21cac
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: l415ng0o.himoy.space
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: JOoD5ze_pwrMnQoAIRVieQM8SPJjiLJEw1fwx57iYgk
-    short-id: bbd20b213341644c
-- name: UN【机场推荐：https://a9a.xyz】124
-  type: vless
-  server: 212.87.222.10
-  port: 8443
-  uuid: 8afeb33c-b686-43e9-a629-0d98f991ec28
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.nokia.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: f25sygANXTpzdc9YPCwkggwSmm3piA3BluSeHdfG-hg
-- name: 🇳🇱NL_12|1.7MB/s
+- name: 🇳🇱NL_4|1.0MB/s
   type: vless
   server: vb41fwol.himoy.space
   port: 443
@@ -172,34 +97,34 @@ proxies:
   reality-opts:
     public-key: CwVoZSZr3MQ8IEaxOqmZRolV2Vw5Ve-hwhRLHuOerzg
     short-id: 44aa59cc84b532ed
-- name: 🇨🇦CA_1|1.8MB/s
+- name: 🇳🇱NL_1|1.3MB/s
   type: vless
-  server: 213.152.165.203
-  port: 2093
-  uuid: 0b418782-e023-447e-ba99-e66b84ff118d
+  server: n1.fazelino.site
+  port: 443
+  uuid: dd688bb9-41d9-4eb7-b5eb-6175f612cdb6
+  udp: true
+  encryption: none
+  tls: true
+  servername: api.fazelino.site
+  client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /api/get
+    headers:
+      Host: api.fazelino.site
+- name: UN【机场推荐：https://a9a.xyz】124
+  type: vless
+  server: 212.87.222.10
+  port: 8443
+  uuid: 8afeb33c-b686-43e9-a629-0d98f991ec28
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: www.apple.com
+  servername: www.nokia.com
   client-fingerprint: chrome
   reality-opts:
-    public-key: C_GA8wVjeLmyqLK6em5OHn4WPlsbndA-RyvyNU1aGFM
-    short-id: 8a9725533854a7e8
-- name: UN【机场推荐：https://a9a.xyz】92
-  type: vless
-  server: 177.3.208.65
-  port: 443
-  uuid: 4f34bc04-479c-49ba-91a8-6bb9ed15031c
-  udp: true
-  encryption: none
-  tls: true
-  servername: tgmansion.site
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /vless-tr
-    headers: {}
+    public-key: f25sygANXTpzdc9YPCwkggwSmm3piA3BluSeHdfG-hg
 - name: UN【机场推荐：https://a9a.xyz】122
   type: vmess
   server: 162.159.135.234
@@ -214,75 +139,61 @@ proxies:
     path: /or3
     headers:
       Host: or3.sfacg.uk
-- name: 🇹🇷TR_1|1.3MB/s
-  type: vmess
-  server: free.ertebatgoostar.ir
+- name: 🇩🇪DE_1|1.8MB/s
+  type: vless
+  server: 103.91.147.212
   port: 443
-  uuid: c9eab439-53bf-46e4-ba58-fc368ae1ee8c
-  alterId: 0
-  cipher: auto
+  uuid: 261160d5-0343-4b85-8c28-3d40dd681559
   udp: true
-- name: UN【机场推荐：https://a9a.xyz】102
-  type: ss
-  server: 202.50.253.63
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: de.ozon.ru
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
+  - IT【机场推荐：https://a9a.xyz】17
   - UN【机场推荐：https://a9a.xyz】104
-  - UN【机场推荐：https://a9a.xyz】105
-  - UN【机场推荐：https://a9a.xyz】83
   - IT【机场推荐：https://a9a.xyz】15
+  - UN【机场推荐：https://a9a.xyz】102
+  - UN【机场推荐：https://a9a.xyz】83
   - 节点日期：2026-10-22
   - IT【机场推荐：https://a9a.xyz】9
-  - UN【机场推荐：https://a9a.xyz】103
-  - IT【机场推荐：https://a9a.xyz】17
   - UN【机场推荐：https://a9a.xyz】81
-  - 🇩🇪DE_6|1.4MB/s
-  - 🇩🇪DE_1|2.4MB/s
-  - 🇳🇱NL_5|1.6MB/s
-  - 🇳🇱NL_10|1.8MB/s
-  - 🇪🇪EE_5|2.2MB/s
+  - UN【机场推荐：https://a9a.xyz】103
+  - UN【机场推荐：https://a9a.xyz】105
+  - 🇳🇱NL_4|1.0MB/s
+  - 🇳🇱NL_1|1.3MB/s
   - UN【机场推荐：https://a9a.xyz】124
-  - 🇳🇱NL_12|1.7MB/s
-  - 🇨🇦CA_1|1.8MB/s
-  - UN【机场推荐：https://a9a.xyz】92
   - UN【机场推荐：https://a9a.xyz】122
-  - 🇹🇷TR_1|1.3MB/s
-  - UN【机场推荐：https://a9a.xyz】102
+  - 🇩🇪DE_1|1.8MB/s
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
+  - IT【机场推荐：https://a9a.xyz】17
   - UN【机场推荐：https://a9a.xyz】104
-  - UN【机场推荐：https://a9a.xyz】105
-  - UN【机场推荐：https://a9a.xyz】83
   - IT【机场推荐：https://a9a.xyz】15
+  - UN【机场推荐：https://a9a.xyz】102
+  - UN【机场推荐：https://a9a.xyz】83
   - 节点日期：2026-10-22
   - IT【机场推荐：https://a9a.xyz】9
-  - UN【机场推荐：https://a9a.xyz】103
-  - IT【机场推荐：https://a9a.xyz】17
   - UN【机场推荐：https://a9a.xyz】81
-  - 🇩🇪DE_6|1.4MB/s
-  - 🇩🇪DE_1|2.4MB/s
-  - 🇳🇱NL_5|1.6MB/s
-  - 🇳🇱NL_10|1.8MB/s
-  - 🇪🇪EE_5|2.2MB/s
+  - UN【机场推荐：https://a9a.xyz】103
+  - UN【机场推荐：https://a9a.xyz】105
+  - 🇳🇱NL_4|1.0MB/s
+  - 🇳🇱NL_1|1.3MB/s
   - UN【机场推荐：https://a9a.xyz】124
-  - 🇳🇱NL_12|1.7MB/s
-  - 🇨🇦CA_1|1.8MB/s
-  - UN【机场推荐：https://a9a.xyz】92
   - UN【机场推荐：https://a9a.xyz】122
-  - 🇹🇷TR_1|1.3MB/s
-  - UN【机场推荐：https://a9a.xyz】102
+  - 🇩🇪DE_1|1.8MB/s
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
