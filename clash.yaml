@@ -13,53 +13,23 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: 🇺🇸US_1|3.9MB/s
+- name: 🇩🇪DE_4|2.4MB/s
   type: vless
-  server: 154.17.5.16
-  port: 8443
-  uuid: 3d116251-c919-4cf7-bc61-3a90d91aa80b
+  server: nl3.mycloud1.org
+  port: 2053
+  uuid: 605dea9b-b485-45c9-af9b-cc2b0195023c
   udp: true
   encryption: none
-  flow: xtls-rprx-vision
   tls: true
-  servername: updates.cdn-apple.com
-  client-fingerprint: chrome
+  servername: nl3.mycloud1.org
+  client-fingerprint: edge
   reality-opts:
-    public-key: ozguNbRK0BghbZv0n6a164gmotQ-EI-VR9iXgGlfuXg
-- name: 🇫🇷FR_3|1.3MB/s
-  type: vless
-  server: 147.45.47.95
-  port: 8443
-  uuid: df549242-dc8e-482c-9dd5-eb3518583099
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: apple.com
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: 节点日期：2026-10-22
-  type: ss
-  server: 202.50.253.54
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇫🇷FR_2|1.4MB/s
-  type: vless
-  server: 113.30.154.237
-  port: 443
-  uuid: 8a1f8853-9a71-4ef2-a64c-4f0a94c2e14b
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: ozon.ru
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: 🇷🇺RU_1|1.8MB/s
+    public-key: Su5ULcRQKF-0DJIHZeTNEnXHBpyQtizmUrcNIYhZI0E
+    short-id: afee962d
+  network: grpc
+  grpc-opts:
+    grpc-service-name: api
+- name: 🇷🇺RU_3|1.2MB/s
   type: vless
   server: 45.9.118.177
   port: 8443
@@ -72,11 +42,37 @@ proxies:
   client-fingerprint: firefox
   reality-opts:
     public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: 🇷🇺RU_4|2.6MB/s
+- name: 🇷🇺RU_2|2.2MB/s
   type: vless
-  server: 45.9.118.182
+  server: 193.223.104.124
+  port: 443
+  uuid: 8a1f8853-9a71-4ef2-a64c-4f0a94c2e14b
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: ozon.ru
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
+- name: 🇷🇺RU_4|3.0MB/s
+  type: vless
+  server: 193.223.104.120
   port: 443
   uuid: 680e92ac-1688-49e0-af96-7327fbc30ce8
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: ozon.ru
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
+- name: 🇫🇷FR_6|3.7MB/s
+  type: vless
+  server: 103.91.147.247
+  port: 443
+  uuid: 8a1f8853-9a71-4ef2-a64c-4f0a94c2e14b
   udp: true
   encryption: none
   flow: xtls-rprx-vision
@@ -85,9 +81,22 @@ proxies:
   client-fingerprint: firefox
   reality-opts:
     public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: 🇷🇺RU_2|1008KB/s
+- name: 🇷🇺RU_1|4.0MB/s
   type: vless
-  server: 147.45.47.76
+  server: 193.223.104.127
+  port: 443
+  uuid: 8a1f8853-9a71-4ef2-a64c-4f0a94c2e14b
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: ozon.ru
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
+- name: 🇫🇷FR_1|3.1MB/s
+  type: vless
+  server: 45.151.71.152
   port: 443
   uuid: 8a1f8853-9a71-4ef2-a64c-4f0a94c2e14b
   udp: true
@@ -98,7 +107,7 @@ proxies:
   client-fingerprint: chrome
   reality-opts:
     public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: 🇫🇷FR_1|2.2MB/s
+- name: 🇫🇷FR_3|2.4MB/s
   type: vless
   server: 45.151.71.147
   port: 443
@@ -108,39 +117,51 @@ proxies:
   flow: xtls-rprx-vision
   tls: true
   servername: abuse.ozon.ru
-  client-fingerprint: firefox
+  client-fingerprint: chrome
   reality-opts:
     public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: 🇷🇺RU_3|1.5MB/s
+- name: 🇹🇷TR_1|2.2MB/s
   type: vless
-  server: 193.223.104.120
+  server: 45.151.71.164
   port: 443
-  uuid: 680e92ac-1688-49e0-af96-7327fbc30ce8
+  uuid: 8a1f8853-9a71-4ef2-a64c-4f0a94c2e14b
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: ozon.ru
+  servername: abuse.ozon.ru
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
+- name: 🇬🇧GB_7|3.8MB/s
+  type: vless
+  server: 103.91.147.208
+  port: 443
+  uuid: 0b6a937e-5b0e-49ca-b31e-f03f290e97cf
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: gb.ozon.ru
+  client-fingerprint: edge
+  reality-opts:
+    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
+- name: 🇬🇧GB_5|1.1MB/s
+  type: vless
+  server: 45.151.71.165
+  port: 443
+  uuid: 8a1f8853-9a71-4ef2-a64c-4f0a94c2e14b
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: gb.ozon.ru
   client-fingerprint: firefox
   reality-opts:
     public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: UN【机场推荐：https://a9a.xyz】105
-  type: ss
-  server: 202.50.253.36
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【机场推荐：https://a9a.xyz】9
-  type: ss
-  server: 202.50.253.99
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇬🇧GB_2|1.9MB/s
+- name: 🇬🇧GB_6|1.3MB/s
   type: vless
-  server: 54.37.5.203
+  server: 54.37.2.245
   port: 8443
   uuid: 8a1f8853-9a71-4ef2-a64c-4f0a94c2e14b
   udp: true
@@ -151,6 +172,20 @@ proxies:
   client-fingerprint: firefox
   reality-opts:
     public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
+- name: 🇫🇷FR_2|1.8MB/s
+  type: vless
+  server: 45.95.98.135
+  port: 443
+  uuid: 2f5cfa10-43e5-4912-800d-557308a26a29
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: 8g6zbdoai3lb.cloudydigital.net
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: 8MkHK9vGRtOA97_ag2qUoru4ONKe3W6r7SR1UtIKiWU
+    short-id: c1c6c4326b5b
 - name: UN【机场推荐：https://a9a.xyz】92
   type: vless
   server: 177.3.208.65
@@ -165,27 +200,6 @@ proxies:
   ws-opts:
     path: /vless-tr
     headers: {}
-- name: IT【机场推荐：https://a9a.xyz】15
-  type: ss
-  server: 202.50.253.90
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: UN【机场推荐：https://a9a.xyz】81
-  type: ss
-  server: 202.50.253.81
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【机场推荐：https://a9a.xyz】17
-  type: ss
-  server: 202.50.253.45
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
 - name: UN【机场推荐：https://a9a.xyz】103
   type: ss
   server: 202.50.253.18
@@ -200,54 +214,92 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
+- name: 节点日期：2026-10-22
+  type: ss
+  server: 202.50.253.54
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇬🇧GB_4|1.3MB/s
+  type: vless
+  server: 54.37.5.203
+  port: 8443
+  uuid: 8a1f8853-9a71-4ef2-a64c-4f0a94c2e14b
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: ozon.ru
+  client-fingerprint: firefox
+  reality-opts:
+    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
+- name: IT【机场推荐：https://a9a.xyz】15
+  type: ss
+  server: 202.50.253.90
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【机场推荐：https://a9a.xyz】9
+  type: ss
+  server: 202.50.253.99
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - 🇺🇸US_1|3.9MB/s
-  - 🇫🇷FR_3|1.3MB/s
-  - 节点日期：2026-10-22
-  - 🇫🇷FR_2|1.4MB/s
-  - 🇷🇺RU_1|1.8MB/s
-  - 🇷🇺RU_4|2.6MB/s
-  - 🇷🇺RU_2|1008KB/s
-  - 🇫🇷FR_1|2.2MB/s
-  - 🇷🇺RU_3|1.5MB/s
-  - UN【机场推荐：https://a9a.xyz】105
-  - IT【机场推荐：https://a9a.xyz】9
-  - 🇬🇧GB_2|1.9MB/s
+  - 🇩🇪DE_4|2.4MB/s
+  - 🇷🇺RU_3|1.2MB/s
+  - 🇷🇺RU_2|2.2MB/s
+  - 🇷🇺RU_4|3.0MB/s
+  - 🇫🇷FR_6|3.7MB/s
+  - 🇷🇺RU_1|4.0MB/s
+  - 🇫🇷FR_1|3.1MB/s
+  - 🇫🇷FR_3|2.4MB/s
+  - 🇹🇷TR_1|2.2MB/s
+  - 🇬🇧GB_7|3.8MB/s
+  - 🇬🇧GB_5|1.1MB/s
+  - 🇬🇧GB_6|1.3MB/s
+  - 🇫🇷FR_2|1.8MB/s
   - UN【机场推荐：https://a9a.xyz】92
-  - IT【机场推荐：https://a9a.xyz】15
-  - UN【机场推荐：https://a9a.xyz】81
-  - IT【机场推荐：https://a9a.xyz】17
   - UN【机场推荐：https://a9a.xyz】103
   - UN【机场推荐：https://a9a.xyz】102
+  - 节点日期：2026-10-22
+  - 🇬🇧GB_4|1.3MB/s
+  - IT【机场推荐：https://a9a.xyz】15
+  - IT【机场推荐：https://a9a.xyz】9
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇺🇸US_1|3.9MB/s
-  - 🇫🇷FR_3|1.3MB/s
-  - 节点日期：2026-10-22
-  - 🇫🇷FR_2|1.4MB/s
-  - 🇷🇺RU_1|1.8MB/s
-  - 🇷🇺RU_4|2.6MB/s
-  - 🇷🇺RU_2|1008KB/s
-  - 🇫🇷FR_1|2.2MB/s
-  - 🇷🇺RU_3|1.5MB/s
-  - UN【机场推荐：https://a9a.xyz】105
-  - IT【机场推荐：https://a9a.xyz】9
-  - 🇬🇧GB_2|1.9MB/s
+  - 🇩🇪DE_4|2.4MB/s
+  - 🇷🇺RU_3|1.2MB/s
+  - 🇷🇺RU_2|2.2MB/s
+  - 🇷🇺RU_4|3.0MB/s
+  - 🇫🇷FR_6|3.7MB/s
+  - 🇷🇺RU_1|4.0MB/s
+  - 🇫🇷FR_1|3.1MB/s
+  - 🇫🇷FR_3|2.4MB/s
+  - 🇹🇷TR_1|2.2MB/s
+  - 🇬🇧GB_7|3.8MB/s
+  - 🇬🇧GB_5|1.1MB/s
+  - 🇬🇧GB_6|1.3MB/s
+  - 🇫🇷FR_2|1.8MB/s
   - UN【机场推荐：https://a9a.xyz】92
-  - IT【机场推荐：https://a9a.xyz】15
-  - UN【机场推荐：https://a9a.xyz】81
-  - IT【机场推荐：https://a9a.xyz】17
   - UN【机场推荐：https://a9a.xyz】103
   - UN【机场推荐：https://a9a.xyz】102
+  - 节点日期：2026-10-22
+  - 🇬🇧GB_4|1.3MB/s
+  - IT【机场推荐：https://a9a.xyz】15
+  - IT【机场推荐：https://a9a.xyz】9
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
