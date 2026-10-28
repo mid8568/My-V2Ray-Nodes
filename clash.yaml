@@ -13,42 +13,16 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: 🇨🇦CA_2|1.7MB/s
-  type: vless
-  server: ca001.zestapp778.com
-  port: 32355
-  uuid: e9a8144e-5237-488a-afb1-9ca3d8d54c80
-  udp: true
-  encryption: none
-  tls: true
-  servername: ca001.zestapp778.com
-  client-fingerprint: chrome
-- name: 🇺🇸US_1|1002KB/s
-  type: trojan
-  server: 66.163.122.7
-  port: 443
-  password: 0ab6c98dae3b48e8b9c4a776b6c9c19a
-  udp: true
-  sni: www.searchnationwidecareerchangehelperandguidancetoday.com
-- name: 🇺🇸US_8|2.0MB/s
-  type: vless
-  server: 74.0.48.173
-  port: 443
-  uuid: 4b1be712-774c-4b65-8491-a3339e124a70
-  udp: true
-  encryption: none
-  tls: true
-  servername: nl-all.vless-bitrhythmia.top
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: WJrP73M7px11xkHKhmEMKnaqUR-DPZnKbR2m_N3TwEE
-    short-id: 724d6cab
-  network: grpc
-  grpc-opts:
-    grpc-service-name: grpc-nl-stream
-- name: UN【机场推荐：https://a9a.xyz】83
+- name: IT【机场推荐：https://a9a.xyz】9
   type: ss
-  server: 202.50.253.27
+  server: 202.50.253.99
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: UN【机场推荐：https://a9a.xyz】81
+  type: ss
+  server: 202.50.253.81
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
@@ -60,16 +34,16 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: UN【机场推荐：https://a9a.xyz】105
+- name: IT【机场推荐：https://a9a.xyz】15
   type: ss
-  server: 202.50.253.36
+  server: 202.50.253.90
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: UN【机场推荐：https://a9a.xyz】81
+- name: UN【机场推荐：https://a9a.xyz】83
   type: ss
-  server: 202.50.253.81
+  server: 202.50.253.27
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
@@ -88,46 +62,20 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: IT【机场推荐：https://a9a.xyz】9
+- name: IT【机场推荐：https://a9a.xyz】17
   type: ss
-  server: 202.50.253.99
+  server: 202.50.253.45
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: IT【机场推荐：https://a9a.xyz】15
+- name: 节点日期：2026-10-22
   type: ss
-  server: 202.50.253.90
+  server: 202.50.253.54
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇨🇿CZ_3|1.4MB/s
-  type: vless
-  server: 31.77.13.22
-  port: 2063
-  uuid: b18d5990-96eb-4587-a386-7f8ef7591e6a
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: rusbid.de
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: MMpt_jWc4J3oySBdf5sPDVRkiWlZmOObth6A1scM9BM
-- name: 🇪🇪EE_1|3.0MB/s
-  type: vless
-  server: 79.182.39.232
-  port: 25895
-  uuid: f90b7d43-69e2-4b46-a672-8029bc6796a2
-  udp: true
-  encryption: none
-  tls: true
-  servername: www.samsung.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: jOVKSP-bS9OkILJ8Epz8hadh6qhavCrOiJYeF0NCn0k
-    short-id: a73f0410d728c823
 - name: UN【机场推荐：https://a9a.xyz】92
   type: vless
   server: 177.3.208.65
@@ -142,64 +90,38 @@ proxies:
   ws-opts:
     path: /vless-tr
     headers: {}
-- name: 节点日期：2026-10-22
-  type: ss
-  server: 202.50.253.54
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【机场推荐：https://a9a.xyz】17
-  type: ss
-  server: 202.50.253.45
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - 🇨🇦CA_2|1.7MB/s
-  - 🇺🇸US_1|1002KB/s
-  - 🇺🇸US_8|2.0MB/s
-  - UN【机场推荐：https://a9a.xyz】83
-  - UN【机场推荐：https://a9a.xyz】102
-  - UN【机场推荐：https://a9a.xyz】105
+  - IT【机场推荐：https://a9a.xyz】9
   - UN【机场推荐：https://a9a.xyz】81
+  - UN【机场推荐：https://a9a.xyz】102
+  - IT【机场推荐：https://a9a.xyz】15
+  - UN【机场推荐：https://a9a.xyz】83
   - UN【机场推荐：https://a9a.xyz】104
   - UN【机场推荐：https://a9a.xyz】103
-  - IT【机场推荐：https://a9a.xyz】9
-  - IT【机场推荐：https://a9a.xyz】15
-  - 🇨🇿CZ_3|1.4MB/s
-  - 🇪🇪EE_1|3.0MB/s
-  - UN【机场推荐：https://a9a.xyz】92
-  - 节点日期：2026-10-22
   - IT【机场推荐：https://a9a.xyz】17
+  - 节点日期：2026-10-22
+  - UN【机场推荐：https://a9a.xyz】92
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇨🇦CA_2|1.7MB/s
-  - 🇺🇸US_1|1002KB/s
-  - 🇺🇸US_8|2.0MB/s
-  - UN【机场推荐：https://a9a.xyz】83
-  - UN【机场推荐：https://a9a.xyz】102
-  - UN【机场推荐：https://a9a.xyz】105
+  - IT【机场推荐：https://a9a.xyz】9
   - UN【机场推荐：https://a9a.xyz】81
+  - UN【机场推荐：https://a9a.xyz】102
+  - IT【机场推荐：https://a9a.xyz】15
+  - UN【机场推荐：https://a9a.xyz】83
   - UN【机场推荐：https://a9a.xyz】104
   - UN【机场推荐：https://a9a.xyz】103
-  - IT【机场推荐：https://a9a.xyz】9
-  - IT【机场推荐：https://a9a.xyz】15
-  - 🇨🇿CZ_3|1.4MB/s
-  - 🇪🇪EE_1|3.0MB/s
-  - UN【机场推荐：https://a9a.xyz】92
-  - 节点日期：2026-10-22
   - IT【机场推荐：https://a9a.xyz】17
+  - 节点日期：2026-10-22
+  - UN【机场推荐：https://a9a.xyz】92
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
