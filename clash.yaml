@@ -13,25 +13,161 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: 🇳🇱NL_1|1.4MB/s
+- name: 🇺🇸US_16|2.9MB/s
   type: vless
-  server: 5.149.248.151
+  server: 156.229.166.66
   port: 443
-  uuid: 7aad73a9-a0ff-4fad-9142-4f5c7c6bb2c1
+  uuid: a8945d73-e450-47ea-90cb-10062c8632b7
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: www.amazon.com
+  client-fingerprint: edge
+  reality-opts:
+    public-key: 0hIFPaEn4RdFib8_eP8HYxMywR5izEwM3JA2W1Zo8U4
+    short-id: b390142456517acc
+- name: 🇺🇸US_1|2.1MB/s
+  type: vless
+  server: 169.40.42.89
+  port: 443
+  uuid: d65cc14c-f53f-4fe2-b262-97856601319c
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: yahoo.com
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: e2RLf57Li_-MDZGE9ss1BWPgP54mqRb5PfXhW2jcVVg
+    short-id: c39cc7310a
+- name: 🇺🇸US_2|1.7MB/s
+  type: vless
+  server: 169.40.42.89
+  port: 443
+  uuid: d65cc14c-f53f-4fe2-b262-97856601319c
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: yahoo.com
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: e2RLf57Li_-MDZGE9ss1BWPgP54mqRb5PfXhW2jcVVg
+    short-id: c39cc7310a
+- name: UN【机场推荐：https://a9a.xyz】83
+  type: ss
+  server: 202.50.253.27
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇩🇪DE_1|1.4MB/s
+  type: vless
+  server: 185.44.64.166
+  port: 59397
+  uuid: ac36b6f8-d03d-46cb-808f-e655183fb76d
+  udp: true
+  encryption: mlkem768x25519plus.native.0rtt.sphudmOm4wKYnBGDTU6kl6-KH7fdQ1VzXp58hEAn3zU
+  flow: xtls-rprx-vision
+  tls: true
+  servername: la.blogs.nvidia.com
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: 7w6m1Z7wZk1KX7bBlCi50t_8T-HdC8aMizOcIyqcaS4
+    short-id: '1430'
+- name: 🇳🇱NL_1|1.3MB/s
+  type: vless
+  server: 189.74.114.119
+  port: 443
+  uuid: abd5755a-8b77-4ed4-afbd-f2ccbc08e6f5
   udp: true
   encryption: none
   tls: true
-  servername: nla.kosmosapp.net
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: pR39Vv5qhk8r6akOicoy6mMs4-ppSWUez8MyAXG7wwQ
-    short-id: 27350908de933e09
+  servername: api.mediaklenov.cc
+  client-fingerprint: safari
   network: grpc
   grpc-opts:
-    grpc-service-name: neurex
-- name: IT【机场推荐：https://a9a.xyz】15
+    grpc-service-name: 3e99d50d5740985d
+- name: IT【机场推荐：https://a9a.xyz】17
   type: ss
-  server: 202.50.253.90
+  server: 202.50.253.45
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 节点日期：2026-10-22
+  type: ss
+  server: 202.50.253.54
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇸🇪SE_4|2.2MB/s
+  type: vless
+  server: 171.25.158.163
+  port: 443
+  uuid: 706bce83-91db-4260-b175-cba29145cd56
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: s9se1.newagetechnologies.live
+  client-fingerprint: firefox
+  reality-opts:
+    public-key: Dt6OmhEDOi-Y204u5jWdQsHIgof7g8i52NUnTGc-yjM
+    short-id: ecb6f8fb31668176
+- name: UN【机场推荐：https://a9a.xyz】81
+  type: ss
+  server: 202.50.253.81
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇳🇱NL_4|2.7MB/s
+  type: trojan
+  server: 172.66.0.172
+  port: 443
+  password: humanity
+  udp: true
+  sni: www.cordweave.com
+  network: ws
+  ws-opts:
+    path: /assignment
+    headers: {}
+- name: UN【机场推荐：https://a9a.xyz】104
+  type: ss
+  server: 202.50.253.72
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: UN【机场推荐：https://a9a.xyz】105
+  type: ss
+  server: 202.50.253.36
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇮🇳IN_1|2.3MB/s
+  type: vless
+  server: hydra.yokkastars.com
+  port: 2443
+  uuid: 5e679ccd-1586-4d5f-b87b-48251046cad8
+  udp: true
+  encryption: none
+  tls: true
+  servername: deepl.com
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: h85e28MxBgNyT9d9cNeOLVtWfHq6cT_1_oxZOTajtTg
+    short-id: 92c32de179e5d908
+  network: grpc
+  grpc-opts:
+    grpc-service-name: rex-eb0bf76b710ce763
+- name: UN【机场推荐：https://a9a.xyz】103
+  type: ss
+  server: 202.50.253.18
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
@@ -57,55 +193,19 @@ proxies:
   ws-opts:
     path: /vless-tr
     headers: {}
-- name: UN【机场推荐：https://a9a.xyz】105
-  type: ss
-  server: 202.50.253.36
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+- name: UN【机场推荐：https://a9a.xyz】114
+  type: vless
+  server: a0688bt.us4.h1clayd.click
+  port: 443
+  uuid: 056405e8-de9f-4d0d-8145-956f13cc34da
   udp: true
-- name: UN【机场推荐：https://a9a.xyz】83
-  type: ss
-  server: 202.50.253.27
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: UN【机场推荐：https://a9a.xyz】104
-  type: ss
-  server: 202.50.253.72
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 节点日期：2026-10-22
-  type: ss
-  server: 202.50.253.54
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: UN【机场推荐：https://a9a.xyz】81
-  type: ss
-  server: 202.50.253.81
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: UN【机场推荐：https://a9a.xyz】103
-  type: ss
-  server: 202.50.253.18
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【机场推荐：https://a9a.xyz】17
-  type: ss
-  server: 202.50.253.45
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
+  encryption: none
+  tls: true
+  servername: a0688bt.us4.h1clayd.click
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: 5-9YzvyXcZ4J5Z4OaVTUbxUU2InvnwT17m0XY-Jse1E
+    short-id: 257420d9d430152a
 - name: IT【机场推荐：https://a9a.xyz】9
   type: ss
   server: 202.50.253.99
@@ -119,17 +219,24 @@ proxy-groups:
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - 🇳🇱NL_1|1.4MB/s
-  - IT【机场推荐：https://a9a.xyz】15
+  - 🇺🇸US_16|2.9MB/s
+  - 🇺🇸US_1|2.1MB/s
+  - 🇺🇸US_2|1.7MB/s
+  - UN【机场推荐：https://a9a.xyz】83
+  - 🇩🇪DE_1|1.4MB/s
+  - 🇳🇱NL_1|1.3MB/s
+  - IT【机场推荐：https://a9a.xyz】17
+  - 节点日期：2026-10-22
+  - 🇸🇪SE_4|2.2MB/s
+  - UN【机场推荐：https://a9a.xyz】81
+  - 🇳🇱NL_4|2.7MB/s
+  - UN【机场推荐：https://a9a.xyz】104
+  - UN【机场推荐：https://a9a.xyz】105
+  - 🇮🇳IN_1|2.3MB/s
+  - UN【机场推荐：https://a9a.xyz】103
   - UN【机场推荐：https://a9a.xyz】102
   - UN【机场推荐：https://a9a.xyz】92
-  - UN【机场推荐：https://a9a.xyz】105
-  - UN【机场推荐：https://a9a.xyz】83
-  - UN【机场推荐：https://a9a.xyz】104
-  - 节点日期：2026-10-22
-  - UN【机场推荐：https://a9a.xyz】81
-  - UN【机场推荐：https://a9a.xyz】103
-  - IT【机场推荐：https://a9a.xyz】17
+  - UN【机场推荐：https://a9a.xyz】114
   - IT【机场推荐：https://a9a.xyz】9
 - name: ⚡ 自动选择
   type: url-test
@@ -137,17 +244,24 @@ proxy-groups:
   interval: 300
   tolerance: 50
   proxies:
-  - 🇳🇱NL_1|1.4MB/s
-  - IT【机场推荐：https://a9a.xyz】15
+  - 🇺🇸US_16|2.9MB/s
+  - 🇺🇸US_1|2.1MB/s
+  - 🇺🇸US_2|1.7MB/s
+  - UN【机场推荐：https://a9a.xyz】83
+  - 🇩🇪DE_1|1.4MB/s
+  - 🇳🇱NL_1|1.3MB/s
+  - IT【机场推荐：https://a9a.xyz】17
+  - 节点日期：2026-10-22
+  - 🇸🇪SE_4|2.2MB/s
+  - UN【机场推荐：https://a9a.xyz】81
+  - 🇳🇱NL_4|2.7MB/s
+  - UN【机场推荐：https://a9a.xyz】104
+  - UN【机场推荐：https://a9a.xyz】105
+  - 🇮🇳IN_1|2.3MB/s
+  - UN【机场推荐：https://a9a.xyz】103
   - UN【机场推荐：https://a9a.xyz】102
   - UN【机场推荐：https://a9a.xyz】92
-  - UN【机场推荐：https://a9a.xyz】105
-  - UN【机场推荐：https://a9a.xyz】83
-  - UN【机场推荐：https://a9a.xyz】104
-  - 节点日期：2026-10-22
-  - UN【机场推荐：https://a9a.xyz】81
-  - UN【机场推荐：https://a9a.xyz】103
-  - IT【机场推荐：https://a9a.xyz】17
+  - UN【机场推荐：https://a9a.xyz】114
   - IT【机场推荐：https://a9a.xyz】9
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
