@@ -20,9 +20,23 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: IT【机场推荐：https://a9a.xyz】1
+- name: IT【机场推荐：https://a9a.xyz】9
   type: ss
-  server: 202.50.253.27
+  server: 202.50.253.45
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【机场推荐：https://a9a.xyz】7
+  type: ss
+  server: 202.50.253.72
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【机场推荐：https://a9a.xyz】5
+  type: ss
+  server: 202.50.253.54
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
@@ -34,51 +48,13 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: IT【机场推荐：https://a9a.xyz】3
+- name: 🇺🇸US_1|4.4MB/s
   type: ss
-  server: 202.50.253.36
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  server: 88.216.254.18
+  port: 1080
+  cipher: chacha20-ietf-poly1305
+  password: V7WLaYdujkwnj6xxXq-2BSxGWEcSJtTA
   udp: true
-- name: 🇨🇭CH_1|1.4MB/s
-  type: vless
-  server: 179.43.166.190
-  port: 443
-  uuid: 90157e25-cee1-4217-921e-91f300bc1a24
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: perevodchiki.su
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: 1vSZjvhZO01oAEH3b7eebR1qF5dLU1Dq2E7xu8pwGSs
-    short-id: 428ef87fd47a3a32
-- name: IT【机场推荐：https://a9a.xyz】6
-  type: ss
-  server: 202.50.253.18
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【机场推荐：https://a9a.xyz】9
-  type: ss
-  server: 202.50.253.45
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: HK【机场推荐：https://a9a.xyz】20
-  type: vless
-  server: 152.175.6.229
-  port: 31884
-  uuid: e9a8144e-5237-488a-afb1-9ca3d8d54c80
-  udp: true
-  encryption: none
-  tls: true
-  servername: hk010.zestapp778.com
-  client-fingerprint: firefox
 - name: AT【机场推荐：https://a9a.xyz】13
   type: vless
   server: 178.22.31.72
@@ -93,6 +69,23 @@ proxies:
   reality-opts:
     public-key: zEntiD6D81wY__YHPvIw78e09CBIgYkyQ5meIo7c_hg
     short-id: 41ae8e266bc3346f
+- name: IT【机场推荐：https://a9a.xyz】3
+  type: ss
+  server: 202.50.253.36
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: HK【机场推荐：https://a9a.xyz】20
+  type: vless
+  server: 152.175.6.229
+  port: 31884
+  uuid: e9a8144e-5237-488a-afb1-9ca3d8d54c80
+  udp: true
+  encryption: none
+  tls: true
+  servername: hk010.zestapp778.com
+  client-fingerprint: firefox
 - name: AT【机场推荐：https://a9a.xyz】12
   type: vless
   server: at1.japancase.site
@@ -107,16 +100,9 @@ proxies:
   reality-opts:
     public-key: zEntiD6D81wY__YHPvIw78e09CBIgYkyQ5meIo7c_hg
     short-id: 41ae8e266bc3346f
-- name: IT【机场推荐：https://a9a.xyz】7
+- name: IT【机场推荐：https://a9a.xyz】6
   type: ss
-  server: 202.50.253.72
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【机场推荐：https://a9a.xyz】8
-  type: ss
-  server: 202.50.253.99
+  server: 202.50.253.18
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
@@ -128,13 +114,20 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: IT【机场推荐：https://a9a.xyz】5
-  type: ss
-  server: 202.50.253.54
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+- name: 🇳🇱NL_6|1.4MB/s
+  type: vless
+  server: nl3.japancase.site
+  port: 443
+  uuid: db80088c-32a1-4cb8-a907-0f3cb7844152
   udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: nl3.japancase.site
+  client-fingerprint: firefox
+  reality-opts:
+    public-key: ZsKgmywoAPRRkYHqQ8hUHFB6X_f7tjXfYmvSeHj0-xQ
+    short-id: 0d98b07acc98ccef
 proxy-groups:
 - name: 🚀 节点选择
   type: select
@@ -142,19 +135,18 @@ proxy-groups:
   - ⚡ 自动选择
   - DIRECT
   - IT【机场推荐：https://a9a.xyz】4
-  - IT【机场推荐：https://a9a.xyz】1
-  - 节点日期：2026-11-07
-  - IT【机场推荐：https://a9a.xyz】3
-  - 🇨🇭CH_1|1.4MB/s
-  - IT【机场推荐：https://a9a.xyz】6
   - IT【机场推荐：https://a9a.xyz】9
-  - HK【机场推荐：https://a9a.xyz】20
-  - AT【机场推荐：https://a9a.xyz】13
-  - AT【机场推荐：https://a9a.xyz】12
   - IT【机场推荐：https://a9a.xyz】7
-  - IT【机场推荐：https://a9a.xyz】8
-  - IT【机场推荐：https://a9a.xyz】2
   - IT【机场推荐：https://a9a.xyz】5
+  - 节点日期：2026-11-07
+  - 🇺🇸US_1|4.4MB/s
+  - AT【机场推荐：https://a9a.xyz】13
+  - IT【机场推荐：https://a9a.xyz】3
+  - HK【机场推荐：https://a9a.xyz】20
+  - AT【机场推荐：https://a9a.xyz】12
+  - IT【机场推荐：https://a9a.xyz】6
+  - IT【机场推荐：https://a9a.xyz】2
+  - 🇳🇱NL_6|1.4MB/s
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
@@ -162,19 +154,18 @@ proxy-groups:
   tolerance: 50
   proxies:
   - IT【机场推荐：https://a9a.xyz】4
-  - IT【机场推荐：https://a9a.xyz】1
-  - 节点日期：2026-11-07
-  - IT【机场推荐：https://a9a.xyz】3
-  - 🇨🇭CH_1|1.4MB/s
-  - IT【机场推荐：https://a9a.xyz】6
   - IT【机场推荐：https://a9a.xyz】9
-  - HK【机场推荐：https://a9a.xyz】20
-  - AT【机场推荐：https://a9a.xyz】13
-  - AT【机场推荐：https://a9a.xyz】12
   - IT【机场推荐：https://a9a.xyz】7
-  - IT【机场推荐：https://a9a.xyz】8
-  - IT【机场推荐：https://a9a.xyz】2
   - IT【机场推荐：https://a9a.xyz】5
+  - 节点日期：2026-11-07
+  - 🇺🇸US_1|4.4MB/s
+  - AT【机场推荐：https://a9a.xyz】13
+  - IT【机场推荐：https://a9a.xyz】3
+  - HK【机场推荐：https://a9a.xyz】20
+  - AT【机场推荐：https://a9a.xyz】12
+  - IT【机场推荐：https://a9a.xyz】6
+  - IT【机场推荐：https://a9a.xyz】2
+  - 🇳🇱NL_6|1.4MB/s
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
