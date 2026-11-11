@@ -13,9 +13,9 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: 🇮🇹IT_3|1.7MB/s
+- name: IT【机场推荐：https://a9a.xyz】3
   type: ss
-  server: 202.50.253.54
+  server: 202.50.253.36
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
@@ -27,20 +27,6 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: IT【机场推荐：https://a9a.xyz】5
-  type: ss
-  server: 202.50.253.63
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇮🇹IT_1|1.1MB/s
-  type: ss
-  server: 202.50.253.72
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
 - name: IT【机场推荐：https://a9a.xyz】11
   type: ss
   server: 202.50.253.72
@@ -48,6 +34,55 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
+- name: CA【机场推荐：https://a9a.xyz】2
+  type: vmess
+  server: 172.67.190.164
+  port: 443
+  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
+  alterId: 0
+  cipher: auto
+  udp: true
+  tls: true
+  network: ws
+  ws-opts:
+    path: /hls/cctv5phd.m3u8
+    headers:
+      Host: guanwang.awsno.com
+- name: 🇸🇬SG_2|1.2MB/s
+  type: vless
+  server: zfapi.zalolink.com
+  port: 46105
+  uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: www.lamer.com.sg
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: Lk5nwDxC2tr3J7hT8emhUUiMX8cHyKX9TiRj_EnAiik
+    short-id: 28f5c1f8f98a
+- name: 🇹🇷TR_1|2.0MB/s
+  type: trojan
+  server: sclass-b1.catcat321.com
+  port: 20028
+  password: d7563108-615c-4338-a7bd-77f359869a4a
+  udp: true
+  sni: hk.catxstar.com
+- name: 🇦🇺AU_1|3.5MB/s
+  type: vless
+  server: zfapi.zalolink.com
+  port: 54528
+  uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: www.apple.com
+  client-fingerprint: ios
+  reality-opts:
+    public-key: 7GvJVbR6BRhtrc8-rcZvB8qTFUF1LPeM_MmoZ04mBxo
+    short-id: 54cca3c1c1c7
 - name: IT【机场推荐：https://a9a.xyz】8
   type: ss
   server: 202.50.253.54
@@ -69,30 +104,9 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: IT【机场推荐：https://a9a.xyz】10
+- name: IT【机场推荐：https://a9a.xyz】5
   type: ss
-  server: 202.50.253.45
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【机场推荐：https://a9a.xyz】12
-  type: ss
-  server: 202.50.253.81
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇮🇹IT_2|1.9MB/s
-  type: ss
-  server: 202.50.253.81
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【机场推荐：https://a9a.xyz】3
-  type: ss
-  server: 202.50.253.36
+  server: 202.50.253.63
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
@@ -104,64 +118,20 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇳🇱NL_3|1.5MB/s
-  type: vless
-  server: 79.182.39.131
-  port: 443
-  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
-  udp: true
-  encryption: none
-  tls: true
-  servername: 717252g.nl8.h1clayd.click
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: PD8Jdlg3xB9QY--jwQjp8PFPzCS8-Oryw6-HWBcHMFU
-    short-id: d3bd772514c87d28
-  network: grpc
-  grpc-opts:
-    grpc-service-name: 204adda7e3da
-- name: RU【机场推荐：https://a9a.xyz】13
-  type: vless
-  server: 157.22.185.68
-  port: 2058
-  uuid: 4ad9f982-b56a-444a-9684-35ce51307a36
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.cloudflare.com
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: lJBsn9ndieTIUBzXkJUhf6O0OE8pm29_z1fUtARwL0s
-    short-id: 937255313d6ce673
-- name: CA【机场推荐：https://a9a.xyz】2
-  type: vmess
-  server: 172.67.190.164
-  port: 443
-  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
-  alterId: 0
-  cipher: auto
-  udp: true
-  tls: true
-  network: ws
-  ws-opts:
-    path: /hls/cctv5phd.m3u8
-    headers:
-      Host: guanwang.awsno.com
-- name: 🇦🇺AU_1|4.3MB/s
+- name: 🇸🇬SG_3|2.9MB/s
   type: vless
   server: zfapi.zalolink.com
-  port: 54528
+  port: 35460
   uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: www.apple.com
+  servername: psstatic.cdn.bcebos.com
   client-fingerprint: ios
   reality-opts:
-    public-key: 7GvJVbR6BRhtrc8-rcZvB8qTFUF1LPeM_MmoZ04mBxo
-    short-id: 54cca3c1c1c7
+    public-key: mkVsbEvwaiSo9QwnrVN65YZ92QntQQyYs2iDxN6yTlw
+    short-id: 30d976db3eab32
 - name: CA【机场推荐：https://a9a.xyz】1
   type: vmess
   server: 172.64.145.93
@@ -176,21 +146,7 @@ proxies:
     path: /hls/cctv5phd.m3u8
     headers:
       Host: guanwang.awsno.com
-- name: 🇸🇬SG_2|3.4MB/s
-  type: vless
-  server: zfapi.zalolink.com
-  port: 35460
-  uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: psstatic.cdn.bcebos.com
-  client-fingerprint: ios
-  reality-opts:
-    public-key: mkVsbEvwaiSo9QwnrVN65YZ92QntQQyYs2iDxN6yTlw
-    short-id: 30d976db3eab32
-- name: 🇫🇷FR_1|2.4MB/s
+- name: 🇫🇷FR_2|1.1MB/s
   type: vless
   server: 3.169.9.125
   port: 443
@@ -205,7 +161,7 @@ proxies:
     path: /
     headers:
       Host: dkfsoyk9ju2as.cloudfront.net
-- name: 🇫🇷FR_3|1.6MB/s
+- name: 🇫🇷FR_1|1001KB/s
   type: vless
   server: 3.169.9.125
   port: 443
@@ -213,101 +169,75 @@ proxies:
   udp: true
   encryption: none
   tls: true
-  servername: d1aedflfr97jes.cloudfront.net
+  servername: dkfsoyk9ju2as.cloudfront.net
   client-fingerprint: chrome
   network: ws
   ws-opts:
     path: /
     headers:
-      Host: d1aedflfr97jes.cloudfront.net
-- name: 🇫🇷FR_4|1.9MB/s
-  type: vless
-  server: 3.169.9.125
-  port: 443
-  uuid: 67cd3349-f789-4cbb-8b91-4b6b1654ce7c
+      Host: dkfsoyk9ju2as.cloudfront.net
+- name: IT【机场推荐：https://a9a.xyz】10
+  type: ss
+  server: 202.50.253.45
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-  encryption: none
-  tls: true
-  servername: d1m31xp31bswc2.cloudfront.net
-  client-fingerprint: chrome
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: d1m31xp31bswc2.cloudfront.net
-- name: 🇵🇱PL_1|1.8MB/s
-  type: vless
-  server: 3.169.9.125
-  port: 443
-  uuid: 67cd3349-f789-4cbb-8b91-4b6b1654ce7c
+- name: IT【机场推荐：https://a9a.xyz】12
+  type: ss
+  server: 202.50.253.81
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-  encryption: none
-  tls: true
-  servername: d2ex4nxd2e01ub.cloudfront.net
-  client-fingerprint: qq
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: d2ex4nxd2e01ub.cloudfront.net
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - 🇮🇹IT_3|1.7MB/s
+  - IT【机场推荐：https://a9a.xyz】3
   - IT【机场推荐：https://a9a.xyz】4
-  - IT【机场推荐：https://a9a.xyz】5
-  - 🇮🇹IT_1|1.1MB/s
   - IT【机场推荐：https://a9a.xyz】11
+  - CA【机场推荐：https://a9a.xyz】2
+  - 🇸🇬SG_2|1.2MB/s
+  - 🇹🇷TR_1|2.0MB/s
+  - 🇦🇺AU_1|3.5MB/s
   - IT【机场推荐：https://a9a.xyz】8
   - IT【机场推荐：https://a9a.xyz】6
   - IT【机场推荐：https://a9a.xyz】9
+  - IT【机场推荐：https://a9a.xyz】5
+  - IT【机场推荐：https://a9a.xyz】7
+  - 🇸🇬SG_3|2.9MB/s
+  - CA【机场推荐：https://a9a.xyz】1
+  - 🇫🇷FR_2|1.1MB/s
+  - 🇫🇷FR_1|1001KB/s
   - IT【机场推荐：https://a9a.xyz】10
   - IT【机场推荐：https://a9a.xyz】12
-  - 🇮🇹IT_2|1.9MB/s
-  - IT【机场推荐：https://a9a.xyz】3
-  - IT【机场推荐：https://a9a.xyz】7
-  - 🇳🇱NL_3|1.5MB/s
-  - RU【机场推荐：https://a9a.xyz】13
-  - CA【机场推荐：https://a9a.xyz】2
-  - 🇦🇺AU_1|4.3MB/s
-  - CA【机场推荐：https://a9a.xyz】1
-  - 🇸🇬SG_2|3.4MB/s
-  - 🇫🇷FR_1|2.4MB/s
-  - 🇫🇷FR_3|1.6MB/s
-  - 🇫🇷FR_4|1.9MB/s
-  - 🇵🇱PL_1|1.8MB/s
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇮🇹IT_3|1.7MB/s
+  - IT【机场推荐：https://a9a.xyz】3
   - IT【机场推荐：https://a9a.xyz】4
-  - IT【机场推荐：https://a9a.xyz】5
-  - 🇮🇹IT_1|1.1MB/s
   - IT【机场推荐：https://a9a.xyz】11
+  - CA【机场推荐：https://a9a.xyz】2
+  - 🇸🇬SG_2|1.2MB/s
+  - 🇹🇷TR_1|2.0MB/s
+  - 🇦🇺AU_1|3.5MB/s
   - IT【机场推荐：https://a9a.xyz】8
   - IT【机场推荐：https://a9a.xyz】6
   - IT【机场推荐：https://a9a.xyz】9
+  - IT【机场推荐：https://a9a.xyz】5
+  - IT【机场推荐：https://a9a.xyz】7
+  - 🇸🇬SG_3|2.9MB/s
+  - CA【机场推荐：https://a9a.xyz】1
+  - 🇫🇷FR_2|1.1MB/s
+  - 🇫🇷FR_1|1001KB/s
   - IT【机场推荐：https://a9a.xyz】10
   - IT【机场推荐：https://a9a.xyz】12
-  - 🇮🇹IT_2|1.9MB/s
-  - IT【机场推荐：https://a9a.xyz】3
-  - IT【机场推荐：https://a9a.xyz】7
-  - 🇳🇱NL_3|1.5MB/s
-  - RU【机场推荐：https://a9a.xyz】13
-  - CA【机场推荐：https://a9a.xyz】2
-  - 🇦🇺AU_1|4.3MB/s
-  - CA【机场推荐：https://a9a.xyz】1
-  - 🇸🇬SG_2|3.4MB/s
-  - 🇫🇷FR_1|2.4MB/s
-  - 🇫🇷FR_3|1.6MB/s
-  - 🇫🇷FR_4|1.9MB/s
-  - 🇵🇱PL_1|1.8MB/s
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
