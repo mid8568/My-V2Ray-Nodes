@@ -13,28 +13,249 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: IT【机场推荐：https://a9a.xyz】3
-  type: ss
-  server: 202.50.253.36
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+- name: 🇩🇪DE_6|2.7MB/s
+  type: vless
+  server: support.zoom.us.vltj.qzz.io
+  port: 443
+  uuid: 506e4a91-1d05-5683-b84c-2113f673cb19
   udp: true
-- name: IT【机场推荐：https://a9a.xyz】4
+  encryption: none
+  tls: true
+  servername: support.zoom.us.vltj.qzz.io
+  client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /id-pusat
+    headers:
+      Host: support.zoom.us.vltj.qzz.io
+- name: 🇳🇱NL_7|1.5MB/s
+  type: vless
+  server: 50.7.178.197
+  port: 8443
+  uuid: 3f5e89d5-591f-4ac9-b071-b05680b573c3
+  udp: true
+  encryption: none
+  tls: true
+  servername: fr2.gacvpn.site
+  client-fingerprint: firefox
+  network: grpc
+  grpc-opts:
+    grpc-service-name: connect-fr
+- name: 🇫🇷FR_1|3.1MB/s
+  type: vless
+  server: 200.102.183.57
+  port: 80
+  uuid: 664f65f4-33b3-43a3-b9e5-68192d1d428e
+  udp: true
+  encryption: none
+  tls: true
+  servername: 68r2nrw6avta71yq.cdn.cachefleet.com
+  client-fingerprint: chrome
+  network: grpc
+  grpc-opts:
+    grpc-service-name: qi8ws15c7jv5q2fa
+- name: 🇵🇱PL_1|1.6MB/s
+  type: vless
+  server: 138.124.242.46
+  port: 8443
+  uuid: 3f5e89d5-591f-4ac9-b071-b05680b573c3
+  udp: true
+  encryption: none
+  tls: true
+  servername: pl2-edge.gacvpn.site
+  client-fingerprint: firefox
+  network: grpc
+  grpc-opts:
+    grpc-service-name: connect-pl
+- name: 🇺🇸US_3|2.4MB/s
+  type: vless
+  server: 143.246.62.191
+  port: 8443
+  uuid: eb8c97f7-a154-4442-91b0-54c0d055ad0b
+  udp: true
+  encryption: none
+  tls: true
+  servername: github.githubassets.com
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: 4g6gX0ueJap7pY_iTDx23h6bzo3KIOTcFzP1Uacn0QA
+    short-id: 4ad2e4e660550e43
+- name: IT【高速节点：https://tt.vg/vip】1
   type: ss
   server: 202.50.253.90
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: IT【机场推荐：https://a9a.xyz】11
+- name: 🇮🇹IT_2|3.7MB/s
+  type: ss
+  server: 202.50.253.63
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇮🇹IT_7|1.0MB/s
+  type: ss
+  server: 202.50.253.27
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇮🇹IT_8|1.2MB/s
   type: ss
   server: 202.50.253.72
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: CA【机场推荐：https://a9a.xyz】2
+- name: 🇮🇹IT_6|1.9MB/s
+  type: ss
+  server: 202.50.253.54
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【高速节点：https://tt.vg/vip】5
+  type: ss
+  server: 202.50.253.63
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇮🇹IT_3|2.0MB/s
+  type: ss
+  server: 202.50.253.90
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【高速节点：https://tt.vg/vip】6
+  type: ss
+  server: 202.50.253.27
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇮🇹IT_4|3.5MB/s
+  type: ss
+  server: 202.50.253.81
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇮🇹IT_1|1.1MB/s
+  type: ss
+  server: 202.50.253.36
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【高速节点：https://tt.vg/vip】9
+  type: ss
+  server: 202.50.253.72
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇮🇹IT_9|2.1MB/s
+  type: ss
+  server: 202.50.253.99
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 节点日期：2026-11-12
+  type: ss
+  server: 202.50.253.99
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【高速节点：https://tt.vg/vip】4
+  type: ss
+  server: 202.50.253.81
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【高速节点：https://tt.vg/vip】7
+  type: ss
+  server: 202.50.253.18
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【高速节点：https://tt.vg/vip】8
+  type: ss
+  server: 202.50.253.45
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【高速节点：https://tt.vg/vip】3
+  type: ss
+  server: 202.50.253.36
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇮🇹IT_5|1.2MB/s
+  type: ss
+  server: 202.50.253.45
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: NL【高速节点：https://tt.vg/vip】15
+  type: vless
+  server: msk10.gacvpn.site
+  port: 443
+  uuid: 3f5e89d5-591f-4ac9-b071-b05680b573c3
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: nl3-edge.gacvpn.site
+  client-fingerprint: edge
+  reality-opts:
+    public-key: Caj4X3VjnHfdRQzWLmjFCiG_CGw0scYYni6UxVfBs38
+    short-id: db6a4219fb
+- name: IT【高速节点：https://tt.vg/vip】2
+  type: ss
+  server: 202.50.253.54
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇳🇱NL_15|1.7MB/s
+  type: vless
+  server: msk10.gacvpn.site
+  port: 443
+  uuid: 3f5e89d5-591f-4ac9-b071-b05680b573c3
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: nl3-edge.gacvpn.site
+  client-fingerprint: edge
+  reality-opts:
+    public-key: Caj4X3VjnHfdRQzWLmjFCiG_CGw0scYYni6UxVfBs38
+    short-id: db6a4219fb
+- name: 🇳🇱NL_6|3.0MB/s
+  type: vless
+  server: 89.125.48.218
+  port: 443
+  uuid: 3f5e89d5-591f-4ac9-b071-b05680b573c3
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: nl3-edge.gacvpn.site
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: Caj4X3VjnHfdRQzWLmjFCiG_CGw0scYYni6UxVfBs38
+    short-id: db6a4219fb
+- name: CA【高速节点：https://tt.vg/vip】13
   type: vmess
   server: 172.67.190.164
   port: 443
@@ -48,91 +269,110 @@ proxies:
     path: /hls/cctv5phd.m3u8
     headers:
       Host: guanwang.awsno.com
-- name: 🇸🇬SG_2|1.2MB/s
+- name: 🇳🇱NL_4|1.1MB/s
   type: vless
-  server: zfapi.zalolink.com
-  port: 46105
-  uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
+  server: msk10.gacvpn.site
+  port: 443
+  uuid: 3f5e89d5-591f-4ac9-b071-b05680b573c3
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: www.lamer.com.sg
+  servername: nl3-edge.gacvpn.site
+  client-fingerprint: safari
+  reality-opts:
+    public-key: Caj4X3VjnHfdRQzWLmjFCiG_CGw0scYYni6UxVfBs38
+    short-id: db6a4219fb
+- name: 🇫🇷FR_7|1.4MB/s
+  type: vless
+  server: 200.102.183.50
+  port: 443
+  uuid: 664f65f4-33b3-43a3-b9e5-68192d1d428e
+  udp: true
+  encryption: none
+  tls: true
+  servername: f2hbck5x3c0g8pl7.cdn.cachefleet.com
+  client-fingerprint: chrome
+  network: grpc
+  grpc-opts:
+    grpc-service-name: qi8ws15c7jv5q2fa
+- name: DE【高速节点：https://tt.vg/vip】10
+  type: vless
+  server: 95.85.234.66
+  port: 443
+  uuid: 3659f248-1797-4d6e-9982-a308565fec79
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: fl-modx.webedg.net
+  client-fingerprint: firefox
+  reality-opts:
+    public-key: MuQH546CBdgYVBzNU_F5fimkbQ0srHxgLKDjl1Wz2Rw
+    short-id: '00000000'
+- name: 🇪🇪EE_1|1.0MB/s
+  type: vless
+  server: ee.subv.ru
+  port: 443
+  uuid: 90157e25-cee1-4217-921e-91f300bc1a24
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: dvizhok.su
+  client-fingerprint: firefox
+  reality-opts:
+    public-key: 1vSZjvhZO01oAEH3b7eebR1qF5dLU1Dq2E7xu8pwGSs
+    short-id: 428ef87fd47a3a32
+- name: 🇪🇪EE_2|3.4MB/s
+  type: vless
+  server: ee.subv.ru
+  port: 443
+  uuid: 90157e25-cee1-4217-921e-91f300bc1a24
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: dvizhok.su
   client-fingerprint: chrome
   reality-opts:
-    public-key: Lk5nwDxC2tr3J7hT8emhUUiMX8cHyKX9TiRj_EnAiik
-    short-id: 28f5c1f8f98a
-- name: 🇹🇷TR_1|2.0MB/s
+    public-key: 1vSZjvhZO01oAEH3b7eebR1qF5dLU1Dq2E7xu8pwGSs
+    short-id: 428ef87fd47a3a32
+- name: 🇳🇱NL_5|1.3MB/s
+  type: vless
+  server: 196.240.125.6
+  port: 8443
+  uuid: 97fd7807-7e2b-49da-8a0e-e40197088f97
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: api-v2-6af3f40b.vmagnum.win
+  client-fingerprint: safari
+- name: 🇳🇱NL_2|3.1MB/s
+  type: vless
+  server: 79.182.39.131
+  port: 443
+  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
+  udp: true
+  encryption: none
+  tls: true
+  servername: 717252g.nl8.h1clayd.click
+  client-fingerprint: firefox
+  reality-opts:
+    public-key: PD8Jdlg3xB9QY--jwQjp8PFPzCS8-Oryw6-HWBcHMFU
+    short-id: d3bd772514c87d28
+  network: grpc
+  grpc-opts:
+    grpc-service-name: 204adda7e3da
+- name: 🇹🇷TR_1|1.3MB/s
   type: trojan
   server: sclass-b1.catcat321.com
-  port: 20028
+  port: 20027
   password: d7563108-615c-4338-a7bd-77f359869a4a
   udp: true
   sni: hk.catxstar.com
-- name: 🇦🇺AU_1|3.5MB/s
-  type: vless
-  server: zfapi.zalolink.com
-  port: 54528
-  uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.apple.com
-  client-fingerprint: ios
-  reality-opts:
-    public-key: 7GvJVbR6BRhtrc8-rcZvB8qTFUF1LPeM_MmoZ04mBxo
-    short-id: 54cca3c1c1c7
-- name: IT【机场推荐：https://a9a.xyz】8
-  type: ss
-  server: 202.50.253.54
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【机场推荐：https://a9a.xyz】6
-  type: ss
-  server: 202.50.253.18
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【机场推荐：https://a9a.xyz】9
-  type: ss
-  server: 202.50.253.99
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【机场推荐：https://a9a.xyz】5
-  type: ss
-  server: 202.50.253.63
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【机场推荐：https://a9a.xyz】7
-  type: ss
-  server: 202.50.253.27
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇸🇬SG_3|2.9MB/s
-  type: vless
-  server: zfapi.zalolink.com
-  port: 35460
-  uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: psstatic.cdn.bcebos.com
-  client-fingerprint: ios
-  reality-opts:
-    public-key: mkVsbEvwaiSo9QwnrVN65YZ92QntQQyYs2iDxN6yTlw
-    short-id: 30d976db3eab32
-- name: CA【机场推荐：https://a9a.xyz】1
+- name: CA【高速节点：https://tt.vg/vip】12
   type: vmess
   server: 172.64.145.93
   port: 443
@@ -146,7 +386,23 @@ proxies:
     path: /hls/cctv5phd.m3u8
     headers:
       Host: guanwang.awsno.com
-- name: 🇫🇷FR_2|1.1MB/s
+- name: 🇳🇱NL_1|1.6MB/s
+  type: vless
+  server: 196.196.148.63
+  port: 443
+  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
+  udp: true
+  encryption: none
+  tls: true
+  servername: 717252g.nl8.h1clayd.click
+  client-fingerprint: firefox
+  reality-opts:
+    public-key: PD8Jdlg3xB9QY--jwQjp8PFPzCS8-Oryw6-HWBcHMFU
+    short-id: d3bd772514c87d28
+  network: grpc
+  grpc-opts:
+    grpc-service-name: 204adda7e3da
+- name: 🇫🇷FR_2|1020KB/s
   type: vless
   server: 3.169.9.125
   port: 443
@@ -154,14 +410,14 @@ proxies:
   udp: true
   encryption: none
   tls: true
-  servername: dkfsoyk9ju2as.cloudfront.net
+  servername: d4afoyczh5tek.cloudfront.net
   client-fingerprint: chrome
   network: ws
   ws-opts:
     path: /
     headers:
-      Host: dkfsoyk9ju2as.cloudfront.net
-- name: 🇫🇷FR_1|1001KB/s
+      Host: d4afoyczh5tek.cloudfront.net
+- name: 🇵🇱PL_6|2.2MB/s
   type: vless
   server: 3.169.9.125
   port: 443
@@ -169,75 +425,173 @@ proxies:
   udp: true
   encryption: none
   tls: true
-  servername: dkfsoyk9ju2as.cloudfront.net
+  servername: d3kw8eszm8s6l1.cloudfront.net
   client-fingerprint: chrome
   network: ws
   ws-opts:
     path: /
     headers:
-      Host: dkfsoyk9ju2as.cloudfront.net
-- name: IT【机场推荐：https://a9a.xyz】10
-  type: ss
-  server: 202.50.253.45
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+      Host: d3kw8eszm8s6l1.cloudfront.net
+- name: 🇫🇷FR_8|1.6MB/s
+  type: vless
+  server: 3.169.9.125
+  port: 443
+  uuid: 67cd3349-f789-4cbb-8b91-4b6b1654ce7c
   udp: true
-- name: IT【机场推荐：https://a9a.xyz】12
-  type: ss
-  server: 202.50.253.81
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  encryption: none
+  tls: true
+  servername: d2im3v6ipzlavc.cloudfront.net
+  client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: d2im3v6ipzlavc.cloudfront.net
+- name: 🇵🇱PL_3|1.4MB/s
+  type: vless
+  server: 3.169.9.125
+  port: 443
+  uuid: 67cd3349-f789-4cbb-8b91-4b6b1654ce7c
   udp: true
+  encryption: none
+  tls: true
+  servername: d25kvre1mf3uya.cloudfront.net
+  client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: d25kvre1mf3uya.cloudfront.net
+- name: 🇵🇱PL_4|2.4MB/s
+  type: vless
+  server: 3.169.9.125
+  port: 443
+  uuid: 67cd3349-f789-4cbb-8b91-4b6b1654ce7c
+  udp: true
+  encryption: none
+  tls: true
+  servername: d2ex4nxd2e01ub.cloudfront.net
+  client-fingerprint: qq
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: d2ex4nxd2e01ub.cloudfront.net
+- name: 🇵🇱PL_2|1.7MB/s
+  type: vless
+  server: 3.169.9.125
+  port: 443
+  uuid: 67cd3349-f789-4cbb-8b91-4b6b1654ce7c
+  udp: true
+  encryption: none
+  tls: true
+  servername: djb2br1cgydas.cloudfront.net
+  client-fingerprint: chrome
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: djb2br1cgydas.cloudfront.net
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - IT【机场推荐：https://a9a.xyz】3
-  - IT【机场推荐：https://a9a.xyz】4
-  - IT【机场推荐：https://a9a.xyz】11
-  - CA【机场推荐：https://a9a.xyz】2
-  - 🇸🇬SG_2|1.2MB/s
-  - 🇹🇷TR_1|2.0MB/s
-  - 🇦🇺AU_1|3.5MB/s
-  - IT【机场推荐：https://a9a.xyz】8
-  - IT【机场推荐：https://a9a.xyz】6
-  - IT【机场推荐：https://a9a.xyz】9
-  - IT【机场推荐：https://a9a.xyz】5
-  - IT【机场推荐：https://a9a.xyz】7
-  - 🇸🇬SG_3|2.9MB/s
-  - CA【机场推荐：https://a9a.xyz】1
-  - 🇫🇷FR_2|1.1MB/s
-  - 🇫🇷FR_1|1001KB/s
-  - IT【机场推荐：https://a9a.xyz】10
-  - IT【机场推荐：https://a9a.xyz】12
+  - 🇩🇪DE_6|2.7MB/s
+  - 🇳🇱NL_7|1.5MB/s
+  - 🇫🇷FR_1|3.1MB/s
+  - 🇵🇱PL_1|1.6MB/s
+  - 🇺🇸US_3|2.4MB/s
+  - IT【高速节点：https://tt.vg/vip】1
+  - 🇮🇹IT_2|3.7MB/s
+  - 🇮🇹IT_7|1.0MB/s
+  - 🇮🇹IT_8|1.2MB/s
+  - 🇮🇹IT_6|1.9MB/s
+  - IT【高速节点：https://tt.vg/vip】5
+  - 🇮🇹IT_3|2.0MB/s
+  - IT【高速节点：https://tt.vg/vip】6
+  - 🇮🇹IT_4|3.5MB/s
+  - 🇮🇹IT_1|1.1MB/s
+  - IT【高速节点：https://tt.vg/vip】9
+  - 🇮🇹IT_9|2.1MB/s
+  - 节点日期：2026-11-12
+  - IT【高速节点：https://tt.vg/vip】4
+  - IT【高速节点：https://tt.vg/vip】7
+  - IT【高速节点：https://tt.vg/vip】8
+  - IT【高速节点：https://tt.vg/vip】3
+  - 🇮🇹IT_5|1.2MB/s
+  - NL【高速节点：https://tt.vg/vip】15
+  - IT【高速节点：https://tt.vg/vip】2
+  - 🇳🇱NL_15|1.7MB/s
+  - 🇳🇱NL_6|3.0MB/s
+  - CA【高速节点：https://tt.vg/vip】13
+  - 🇳🇱NL_4|1.1MB/s
+  - 🇫🇷FR_7|1.4MB/s
+  - DE【高速节点：https://tt.vg/vip】10
+  - 🇪🇪EE_1|1.0MB/s
+  - 🇪🇪EE_2|3.4MB/s
+  - 🇳🇱NL_5|1.3MB/s
+  - 🇳🇱NL_2|3.1MB/s
+  - 🇹🇷TR_1|1.3MB/s
+  - CA【高速节点：https://tt.vg/vip】12
+  - 🇳🇱NL_1|1.6MB/s
+  - 🇫🇷FR_2|1020KB/s
+  - 🇵🇱PL_6|2.2MB/s
+  - 🇫🇷FR_8|1.6MB/s
+  - 🇵🇱PL_3|1.4MB/s
+  - 🇵🇱PL_4|2.4MB/s
+  - 🇵🇱PL_2|1.7MB/s
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - IT【机场推荐：https://a9a.xyz】3
-  - IT【机场推荐：https://a9a.xyz】4
-  - IT【机场推荐：https://a9a.xyz】11
-  - CA【机场推荐：https://a9a.xyz】2
-  - 🇸🇬SG_2|1.2MB/s
-  - 🇹🇷TR_1|2.0MB/s
-  - 🇦🇺AU_1|3.5MB/s
-  - IT【机场推荐：https://a9a.xyz】8
-  - IT【机场推荐：https://a9a.xyz】6
-  - IT【机场推荐：https://a9a.xyz】9
-  - IT【机场推荐：https://a9a.xyz】5
-  - IT【机场推荐：https://a9a.xyz】7
-  - 🇸🇬SG_3|2.9MB/s
-  - CA【机场推荐：https://a9a.xyz】1
-  - 🇫🇷FR_2|1.1MB/s
-  - 🇫🇷FR_1|1001KB/s
-  - IT【机场推荐：https://a9a.xyz】10
-  - IT【机场推荐：https://a9a.xyz】12
+  - 🇩🇪DE_6|2.7MB/s
+  - 🇳🇱NL_7|1.5MB/s
+  - 🇫🇷FR_1|3.1MB/s
+  - 🇵🇱PL_1|1.6MB/s
+  - 🇺🇸US_3|2.4MB/s
+  - IT【高速节点：https://tt.vg/vip】1
+  - 🇮🇹IT_2|3.7MB/s
+  - 🇮🇹IT_7|1.0MB/s
+  - 🇮🇹IT_8|1.2MB/s
+  - 🇮🇹IT_6|1.9MB/s
+  - IT【高速节点：https://tt.vg/vip】5
+  - 🇮🇹IT_3|2.0MB/s
+  - IT【高速节点：https://tt.vg/vip】6
+  - 🇮🇹IT_4|3.5MB/s
+  - 🇮🇹IT_1|1.1MB/s
+  - IT【高速节点：https://tt.vg/vip】9
+  - 🇮🇹IT_9|2.1MB/s
+  - 节点日期：2026-11-12
+  - IT【高速节点：https://tt.vg/vip】4
+  - IT【高速节点：https://tt.vg/vip】7
+  - IT【高速节点：https://tt.vg/vip】8
+  - IT【高速节点：https://tt.vg/vip】3
+  - 🇮🇹IT_5|1.2MB/s
+  - NL【高速节点：https://tt.vg/vip】15
+  - IT【高速节点：https://tt.vg/vip】2
+  - 🇳🇱NL_15|1.7MB/s
+  - 🇳🇱NL_6|3.0MB/s
+  - CA【高速节点：https://tt.vg/vip】13
+  - 🇳🇱NL_4|1.1MB/s
+  - 🇫🇷FR_7|1.4MB/s
+  - DE【高速节点：https://tt.vg/vip】10
+  - 🇪🇪EE_1|1.0MB/s
+  - 🇪🇪EE_2|3.4MB/s
+  - 🇳🇱NL_5|1.3MB/s
+  - 🇳🇱NL_2|3.1MB/s
+  - 🇹🇷TR_1|1.3MB/s
+  - CA【高速节点：https://tt.vg/vip】12
+  - 🇳🇱NL_1|1.6MB/s
+  - 🇫🇷FR_2|1020KB/s
+  - 🇵🇱PL_6|2.2MB/s
+  - 🇫🇷FR_8|1.6MB/s
+  - 🇵🇱PL_3|1.4MB/s
+  - 🇵🇱PL_4|2.4MB/s
+  - 🇵🇱PL_2|1.7MB/s
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
