@@ -13,32 +13,9 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: 🇸🇪SE_1|4.5MB/s
-  type: vless
-  server: 185.117.89.74
-  port: 443
-  uuid: f8cb3c89-32af-4255-bebc-d90aad175069
-  udp: true
-  encryption: none
-  tls: true
-  servername: seb.kosmosapp.net
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: pR39Vv5qhk8r6akOicoy6mMs4-ppSWUez8MyAXG7wwQ
-    short-id: 27350908de933e09
-  network: grpc
-  grpc-opts:
-    grpc-service-name: neurex
-- name: 🇮🇹IT_3|2.8MB/s
+- name: IT【高速节点：https://tt.vg/vip】4
   type: ss
-  server: 202.50.253.54
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇮🇹IT_2|2.6MB/s
-  type: ss
-  server: 202.50.253.45
+  server: 202.50.253.63
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
@@ -50,34 +27,6 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: IT【高速节点：https://tt.vg/vip】2
-  type: ss
-  server: 202.50.253.81
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【高速节点：https://tt.vg/vip】8
-  type: ss
-  server: 202.50.253.90
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【高速节点：https://tt.vg/vip】11
-  type: ss
-  server: 202.50.253.99
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【高速节点：https://tt.vg/vip】3
-  type: ss
-  server: 202.50.253.72
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
 - name: IT【高速节点：https://tt.vg/vip】5
   type: ss
   server: 202.50.253.18
@@ -85,96 +34,6 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: IT【高速节点：https://tt.vg/vip】10
-  type: ss
-  server: 202.50.253.36
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇮🇹IT_5|4.1MB/s
-  type: ss
-  server: 202.50.253.99
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【高速节点：https://tt.vg/vip】4
-  type: ss
-  server: 202.50.253.63
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇮🇹IT_4|2.9MB/s
-  type: ss
-  server: 202.50.253.36
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇮🇹IT_1|2.9MB/s
-  type: ss
-  server: 202.50.253.72
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【高速节点：https://tt.vg/vip】7
-  type: ss
-  server: 202.50.253.45
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇵🇱PL_2|3.3MB/s
-  type: vless
-  server: pl.galacticworld.online
-  port: 443
-  uuid: ecc0e60a-f2cc-4266-8353-b228df89730a
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: pl.galacticworld.online
-  client-fingerprint: qq
-  reality-opts:
-    public-key: GBO_paFyK9FihgPMH8r_vHa4IKMkSGfvAQ2fhPK_1H4
-- name: IT【高速节点：https://tt.vg/vip】6
-  type: ss
-  server: 202.50.253.27
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: CA【高速节点：https://tt.vg/vip】17
-  type: vmess
-  server: 172.67.190.164
-  port: 443
-  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
-  alterId: 0
-  cipher: auto
-  udp: true
-  tls: true
-  network: ws
-  ws-opts:
-    path: /hls/cctv5phd.m3u8
-    headers:
-      Host: guanwang.awsno.com
-- name: CA【高速节点：https://tt.vg/vip】16
-  type: vmess
-  server: 172.64.145.93
-  port: 443
-  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
-  alterId: 0
-  cipher: auto
-  udp: true
-  tls: true
-  network: ws
-  ws-opts:
-    path: /hls/cctv5phd.m3u8
-    headers:
-      Host: guanwang.awsno.com
 - name: CA【高速节点：https://tt.vg/vip】18
   type: vmess
   server: 104.18.42.163
@@ -189,157 +48,83 @@ proxies:
     path: /hls/cctv5phd.m3u8
     headers:
       Host: guanwang.awsno.com
-- name: ❓Other_1|2.8MB/s
-  type: vless
-  server: 195.63.128.21
-  port: 2443
-  uuid: fa937345-6d3e-4ff4-8127-1a836987a0db
+- name: IT【高速节点：https://tt.vg/vip】11
+  type: ss
+  server: 202.50.253.99
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-  encryption: none
-  flow: xtls-rprx-vision
+- name: CA【高速节点：https://tt.vg/vip】16
+  type: vmess
+  server: 172.64.145.93
+  port: 443
+  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
+  alterId: 0
+  cipher: auto
+  udp: true
   tls: true
-  servername: germany.cloudhouse1.ru
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: q_MJ5Zo2vcnePWq3KY653QUPX8mNSvapLpqXU4NuPho
-    short-id: 464db718e17e4107
-- name: DE【高速节点：https://tt.vg/vip】1
-  type: vless
-  server: 9.247.174.4
-  port: 8443
-  uuid: 585a421d-d782-4420-912e-dd58ff5966d7
-  udp: true
-  encryption: none
-  tls: true
-  servername: play.googleapis.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: 7jPluypHwPilf_Mq7JOY96SwKkbK35WuIlN1HwGQ_0A
-    short-id: 974f7f8f
-- name: 🇪🇸ES_1|2.9MB/s
-  type: vless
-  server: 9.247.174.134
-  port: 8443
-  uuid: 585a421d-d782-4420-912e-dd58ff5966d7
-  udp: true
-  encryption: none
-  tls: true
-  servername: play.googleapis.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: 7jPluypHwPilf_Mq7JOY96SwKkbK35WuIlN1HwGQ_0A
-    short-id: 974f7f8f
-- name: 🇳🇱NL_12|2.0MB/s
-  type: trojan
-  server: 199.68.156.221
-  port: 2087
-  password: QzVKeGlc2qYRxyzWb3xZFjHbqY2JmOfZ
-  udp: true
-  sni: nexoastra.xnetaro.ir
   network: ws
   ws-opts:
-    path: /wss
-    headers: {}
-- name: 🇳🇱NL_8|3.4MB/s
-  type: vless
-  server: 196.196.148.85
-  port: 443
-  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
-  udp: true
-  encryption: none
-  tls: true
-  servername: 5d0319t.nl7.h1clayd.click
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: l-GzBDuNuhnjxoRlZqKvT7jAt_sbVAxhGFsAttO5kXs
-    short-id: 361d0dd59c70516f
-- name: 🇩🇪DE_9|1.2MB/s
-  type: vless
-  server: 83.141.69.220
-  port: 443
-  uuid: 70178a92-cfd2-4a4f-b9fb-7e916d231349
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: 13.143.195.113.sslip.io
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: p0M6RumtfcATPNPUIFnFcgWy2rzk2gGVWx21sql1hV0
-    short-id: 8238d76df92c2560
-- name: 🇩🇪DE_10|1.4MB/s
-  type: vless
-  server: 83.141.69.239
-  port: 443
-  uuid: 1b487f79-6b87-4971-863c-526bd31abd44
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: 83.141.69.239.sslip.io
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: vluPN5krskStuIe1YYoOopN766N8qK_uMsSsZGJdwCI
-    short-id: db71028aeb67289c
-- name: 🇩🇪DE_2|3.2MB/s
-  type: vless
-  server: silk.filnex.baby
-  port: 443
-  uuid: 820fa845-a1eb-4a83-b613-e6714cea8a1a
-  udp: true
-  encryption: none
-  tls: true
-  servername: silk.filnex.baby
-  client-fingerprint: chrome
-  network: ws
-  ws-opts:
-    path: /api/de5/stream
+    path: /hls/cctv5phd.m3u8
     headers:
-      Host: silk.filnex.baby
-- name: 🇺🇸US_1|1.2MB/s
-  type: vless
-  server: 162.35.101.177
+      Host: guanwang.awsno.com
+- name: CA【高速节点：https://tt.vg/vip】17
+  type: vmess
+  server: 172.67.190.164
   port: 443
-  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
+  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
+  alterId: 0
+  cipher: auto
   udp: true
-  encryption: none
   tls: true
-  servername: 0592efg.us8.h1clayd.click
-  client-fingerprint: edge
-  reality-opts:
-    public-key: cO3wYHISTeorXcM8ffaDCDdqZ-olBQL-GyZqb-W7rTk
-    short-id: bd8f712209a9c283
-  network: grpc
-  grpc-opts:
-    grpc-service-name: 99f2107b03f8
-- name: 🇸🇬SG_1|4.4MB/s
-  type: vless
-  server: zfapi.zalolink.com
-  port: 30322
-  uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
+  network: ws
+  ws-opts:
+    path: /hls/cctv5phd.m3u8
+    headers:
+      Host: guanwang.awsno.com
+- name: IT【高速节点：https://tt.vg/vip】2
+  type: ss
+  server: 202.50.253.81
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: psstatic.cdn.bcebos.com
-  client-fingerprint: chrome
-  reality-opts:
-    public-key: 5gncThwqPFzLu23WO3mPTEhG7-KgVYlGVvveHjM2SUo
-    short-id: 6a60e7e382d6
-- name: 🇸🇬SG_3|2.3MB/s
-  type: vless
-  server: zfapi.zalolink.com
-  port: 46957
-  uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
+- name: IT【高速节点：https://tt.vg/vip】3
+  type: ss
+  server: 202.50.253.72
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: psstatic.cdn.bcebos.com
-  client-fingerprint: safari
-  reality-opts:
-    public-key: 1SefqLQXrqkiUdf7cTMF53hrMZyo684_uneRC8-qTxI
-    short-id: 8f6683a234d3
+- name: IT【高速节点：https://tt.vg/vip】6
+  type: ss
+  server: 202.50.253.27
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【高速节点：https://tt.vg/vip】7
+  type: ss
+  server: 202.50.253.45
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇮🇹IT_1|3.0MB/s
+  type: ss
+  server: 202.50.253.72
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【高速节点：https://tt.vg/vip】10
+  type: ss
+  server: 202.50.253.36
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
 - name: ES【高速节点：https://tt.vg/vip】12
   type: vless
   server: 196.245.52.187
@@ -367,6 +152,13 @@ proxies:
   reality-opts:
     public-key: ZSmetD4e9QG5CiXhniHg5HJB68L4kwbgAkJmMHtVwEE
     short-id: 42426c882c5fcd41
+- name: IT【高速节点：https://tt.vg/vip】8
+  type: ss
+  server: 202.50.253.90
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
 - name: LY【高速节点：https://tt.vg/vip】14
   type: vless
   server: 196.199.122.2
@@ -387,39 +179,22 @@ proxy-groups:
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - 🇸🇪SE_1|4.5MB/s
-  - 🇮🇹IT_3|2.8MB/s
-  - 🇮🇹IT_2|2.6MB/s
-  - IT【高速节点：https://tt.vg/vip】9
-  - IT【高速节点：https://tt.vg/vip】2
-  - IT【高速节点：https://tt.vg/vip】8
-  - IT【高速节点：https://tt.vg/vip】11
-  - IT【高速节点：https://tt.vg/vip】3
-  - IT【高速节点：https://tt.vg/vip】5
-  - IT【高速节点：https://tt.vg/vip】10
-  - 🇮🇹IT_5|4.1MB/s
   - IT【高速节点：https://tt.vg/vip】4
-  - 🇮🇹IT_4|2.9MB/s
-  - 🇮🇹IT_1|2.9MB/s
-  - IT【高速节点：https://tt.vg/vip】7
-  - 🇵🇱PL_2|3.3MB/s
-  - IT【高速节点：https://tt.vg/vip】6
-  - CA【高速节点：https://tt.vg/vip】17
-  - CA【高速节点：https://tt.vg/vip】16
+  - IT【高速节点：https://tt.vg/vip】9
+  - IT【高速节点：https://tt.vg/vip】5
   - CA【高速节点：https://tt.vg/vip】18
-  - ❓Other_1|2.8MB/s
-  - DE【高速节点：https://tt.vg/vip】1
-  - 🇪🇸ES_1|2.9MB/s
-  - 🇳🇱NL_12|2.0MB/s
-  - 🇳🇱NL_8|3.4MB/s
-  - 🇩🇪DE_9|1.2MB/s
-  - 🇩🇪DE_10|1.4MB/s
-  - 🇩🇪DE_2|3.2MB/s
-  - 🇺🇸US_1|1.2MB/s
-  - 🇸🇬SG_1|4.4MB/s
-  - 🇸🇬SG_3|2.3MB/s
+  - IT【高速节点：https://tt.vg/vip】11
+  - CA【高速节点：https://tt.vg/vip】16
+  - CA【高速节点：https://tt.vg/vip】17
+  - IT【高速节点：https://tt.vg/vip】2
+  - IT【高速节点：https://tt.vg/vip】3
+  - IT【高速节点：https://tt.vg/vip】6
+  - IT【高速节点：https://tt.vg/vip】7
+  - 🇮🇹IT_1|3.0MB/s
+  - IT【高速节点：https://tt.vg/vip】10
   - ES【高速节点：https://tt.vg/vip】12
   - NG【高速节点：https://tt.vg/vip】15
+  - IT【高速节点：https://tt.vg/vip】8
   - LY【高速节点：https://tt.vg/vip】14
 - name: ⚡ 自动选择
   type: url-test
@@ -427,39 +202,22 @@ proxy-groups:
   interval: 300
   tolerance: 50
   proxies:
-  - 🇸🇪SE_1|4.5MB/s
-  - 🇮🇹IT_3|2.8MB/s
-  - 🇮🇹IT_2|2.6MB/s
-  - IT【高速节点：https://tt.vg/vip】9
-  - IT【高速节点：https://tt.vg/vip】2
-  - IT【高速节点：https://tt.vg/vip】8
-  - IT【高速节点：https://tt.vg/vip】11
-  - IT【高速节点：https://tt.vg/vip】3
-  - IT【高速节点：https://tt.vg/vip】5
-  - IT【高速节点：https://tt.vg/vip】10
-  - 🇮🇹IT_5|4.1MB/s
   - IT【高速节点：https://tt.vg/vip】4
-  - 🇮🇹IT_4|2.9MB/s
-  - 🇮🇹IT_1|2.9MB/s
-  - IT【高速节点：https://tt.vg/vip】7
-  - 🇵🇱PL_2|3.3MB/s
-  - IT【高速节点：https://tt.vg/vip】6
-  - CA【高速节点：https://tt.vg/vip】17
-  - CA【高速节点：https://tt.vg/vip】16
+  - IT【高速节点：https://tt.vg/vip】9
+  - IT【高速节点：https://tt.vg/vip】5
   - CA【高速节点：https://tt.vg/vip】18
-  - ❓Other_1|2.8MB/s
-  - DE【高速节点：https://tt.vg/vip】1
-  - 🇪🇸ES_1|2.9MB/s
-  - 🇳🇱NL_12|2.0MB/s
-  - 🇳🇱NL_8|3.4MB/s
-  - 🇩🇪DE_9|1.2MB/s
-  - 🇩🇪DE_10|1.4MB/s
-  - 🇩🇪DE_2|3.2MB/s
-  - 🇺🇸US_1|1.2MB/s
-  - 🇸🇬SG_1|4.4MB/s
-  - 🇸🇬SG_3|2.3MB/s
+  - IT【高速节点：https://tt.vg/vip】11
+  - CA【高速节点：https://tt.vg/vip】16
+  - CA【高速节点：https://tt.vg/vip】17
+  - IT【高速节点：https://tt.vg/vip】2
+  - IT【高速节点：https://tt.vg/vip】3
+  - IT【高速节点：https://tt.vg/vip】6
+  - IT【高速节点：https://tt.vg/vip】7
+  - 🇮🇹IT_1|3.0MB/s
+  - IT【高速节点：https://tt.vg/vip】10
   - ES【高速节点：https://tt.vg/vip】12
   - NG【高速节点：https://tt.vg/vip】15
+  - IT【高速节点：https://tt.vg/vip】8
   - LY【高速节点：https://tt.vg/vip】14
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
