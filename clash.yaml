@@ -13,30 +13,44 @@ dns:
   - 1.0.0.1
   - 8.8.4.4
 proxies:
-- name: CA【高速节点：https://tt.vg/vip】31
-  type: vmess
-  server: 104.18.42.163
-  port: 443
-  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
-  alterId: 0
-  cipher: auto
-  udp: true
-  tls: true
-  network: ws
-  ws-opts:
-    path: /hls/cctv5phd.m3u8
-    headers:
-      Host: guanwang.awsno.com
-- name: DE【高速节点：https://tt.vg/vip】15
+- name: IT【高速节点：https://tt.vg/vip】12
   type: ss
-  server: 47.254.175.2
-  port: 443
-  cipher: 2022-blake3-chacha20-poly1305
-  password: 8yO3ANWefuuGs1lRKXECQA1FEhxlWFV2ppQMcBaZo5Y=
+  server: 202.50.253.54
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【高速节点：https://tt.vg/vip】6
+  type: ss
+  server: 202.50.253.72
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
 - name: IT【高速节点：https://tt.vg/vip】9
   type: ss
+  server: 202.50.253.36
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 节点日期：2026-11-18
+  type: ss
+  server: 202.50.253.27
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【高速节点：https://tt.vg/vip】11
+  type: ss
   server: 202.50.253.99
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【高速节点：https://tt.vg/vip】2
+  type: ss
+  server: 202.50.253.81
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
@@ -48,7 +62,7 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: CA【高速节点：https://tt.vg/vip】32
+- name: CA【高速节点：https://tt.vg/vip】26
   type: vmess
   server: 172.64.145.93
   port: 443
@@ -62,7 +76,42 @@ proxies:
     path: /hls/cctv5phd.m3u8
     headers:
       Host: guanwang.awsno.com
-- name: CA【高速节点：https://tt.vg/vip】33
+- name: IT【高速节点：https://tt.vg/vip】8
+  type: ss
+  server: 202.50.253.63
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: CA【高速节点：https://tt.vg/vip】25
+  type: vmess
+  server: 104.18.42.163
+  port: 443
+  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
+  alterId: 0
+  cipher: auto
+  udp: true
+  tls: true
+  network: ws
+  ws-opts:
+    path: /hls/cctv5phd.m3u8
+    headers:
+      Host: guanwang.awsno.com
+- name: IT【高速节点：https://tt.vg/vip】1
+  type: ss
+  server: 202.50.253.45
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: IT【高速节点：https://tt.vg/vip】14
+  type: ss
+  server: 202.50.253.18
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: CA【高速节点：https://tt.vg/vip】27
   type: vmess
   server: 172.67.190.164
   port: 443
@@ -76,94 +125,20 @@ proxies:
     path: /hls/cctv5phd.m3u8
     headers:
       Host: guanwang.awsno.com
-- name: NL【高速节点：https://tt.vg/vip】27
+- name: NE【高速节点：https://tt.vg/vip】21
   type: vless
-  server: 81.171.14.72
+  server: 196.196.148.85
   port: 443
-  uuid: 8197b9b9-8945-460f-99c9-325ef8a8a7c3
+  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
   udp: true
   encryption: none
-  flow: xtls-rprx-vision
   tls: true
-  servername: zovira.me
+  servername: 5d0319t.nl7.h1clayd.click
   client-fingerprint: firefox
   reality-opts:
-    public-key: OH9jKzqAqEg98VDxmxReqrC_jbJWNwr-ipj2cNRgazc
-    short-id: 2237b916
-- name: IT【高速节点：https://tt.vg/vip】8
-  type: ss
-  server: 202.50.253.18
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【高速节点：https://tt.vg/vip】6
-  type: ss
-  server: 202.50.253.81
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IR【高速节点：https://tt.vg/vip】12
-  type: vless
-  server: 194.60.228.97
-  port: 443
-  uuid: 667016ca-f02e-4b5f-bfc3-3d8ed81e9bec
-  udp: true
-  encryption: none
-  tls: true
-  servername: base.hosamobenl.co.uk
-  client-fingerprint: chrome
-- name: DE【高速节点：https://tt.vg/vip】11
-  type: ss
-  server: 47.254.169.3
-  port: 443
-  cipher: 2022-blake3-chacha20-poly1305
-  password: 8yO3ANWefuuGs1lRKXECQA1FEhxlWFV2ppQMcBaZo5Y=
-  udp: true
-- name: 节点日期：2026-11-17
-  type: ss
-  server: 202.50.253.54
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【高速节点：https://tt.vg/vip】1
-  type: ss
-  server: 202.50.253.45
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: IT【高速节点：https://tt.vg/vip】3
-  type: ss
-  server: 202.50.253.27
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: CY【高速节点：https://tt.vg/vip】25
-  type: vless
-  server: 194.55.167.133
-  port: 443
-  uuid: 8197b9b9-8945-460f-99c9-325ef8a8a7c3
-  udp: true
-  encryption: none
-  flow: xtls-rprx-vision
-  tls: true
-  servername: cy1.gofizz.in
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: XSh3jB8zXtqpI38glgwN2Bn5imxN8Rkyc39LeBSD8BQ
-    short-id: 24f1fa53275b
-- name: IT【高速节点：https://tt.vg/vip】5
-  type: ss
-  server: 202.50.253.72
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: JP【高速节点：https://tt.vg/vip】30
+    public-key: l-GzBDuNuhnjxoRlZqKvT7jAt_sbVAxhGFsAttO5kXs
+    short-id: 361d0dd59c70516f
+- name: JP【高速节点：https://tt.vg/vip】17
   type: vless
   server: zfapi.zalolink.com
   port: 47691
@@ -177,27 +152,61 @@ proxies:
   reality-opts:
     public-key: 6PbC7GxOg_YdXya-53llPReUzoU_yknQbkDvI4uorBg
     short-id: 2905326a
-- name: JP【高速节点：https://tt.vg/vip】18
+- name: JP【高速节点：https://tt.vg/vip】5
   type: vless
   server: zfapi.zalolink.com
-  port: 55688
+  port: 54528
   uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: bilibili-vn.biliimg.com
-  client-fingerprint: chrome
+  servername: www.apple.com
+  client-fingerprint: ios
   reality-opts:
-    public-key: 6dqd0hqbC0bht9RtsYamvlYdMpxyUbk7uXw0xtO8DzQ
-    short-id: 865c1b2c
-- name: IT【高速节点：https://tt.vg/vip】7
-  type: ss
-  server: 202.50.253.36
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+    public-key: 7GvJVbR6BRhtrc8-rcZvB8qTFUF1LPeM_MmoZ04mBxo
+    short-id: 54cca3c1c1c7
+- name: SG【高速节点：https://tt.vg/vip】23
+  type: vless
+  server: win2loxfde0202.gggrelay.org
+  port: 30322
+  uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
   udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: psstatic.cdn.bcebos.com
+  client-fingerprint: ios
+  reality-opts:
+    public-key: 5gncThwqPFzLu23WO3mPTEhG7-KgVYlGVvveHjM2SUo
+    short-id: 6a60e7e382d6
+- name: SE【高速节点：https://tt.vg/vip】16
+  type: vless
+  server: 88.216.60.73
+  port: 443
+  uuid: a30903dc-1bf0-4be5-8b1b-603a3a56211c
+  udp: true
+  encryption: none
+  tls: true
+  servername: ns-api-gw.galioncc.com
+  client-fingerprint: ios
+  reality-opts:
+    public-key: drl7nndYdfzZY1aQ0eUAWmNV0nsHig2uDnu9siy9biQ
+    short-id: a7c92e4b10d6f835
+- name: JP【高速节点：https://tt.vg/vip】4
+  type: vless
+  server: zfapi.zalolink.com
+  port: 30322
+  uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: psstatic.cdn.bcebos.com
+  client-fingerprint: ios
+  reality-opts:
+    public-key: 5gncThwqPFzLu23WO3mPTEhG7-KgVYlGVvveHjM2SUo
+    short-id: 6a60e7e382d6
 - name: JP【高速节点：https://tt.vg/vip】24
   type: vless
   server: zfapi.zalolink.com
@@ -212,27 +221,7 @@ proxies:
   reality-opts:
     public-key: 1SefqLQXrqkiUdf7cTMF53hrMZyo684_uneRC8-qTxI
     short-id: 8f6683a234d3
-- name: US【高速节点：https://tt.vg/vip】28
-  type: vless
-  server: 4626b8t.nl19.h1clayd.shop
-  port: 443
-  uuid: 2208b003-78b1-453c-b5ca-ce847ff0efd6
-  udp: true
-  encryption: none
-  tls: true
-  servername: 4626b8t.nl19.h1clayd.shop
-  client-fingerprint: firefox
-  reality-opts:
-    public-key: fgZfPnrvmYRR3aMKxLCmcpmTjOlTcdA356_heBfqkTk
-    short-id: a23fc7d3b02e0a0e
-- name: IT【高速节点：https://tt.vg/vip】4
-  type: ss
-  server: 202.50.253.63
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: ES【高速节点：https://tt.vg/vip】23
+- name: ES【高速节点：https://tt.vg/vip】22
   type: vless
   server: 196.245.52.187
   port: 443
@@ -245,80 +234,92 @@ proxies:
   reality-opts:
     public-key: UoS8qZ74hP_ECcncCz55lzvlcVss3R7VA0WYZE0YQCY
     short-id: ba2a3dce62b99092
-- name: JP【高速节点：https://tt.vg/vip】14
+- name: LY【高速节点：https://tt.vg/vip】18
   type: vless
-  server: zfapi.zalolink.com
-  port: 54528
-  uuid: 57beeeb0-03fc-4fc9-94da-7604488a7134
+  server: 196.199.122.2
+  port: 443
+  uuid: 4201786b-d99b-4147-a5f0-20d47acddb81
   udp: true
   encryption: none
   flow: xtls-rprx-vision
   tls: true
-  servername: www.apple.com
-  client-fingerprint: ios
+  servername: 7aa271t.es1.h1clayd.click
+  client-fingerprint: chrome
   reality-opts:
-    public-key: 7GvJVbR6BRhtrc8-rcZvB8qTFUF1LPeM_MmoZ04mBxo
-    short-id: 54cca3c1c1c7
+    public-key: ZSmetD4e9QG5CiXhniHg5HJB68L4kwbgAkJmMHtVwEE
+    short-id: 42426c882c5fcd41
+- name: NG【高速节点：https://tt.vg/vip】19
+  type: vless
+  server: 196.196.149.81
+  port: 443
+  uuid: 4201786b-d99b-4147-a5f0-20d47acddb81
+  udp: true
+  encryption: none
+  flow: xtls-rprx-vision
+  tls: true
+  servername: 7aa271t.es1.h1clayd.click
+  client-fingerprint: firefox
+  reality-opts:
+    public-key: ZSmetD4e9QG5CiXhniHg5HJB68L4kwbgAkJmMHtVwEE
+    short-id: 42426c882c5fcd41
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
   - ⚡ 自动选择
   - DIRECT
-  - CA【高速节点：https://tt.vg/vip】31
-  - DE【高速节点：https://tt.vg/vip】15
-  - IT【高速节点：https://tt.vg/vip】9
-  - IT【高速节点：https://tt.vg/vip】10
-  - CA【高速节点：https://tt.vg/vip】32
-  - CA【高速节点：https://tt.vg/vip】33
-  - NL【高速节点：https://tt.vg/vip】27
-  - IT【高速节点：https://tt.vg/vip】8
+  - IT【高速节点：https://tt.vg/vip】12
   - IT【高速节点：https://tt.vg/vip】6
-  - IR【高速节点：https://tt.vg/vip】12
-  - DE【高速节点：https://tt.vg/vip】11
-  - 节点日期：2026-11-17
+  - IT【高速节点：https://tt.vg/vip】9
+  - 节点日期：2026-11-18
+  - IT【高速节点：https://tt.vg/vip】11
+  - IT【高速节点：https://tt.vg/vip】2
+  - IT【高速节点：https://tt.vg/vip】10
+  - CA【高速节点：https://tt.vg/vip】26
+  - IT【高速节点：https://tt.vg/vip】8
+  - CA【高速节点：https://tt.vg/vip】25
   - IT【高速节点：https://tt.vg/vip】1
-  - IT【高速节点：https://tt.vg/vip】3
-  - CY【高速节点：https://tt.vg/vip】25
-  - IT【高速节点：https://tt.vg/vip】5
-  - JP【高速节点：https://tt.vg/vip】30
-  - JP【高速节点：https://tt.vg/vip】18
-  - IT【高速节点：https://tt.vg/vip】7
+  - IT【高速节点：https://tt.vg/vip】14
+  - CA【高速节点：https://tt.vg/vip】27
+  - NE【高速节点：https://tt.vg/vip】21
+  - JP【高速节点：https://tt.vg/vip】17
+  - JP【高速节点：https://tt.vg/vip】5
+  - SG【高速节点：https://tt.vg/vip】23
+  - SE【高速节点：https://tt.vg/vip】16
+  - JP【高速节点：https://tt.vg/vip】4
   - JP【高速节点：https://tt.vg/vip】24
-  - US【高速节点：https://tt.vg/vip】28
-  - IT【高速节点：https://tt.vg/vip】4
-  - ES【高速节点：https://tt.vg/vip】23
-  - JP【高速节点：https://tt.vg/vip】14
+  - ES【高速节点：https://tt.vg/vip】22
+  - LY【高速节点：https://tt.vg/vip】18
+  - NG【高速节点：https://tt.vg/vip】19
 - name: ⚡ 自动选择
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - CA【高速节点：https://tt.vg/vip】31
-  - DE【高速节点：https://tt.vg/vip】15
-  - IT【高速节点：https://tt.vg/vip】9
-  - IT【高速节点：https://tt.vg/vip】10
-  - CA【高速节点：https://tt.vg/vip】32
-  - CA【高速节点：https://tt.vg/vip】33
-  - NL【高速节点：https://tt.vg/vip】27
-  - IT【高速节点：https://tt.vg/vip】8
+  - IT【高速节点：https://tt.vg/vip】12
   - IT【高速节点：https://tt.vg/vip】6
-  - IR【高速节点：https://tt.vg/vip】12
-  - DE【高速节点：https://tt.vg/vip】11
-  - 节点日期：2026-11-17
+  - IT【高速节点：https://tt.vg/vip】9
+  - 节点日期：2026-11-18
+  - IT【高速节点：https://tt.vg/vip】11
+  - IT【高速节点：https://tt.vg/vip】2
+  - IT【高速节点：https://tt.vg/vip】10
+  - CA【高速节点：https://tt.vg/vip】26
+  - IT【高速节点：https://tt.vg/vip】8
+  - CA【高速节点：https://tt.vg/vip】25
   - IT【高速节点：https://tt.vg/vip】1
-  - IT【高速节点：https://tt.vg/vip】3
-  - CY【高速节点：https://tt.vg/vip】25
-  - IT【高速节点：https://tt.vg/vip】5
-  - JP【高速节点：https://tt.vg/vip】30
-  - JP【高速节点：https://tt.vg/vip】18
-  - IT【高速节点：https://tt.vg/vip】7
+  - IT【高速节点：https://tt.vg/vip】14
+  - CA【高速节点：https://tt.vg/vip】27
+  - NE【高速节点：https://tt.vg/vip】21
+  - JP【高速节点：https://tt.vg/vip】17
+  - JP【高速节点：https://tt.vg/vip】5
+  - SG【高速节点：https://tt.vg/vip】23
+  - SE【高速节点：https://tt.vg/vip】16
+  - JP【高速节点：https://tt.vg/vip】4
   - JP【高速节点：https://tt.vg/vip】24
-  - US【高速节点：https://tt.vg/vip】28
-  - IT【高速节点：https://tt.vg/vip】4
-  - ES【高速节点：https://tt.vg/vip】23
-  - JP【高速节点：https://tt.vg/vip】14
+  - ES【高速节点：https://tt.vg/vip】22
+  - LY【高速节点：https://tt.vg/vip】18
+  - NG【高速节点：https://tt.vg/vip】19
 rules:
 - DOMAIN-SUFFIX,local,DIRECT
 - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
